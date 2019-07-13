@@ -15,20 +15,9 @@ from astropy.io import fits
 from scipy.interpolate import interp1d, interp2d, CloughTocher2DInterpolator, griddata, LinearNDInterpolator
 from scipy.signal import fftconvolve
 
-IFMR_new = interp1d((0.50, 0.60, 0.8, 0.95, 1.38),(0.8,2.75,3.75,6,10),\
-                          fill_value = 0, bounds_error=False) # mass_WD, mass_ini
-IFMR_new = interp1d((0.50, 0.55, 0.65,0.75, 0.85, 1.0, 1.25,1.35),(0.95,1,2,3,3.5,5,8,9),\
-                          fill_value = 0, bounds_error=False) # mass_WD, mass_ini
-
-IFMR_old = interp1d((0.64, 0.67, 0.8, 0.95, 1.38),(0.8,2.75,3.75,6,10),\
-                          fill_value = 0, bounds_error=False) # mass_WD, mass_ini, for old star (>critical_age), we assume a 
-t_index = -3
-
-def MF(mass_ini):
-    return (mass_ini>0.8)*mass_ini**(-2.3)
-
 #----------------------------------------------------------------------------------------------------   
 
+t_index = -3
 
 #----------------------------------------------------------------------------------------------------   
 
@@ -38,43 +27,17 @@ def interpolate_2d(x,y,para,method):
     elif method == 'cubic':
         interpolator = CloughTocher2DInterpolator
     return interpolator((x,y), para, rescale=True)
-
-
-def plot_lowmass_atm(spec_type='DB',color='G'):
-    '''
-    This function plots the tracks on logg vs. Teff diagram color coded by G or BP-RP.
-    '''
-    for mass in ['0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','1.2']:
-    #for mass in ['0.4']:
-        Cool = Table.read('models/Fontaine_Gaia_atm_grid/Table_Mass_'+mass+'_'+spec_type,format='ascii')
-        # every mass        
-        if color == 'G':
-            plt.scatter(np.log10(Cool['Teff']),Cool['logg'],c=Cool['G/R'],s=1,alpha=1,vmin=8,vmax=16)
-        if color == 'G_Mbol':
-            plt.scatter(np.log10(Cool['Teff']),Cool['logg'],c=Cool['G/R']-Cool['Mbol'],s=1,\
-                        alpha=1,vmin=0,vmax=6)
-        if color == 'bp_rp':
-            plt.scatter(np.log10(Cool['Teff']),Cool['logg'],c=Cool['G_BP/R']-Cool['G_RP/R'],s=1,\
-                        alpha=1,vmin=-0.8,vmax=1.25)
-    Cool = Table.read('Fontaine_Gaia_atm_grid/Table_'+spec_type,format='ascii') # the whole grid
-    if color == 'G':
-        plt.scatter(np.log10(Cool['Teff']),Cool['logg'],c=Cool['G/R'],s=1,alpha=1,vmin=8,vmax=16)
-    if color == 'G_Mbol':
-        plt.scatter(np.log10(Cool['Teff']),Cool['logg'],c=Cool['G/R']-Cool['Mbol'],s=1,\
-                    alpha=1,vmin=0,vmax=6)
-    if color == 'bp_rp':
-        plt.scatter(np.log10(Cool['Teff']),Cool['logg'],c=Cool['G_BP/R']-Cool['G_RP/R'],s=1,\
-                    alpha=1,vmin=-0.8,vmax=1.25)
-    return None
-
+  
 
 def interp_atm(spec_type='DB',color='G',xy=(4000,40000,100,7.0,9.5,0.01)):
     '''
     This function generates from the atmosphere model the function (logTeff, logg) --> G, BP-RP, or G-Mbol 
     
     arguments:
-    color: the target variable of the interpolation function. 'G', 'BP-RP', or 'G-Mbol'.
+    spec_type: 'DA_thick' or 'DA_thin' or 'DB'. See http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+    color:     the target variable of the interpolation function. 'G', 'BP-RP', or 'G-Mbol'.
     '''
+    xy=(tmin,tmax,dt,loggmin,loggmax,dlogg)
     logTeff = np.zeros(0)
     logg = np.zeros(0)
     age = np.zeros(0)
@@ -116,106 +79,111 @@ def interp_atm(spec_type='DB',color='G',xy=(4000,40000,100,7.0,9.5,0.01)):
         return interp(logTeff,logg,bp_rp)
     if color == 'G_Mbol':
         return interp(logTeff,logg,G-Mbol)
-    
-    
-def interp_compare(spec_type = 'DA',color = 'bp_rp',pl=False):
-    '''
-    plot the cooling tracks and the results of atmosphere interpolation on the
-    logg vs. Teff diagram color coded by G or BP-RP
-    '''
-    interp_result, interp_func = interp_atm(spec_type=spec_type,color=color,\
-                                            xy=(tmin,tmax,dt,loggmin,loggmax,dlogg))
-    if pl==True:
-        plt.figure(figsize=(12,1))
-        plot_lowmass_atm(spec_type,color)
-        #plot_lowmass(spec_type,'scatter',0,color)
-        plt.xlim(tmin,tmax)
-        plt.ylim(loggmin,loggmax)
-        plt.colorbar()
-        plt.show()
-    
-        plt.figure(figsize=(12,1))
-        plt.imshow(interp_result.T, extent=(tmin,tmax,loggmin,loggmax), origin='lower',aspect='auto')
-        plt.colorbar()
-        plt.show()
-    return interp_result, interp_func
 
 
-def HR_to_para(para,xy,bp_rp_fontaine,G_fontaine,age,pl=False,title=' '):
+def HR_to_para(z,xy,bp_rp,G,age):
     '''
-    Interpolate the function of (BR-RP, G) --> para.
-    (the argument 'age' is useless.)
+    Interpolate the function of (BR-RP, G) --> z, based on the data points from many 
+    cooling tracks read from a model, and get the value of z on the grid of H-R coordinates.
+    We set select only G<16 and G>8 to avoid the turning of DA cooling track which
+    leads to multi-value mapping.
+    
+    Arguments:
+    z:      1d-array. The target parameter for mapping (BP-RP, G) --> z
+    xy:     in the form of (xmin, xmax, dx, ymin, ymax, dy), the grid information of 
+            the H-R diagram coordinates BP-RP and G
+    bp_rp:  1d-array. The Gaia color BP-RP
+    G:      1d-array. The absolute magnitude of Gaia G band
+    age:    1d-array. The WD age. Only used for the purpose of selecting non-NaN data points.
     '''
+    # define the grid of H-R diagram
     grid_x, grid_y = np.mgrid[xy[0]:xy[1]:xy[2], xy[3]:xy[4]:xy[5]]
     grid_x *= interp_bprp_factor
-    selected = ~np.isnan(bp_rp_fontaine+G_fontaine+age+para)*(G_fontaine<16)*(G_fontaine>8)
-    grid_z = griddata(np.array((bp_rp_fontaine[selected]*interp_bprp_factor, G_fontaine[selected])).T, \
-                        para[selected], (grid_x, grid_y), method=interp_type)
-    grid_z_func = interpolate_2d(bp_rp_fontaine[selected], G_fontaine[selected], \
-                                 para[selected], interp_type)
-
-    if pl==True:
-        plt.figure(figsize=(12,3))
-        plt.subplot(1,2,1)
-        plt.title(title)
-        plt.scatter(bp_rp_fontaine,G_fontaine,c=para,s=1,\
-                    vmin=np.percentile(para[selected],10),vmax=np.percentile(para[selected],70))
-        plt.xlim(xy[0],xy[1])
-        plt.ylim(xy[3],xy[4])
-        plt.colorbar()
-        
-        plt.subplot(1,2,2)
-        plt.title(title)
-        plt.imshow(grid_z.T, extent=(xy[0],xy[1],xy[3],xy[4]), origin='lower',aspect='auto',\
-                  vmin=np.percentile(para[selected],10),vmax=np.percentile(para[selected],90))
-        plt.colorbar()
-        plt.show()
+    
+    # select only not-NaN data points
+    selected = ~np.isnan(bp_rp+G+age+z)*(G<16)*(G>8)
+    
+    # get the value of z on a H-R diagram grid
+    grid_z = griddata(np.array((bp_rp[selected]*interp_bprp_factor, G[selected])).T, z[selected],
+                      (grid_x, grid_y), method=interp_type)
+    
+    # get the interpolated function
+    grid_z_func = interpolate_2d(bp_rp[selected], G[selected], z[selected], interp_type)
+    
+    # return both the grid data and interpolated function
     return grid_z, grid_z_func
 
 
-def interp_xy_z(para,xy,x,y,xfactor=1,pl=False,title=''):
+def interp_xy_z(z,xy,x,y,xfactor=1):
     '''
-    Interpolate the function (x,y) --> z from a series of x, y, and z values. 
-    Similar to HR_to_para, but the x and y can be any variable.
+    Interpolate the function (x,y) --> z, based on a series of x, y, and z values, and
+    get the value of z on the grid of (x,y) coordinates.
+    This function is a generalized version of HR_to_para, allowing any x and y values.
     
-    arguments:
-    xy: the grid information. e.g. xy=(4000,40000,100,7.0,9.5,0.01). see np.mgrid for more information.
+    Arguments:
+    z:      1d-array. The target parameter for mapping (x,y) --> z
+    xy:     in the form of (xmin, xmax, dx, ymin, ymax, dy), the grid information of 
+            x and y
+    x:      1d-array. The Gaia color BP-RP
+    y:      1d-array. The absolute magnitude of Gaia G band
+    xfactor:Number. For balancing the interval of interpolation between x and y.
     '''
+    # define the grid of (x,y)
     grid_x, grid_y = np.mgrid[xy[0]:xy[1]:xy[2], xy[3]:xy[4]:xy[5]]
     grid_x *= xfactor
-    selected = ~np.isnan(x+y+para)
-    grid_z = griddata(np.array((x[selected]*xfactor, y[selected])).T, \
-                        para[selected], (grid_x, grid_y), method=interp_type)
-    grid_z_func = interpolate_2d(x[selected], y[selected], \
-                                 para[selected], interp_type)
-    if pl==True:
-        plt.figure(figsize=(12,3))
-        plt.subplot(1,2,1)
-        plt.title(title)
-        plt.scatter(x,y,c=para,s=1,\
-                    vmin=np.percentile(para[selected],10),vmax=np.percentile(para[selected],70))
-        plt.xlim(xy[0],xy[1])
-        plt.ylim(xy[3],xy[4])
-        plt.colorbar()
-        
-        plt.subplot(1,2,2)
-        plt.title(title)
-        plt.imshow(grid_z.T, extent=(xy[0],xy[1],xy[3],xy[4]), origin='lower',aspect='auto',\
-                  vmin=np.percentile(para[selected],10),vmax=np.percentile(para[selected],90))
-        plt.colorbar()
-        plt.show()
+    
+    # select only not-NaN data points
+    selected = ~np.isnan(x+y+z)
+    
+    # get the value of z on a (x,y) grid
+    grid_z = griddata(np.array((x[selected]*xfactor, y[selected])).T, z[selected], 
+                      (grid_x, grid_y), method=interp_type)
+    
+    # get the interpolated function
+    grid_z_func = interpolate_2d(x[selected], y[selected], z[selected], interp_type)
+    
+    # return both the grid data and interpolated function
     return grid_z, grid_z_func
+  
+
+def interp_xy_z_func(z,x,y):
+    '''
+    Interpolate the function (x,y) --> z, based on a series of x, y, and z values. 
+    This function is a generalized version of HR_to_para, allowing any x and y values,
+    but does not calculate the grid values as HR_to_para and interp_xy_z do.
+    
+    Arguments:
+    z:      1d-array. The target parameter for mapping (x,y) --> z
+    x:      1d-array. The Gaia color BP-RP
+    y:      1d-array. The absolute magnitude of Gaia G band
+    '''
+    # select only not-NaN data points
+    selected = ~np.isnan(x+y+z)
+    
+    # get the interpolated function
+    grid_z_func = interpolate_2d(x[selected], y[selected], z[selected], interp_type)
+    
+    # return the interpolated function
+    return grid_z_func
 
 
-def m_logage_to_HR(mass,logage,bp_rp_fontaine,G_fontaine):
+def m_logage_to_HR(mass,logage,bp_rp,G):
     '''
-    get the interpolated function (mass, logage) --> (BP_RP, G)
+    Get the interpolated function (mass, logage) --> (BP_RP) and (mass, logage) --> (G)
+    
+    Argument:
+    mass:   1d-array
+    logage: 1d-array
+    bp_rp:  1d-array
+    G:      1d-array
     '''
-    selected = ~np.isnan(bp_rp_fontaine+G_fontaine+logage)*(G_fontaine<16)*(G_fontaine>8)
-    grid_bprp_func = interpolate_2d( mass[selected], logage[selected], \
-                                    bp_rp_fontaine[selected], interp_type)
-    grid_G_func = interpolate_2d(mass[selected], logage[selected], \
-                                 G_fontaine[selected], interp_type)
+    # select only not-NaN data points
+    selected = ~np.isnan(bp_rp_fontaine+G_fontaine+logage)
+    
+    # get the interpolated functions
+    grid_bprp_func = interpolate_2d( mass[selected], logage[selected], bp_rp[selected], interp_type )
+    grid_G_func = interpolate_2d( mass[selected], logage[selected], G[selected], interp_type )
+    
     return grid_bprp_func, grid_G_func
 
 
@@ -465,12 +433,12 @@ def final_plot(grid_para,grid_logage,grid_mass,horizontal_shift,vertical_shift,b
 
 def main(spec_type, model,IFMR, logg_func=None):
     # Make Atmosphere Grid/Function: logTeff, logg --> bp-rp,  G-Mbol
-    grid_G_Mbol, grid_G_Mbol_func = interp_compare(spec_type,'G_Mbol',pl=pl[0])
-    grid_bp_rp, grid_bp_rp_func = interp_compare(spec_type,'bp_rp',pl=pl[0])
+    grid_G_Mbol, grid_G_Mbol_func = interp_atm(spec_type,'G_Mbol',xy=(tmin,tmax,dt,loggmin,loggmax,dlogg))
+    grid_bp_rp, grid_bp_rp_func = interp_atm(spec_type,'bp_rp',xy=(tmin,tmax,dt,loggmin,loggmax,dlogg))
     
     
     # Open Evolution Tracks
-    mass_array, logg, age, age_for_density, logteff, Mbol = open_evolution_tracks(model, spec_type, IFMR, logg_func)
+    mass_array, logg, age, age_cool, logteff, Mbol = open_evolution_tracks(model, spec_type, IFMR, logg_func)
     
 
     # Get Colour/Magnitude for Evolution Tracks
@@ -478,63 +446,42 @@ def main(spec_type, model,IFMR, logg_func=None):
     bp_rp_fontaine = grid_bp_rp_func(logteff,logg)
     
     
-    # Calculate Density on HR Diagram
-    k1 = (age_for_density[1:-1]-age_for_density[:-2])/(bp_rp_fontaine[1:-1]-bp_rp_fontaine[:-2])
-    k2 = (age_for_density[2:]-age_for_density[1:-1])/(bp_rp_fontaine[2:]-bp_rp_fontaine[1:-1])
+    # Calculate Cooling Rate (per BP-RP)
+    k1 = (age_cool[1:-1]-age_cool[:-2])/(bp_rp_fontaine[1:-1]-bp_rp_fontaine[:-2])
+    k2 = (age_cool[2:]-age_cool[1:-1])/(bp_rp_fontaine[2:]-bp_rp_fontaine[1:-1])
     k = k1 + (bp_rp_fontaine[1:-1]-bp_rp_fontaine[:-2])*(k1-k2)/(bp_rp_fontaine[:-2]-bp_rp_fontaine[2:])
-    density = np.concatenate((np.array([1]), k , np.array([1])))
-        
+    cooling_rate = np.concatenate((np.array([1]), k , np.array([1])))
+    
     
     # Get Parameters on HR Diagram
-    grid_logage, grid_logage_func = HR_to_para(np.log10(age),xy,bp_rp_fontaine,G_fontaine,age,\
-                                               pl[1],'log age [yr]')
-    grid_mass, grid_mass_func = HR_to_para(mass_array,xy,bp_rp_fontaine,G_fontaine,age,\
-                                           pl[1],'mass [Msol]')
+    grid_logage, grid_logage_func           = HR_to_para(np.log10(age), xy, bp_rp_fontaine, G_fontaine, age,)
+    grid_mass, grid_mass_func               = HR_to_para(mass_array, xy, bp_rp_fontaine, G_fontaine,age,)
     row,col = grid_mass.shape
-    grid_mass_density = np.concatenate((np.zeros((row,1)),\
-                                        grid_mass[:,2:] - grid_mass[:,:-2] ,\
+    grid_mass_density = np.concatenate((np.zeros((row,1)),
+                                        grid_mass[:,2:] - grid_mass[:,:-2],
                                         np.zeros((row,1)) ), axis=1)
-    grid_density, grid_density_func = HR_to_para(density,xy,bp_rp_fontaine,G_fontaine,age,\
-                                                 pl[1],'density')
-    grid_MF = MF(IFMR(grid_mass))
-    grid_MF_func = lambda x,y: MF(IFMR(grid_mass_func(x,y)))
-    grid_teff, grid_teff_func = HR_to_para(10**logteff,xy,bp_rp_fontaine,G_fontaine,age,False)
-    grid_logage_for_density, grid_logage_for_density_func = HR_to_para(np.log10(age_for_density),\
-                                          xy,bp_rp_fontaine,G_fontaine,age,False)
-    grid_Mbol, grid_Mbol_func = HR_to_para(Mbol,xy,bp_rp_fontaine,G_fontaine,age,False)
+    grid_density, grid_density_func         = HR_to_para(cooling_rate, xy, bp_rp_fontaine, G_fontaine, age,)
+    grid_teff, grid_teff_func               = HR_to_para(10**logteff, xy, bp_rp_fontaine, G_fontaine,age,)
+    grid_logage_cool, grid_logage_cool_func = HR_to_para(np.log10(age_cool), xy, bp_rp_fontaine, G_fontaine, age,)
+    grid_Mbol, grid_Mbol_func               = HR_to_para(Mbol,xy,bp_rp_fontaine,G_fontaine,age,False)
     
-    grid_bprp_func, grid_G_func = \
-        m_logage_to_HR(mass_array,np.log10(age_for_density),bp_rp_fontaine,G_fontaine)
+    grid_bprp_func = interp_xy_z_func(bp_rp_fontaine, mass_array, np.log10(age_cool))
+    grid_G_func = interp_xy_z_func(G_fontaine, mass_array, np.log10(age_cool))
     
-    
-    
-    # A Plot of Comparison of Data and Grid for Parameters
-    if pl[2]==True:
-        plot_G_bprp_density(G_fontaine, bp_rp_fontaine, density, mass_array, age)
-    
-    
-    # The Final Plot
-    if pl[3]==True:
-        plt.figure(figsize=(12,6))
-        final_plot(grid_density * grid_MF,grid_logage,grid_mass,horizontal_shift,vertical_shift,\
-                   distance_range=distance_range)
-        plt.title(spec+' '+model)
-        plt.show()
     
     # Return a dictionary containing all the cooling track data points, interpolation functions and interpolation grids 
-    return {'grid_G_Mbol':grid_G_Mbol, 'grid_G_Mbol_func':grid_G_Mbol_func,\
-            'grid_bp_rp':grid_bp_rp, 'grid_bp_rp_func':grid_bp_rp_func,\
-            'mass_array':mass_array, 'logg':logg, 'age':age, 'age_for_density':age_for_density,\
-            'logteff':logteff, 'Mbol':Mbol, 'density':density,\
-            'G_fontaine':G_fontaine, 'bp_rp_fontaine':bp_rp_fontaine,\
-            'grid_logage':grid_logage, 'grid_logage_func':grid_logage_func,\
-            'grid_mass':grid_mass, 'grid_mass_func':grid_mass_func,\
-            'grid_density':grid_density, 'grid_density_func':grid_density_func,\
-            'grid_MF':grid_MF, 'grid_MF_func':grid_MF_func,\
-            'grid_teff':grid_teff, 'grid_teff_func':grid_teff_func,\
-            'grid_logage_for_density':grid_logage_for_density, 'grid_logage_for_density_func':grid_logage_for_density,\
-            'grid_Mbol':grid_Mbol, 'grid_Mbol_func':grid_Mbol_func,\
-            'grid_mass_density':grid_mass_density,\
+    return {'grid_G_Mbol':grid_G_Mbol, 'grid_G_Mbol_func':grid_G_Mbol_func,
+            'grid_bp_rp':grid_bp_rp, 'grid_bp_rp_func':grid_bp_rp_func,
+            'mass_array':mass_array, 'logg':logg, 'age':age, 'age_cool':age_cool,
+            'logteff':logteff, 'Mbol':Mbol, 'density':density,
+            'G_fontaine':G_fontaine, 'bp_rp_fontaine':bp_rp_fontaine,
+            'grid_logage':grid_logage, 'grid_logage_func':grid_logage_func,
+            'grid_mass':grid_mass, 'grid_mass_func':grid_mass_func,
+            'grid_density':grid_density, 'grid_density_func':grid_density_func,
+            'grid_teff':grid_teff, 'grid_teff_func':grid_teff_func,
+            'grid_logage_for_density':grid_logage_for_density, 'grid_logage_for_density_func':grid_logage_for_density_func,
+            'grid_Mbol':grid_Mbol, 'grid_Mbol_func':grid_Mbol_func,
+            'grid_mass_density':grid_mass_density,
             'grid_bprp_func':grid_bprp_func, 'grid_G_func':grid_G_func}
 
 
