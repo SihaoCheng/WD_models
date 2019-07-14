@@ -8,12 +8,9 @@ This package also contains the functions to read a single cooling track.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from astropy.io import ascii, votable
 from astropy.table import Table, vstack, hstack
-import os, sys
-from astropy.io import fits
 from scipy.interpolate import interp1d, interp2d, CloughTocher2DInterpolator, griddata, LinearNDInterpolator
-from scipy.signal import fftconvolve
+
 
 #----------------------------------------------------------------------------------------------------   
 
