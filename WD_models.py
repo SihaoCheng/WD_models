@@ -380,7 +380,7 @@ def main(spec_type, model, logg_func=None):
     return {'grid_G_Mbol':grid_G_Mbol, 'grid_G_Mbol_func':grid_G_Mbol_func,
             'grid_bp_rp':grid_bp_rp, 'grid_bp_rp_func':grid_bp_rp_func,
             'mass_array':mass_array, 'logg':logg, 'age':age, 'age_cool':age_cool,
-            'logteff':logteff, 'Mbol':Mbol, 'G':G, 'bp_rp':bp_rp, 'cooling_rate':cooling_rate,
+            'logteff':logteff, 'Mbol':Mbol, 'G':G, 'bp_rp':bp_rp, 'cool_rate':cool_rate,
             'grid_mass':grid_mass, 'grid_mass_func':grid_mass_func,
             'grid_logg':grid_logg, 'grid_logg_func':grid_logg_func,
             'grid_logage':grid_logage, 'grid_logage_func':grid_logage_func,
