@@ -330,8 +330,8 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
                 logMH       = Cool['LogMHtot']
                 logHeBuf    = Cool['LogHeBuf']
                 logr        = np.log10(Cool['R/R_sun'])
-                L_LH       = np.log10(Cool['L.H.[erg/s)'] / 3.828e33)
-                L_PS       = np.log10(Cool['Sep.Fase[erg/s]'] / 3.828e33)
+                L_LH        = np.log10(Cool['L.H.[erg/s)'] / 3.828e33)
+                L_PS        = np.log10(Cool['Sep.Fase[erg/s]'] / 3.828e33)
                 #/M^dot, Masa_HFC, Masa_HeFC 
     
     # BaSTI model
@@ -416,8 +416,8 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
             logMH       = Cool['LogMHtot']
             logHeBuf    = Cool['LogHeBuf']
             logr        = np.log10(Cool['R/R_sun'])
-            L_LH       = np.log10(Cool['L.H.[erg/s)'] / 3.828e33)
-            L_PS       = np.log10(Cool['Sep.Fase[erg/s]'] / 3.828e33)
+            L_LH        = np.log10(Cool['L.H.[erg/s)'] / 3.828e33)
+            L_PS        = np.log10(Cool['Sep.Fase[erg/s]'] / 3.828e33)
             #/M^dot, Masa_HFC, Masa_HeFC 
             
     # massive MESA model (Lauffer et al. 2019)
