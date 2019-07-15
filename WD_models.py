@@ -337,7 +337,7 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
     # BaSTI model
     for mass in ['054','055','061','068','077','087','100','110','120']:
         if ( normal_mass_model == 'BaSTI' and int(mass)/100 < mass_separation_2 ) or \
-           ( higm_mass_model == 'BaSTI' and int(mass)/100 > mass_separation_2 ):
+           ( high_mass_model == 'BaSTI' and int(mass)/100 > mass_separation_2 ):
             Cool = Table.read('models/BaSTI/'+'COOL'+mass+'BaSTIfinale'+spec_suffix2+'sep.sdss',
                               format='ascii') 
             Cool = Cool[(Cool['log(Teff)']>tmin)*(Cool['log(Teff)']<tmax)][::1]#len(Cool)//100
