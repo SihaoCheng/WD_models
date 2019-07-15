@@ -310,7 +310,7 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
             if int(mass)/100 < mass_separation_2:
                 Cool = Table.read('models/Camisassa_2017_DB_CO/Z002/'+mass+'DB.trk', format='ascii') 
                 Cool = Cool[(Cool['LOG(TEFF)']>tmin)*(Cool['LOG(TEFF)']<tmax)][::1]
-                Cool.sort('Log(edad/Myr)')
+                #Cool.sort('Log(edad/Myr)')
                 mass_array  = np.concatenate(( mass_array, np.ones(len(Cool))*int(mass)/100 ))
                 logg        = np.concatenate(( logg, smooth(np.array(Cool['Log(grav)'])) ))
                 age         = np.concatenate(( age, (10**smooth(np.array(Cool['Log(edad/Myr)'])) - \
@@ -321,17 +321,17 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
                 logteff     = np.concatenate(( logteff, smooth(np.array(Cool['LOG(TEFF)'])) ))
                 Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * smooth(np.array(Cool['LOG(L)'])) ))
                 # additional
-                logT_c      = Cool['T_C'] + 6
+                logT_c      = Cool['T_c'] + 6
                 logrho_c    = Cool['Ro_c']
-                XH_c        = Cool['H_c']
+                XH_c        = Cool['Hc']
                 XHe_c       = Cool['Hec']
                 mass_accurate= Cool['Masa']
                 logL_nu     = Cool['Log(Lnu)']
                 logMH       = Cool['LogMHtot']
                 logHeBuf    = Cool['LogHeBuf']
                 logr        = np.log10(Cool['R/R_sun'])
-                L_LH        = np.log10(Cool['L.H.[erg/s)'] / 3.828e33)
-                L_PS        = np.log10(Cool['Sep.Fase[erg/s]'] / 3.828e33)
+                L_LH        = Cool['L.H.[erg/s)]'] / 3.828e33
+                L_PS        = Cool['Sep.Fase[erg/s]'] / 3.828e33
                 #/M^dot, Masa_HFC, Masa_HeFC 
     
     # BaSTI model
@@ -396,7 +396,7 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
         for mass in ['110','116','122','129']:
             Cool = Table.read('models/ONeWDs/'+mass+'_'+spec_suffix2+'.trk',format='ascii') 
             Cool = Cool[(Cool['LOG(TEFF)']>tmin)*(Cool['LOG(TEFF)']<tmax)][::1]
-            Cool.sort('Log(edad/Myr)')
+            #Cool.sort('Log(edad/Myr)')
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool))*int(mass)/100 ))
             logg        = np.concatenate(( logg, smooth(np.array(Cool['Log(grav)'])) ))
             age         = np.concatenate(( age, (10**smooth(np.array(Cool['Log(edad/Myr)'])) - \
@@ -407,17 +407,17 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
             logteff     = np.concatenate(( logteff, smooth(np.array(Cool['LOG(TEFF)'])) ))
             Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * smooth(np.array(Cool['LOG(L)'])) ))
             # additional
-            logT_c      = Cool['T_C'] + 6
+            logT_c      = Cool['T_c'] + 6
             logrho_c    = Cool['Ro_c']
-            XH_c        = Cool['H_c']
+            XH_c        = Cool['Hc']
             XHe_c       = Cool['Hec']
             mass_accurate= Cool['Masa']
             logL_nu     = Cool['Log(Lnu)']
             logMH       = Cool['LogMHtot']
             logHeBuf    = Cool['LogHeBuf']
             logr        = np.log10(Cool['R/R_sun'])
-            L_LH        = np.log10(Cool['L.H.[erg/s)'] / 3.828e33)
-            L_PS        = np.log10(Cool['Sep.Fase[erg/s]'] / 3.828e33)
+            L_LH        = Cool['L.H.[erg/s)]'] / 3.828e33
+            L_PS        = Cool['Sep.Fase[erg/s]'] / 3.828e33
             #/M^dot, Masa_HFC, Masa_HeFC 
             
     # massive MESA model (Lauffer et al. 2019)
@@ -536,8 +536,6 @@ DB_MESA         = main('Fontaine2001', 'MESA', 'DB',)
 # get BaSTI logg_func
 logg_func_DA_thick_CO   = interp_xy_z_func(z=DA_thick_CO['logg'], 
                                            x=DA_thick_CO['logteff'], y=DA_thick_CO['mass_array'])
-logg_func_DA_thin_CO    = interp_xy_z_func(z=DA_thin_CO['logg'], 
-                                           x=DA_thin_CO['logteff'], y=DA_thin_CO['mass_array'])
 logg_func_DB_CO         = interp_xy_z_func(z=DB_CO['logg'], 
                                            x=DB_CO['logteff'], y=DB_CO['mass_array'])
 
