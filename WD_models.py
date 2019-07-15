@@ -247,7 +247,7 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
     # Fontaine et al. 2001
     for mass in ['020','030','040','050','060','070','080','090','095','100','105',
                  '110','115','120','125','130']:
-        if int(mass)/100 < np.min(mass_separation_1, mass_separation_2):
+        if int(mass)/100 < np.min((mass_separation_1, mass_separation_2)):
             f       = open('models/Fontaine_AllSequences/CO_'+mass+spec_suffix)
             text    = f.read()
             example = "      1    57674.0025    8.36722799  7.160654E+08  4.000000E+05  4.042436E+33\n" + \
