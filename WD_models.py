@@ -123,22 +123,35 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
                         m_WD = [1.0124, 1.019, ...]. If true, the Fontaine2001 1.00 cooling track will be
                         used; if false, it will not be used because it is too close to the MESA 1.0124 track.
     '''
-    logg        = np.zeros(0)
-    age         = np.zeros(0) 
-    age_cool    = np.zeros(0)
-    logteff     = np.zeros(0)
-    mass_array  = np.zeros(0)
-    Mbol        = np.zeros(0)
-
-    IFMR        = interp1d((0.19, 0.3, 0.4, 0.50, 0.55, 0.65, 0.75, 0.85, 1.0, 1.25, 1.35),
-                           (0.3, 0.5, 0.7, 0.95, 1, 2, 3, 3.5, 5, 8, 9),
-                           fill_value = 0, bounds_error=False) # mass_WD, mass_ini
-    t_index     = -3
-
+    # define some alias of model names
+    if normal_mass_model == 'a001':
+        normal_mass_model = 'Althaus_001'
+    if normal_mass_model == 'a0001':
+        normal_mass_model = 'Althaus_0001'
+    if normal_mass_model == 'f':
+        normal_mass_model = 'Fontaine2001'
+    if normal_mass_model == 'c':
+        normal_mass_model = 'Camisassa2017'
+    if normal_mass_model == 'b':
+        normal_mass_model = 'BaSTI'
+    if normal_mass_model == 'b2':
+        normal_mass_model = 'BaSTI_2'
+    if normal_mass_model == 'b4':
+        normal_mass_model = 'BaSTI_4'
+    
+    if high_mass_model == 'f':
+        high_mass_model = 'Fontaine2001'
+    if high_mass_model == 'b':
+        high_mass_model = 'BaSTI'
+    if high_mass_model == 'm':
+        high_mass_model = 'MESA'
+    if high_mass_model == 'o':
+        high_mass_model = 'ONe'
+    
     # determine which cooling tracks in a model to read
-    mass_separation_1 = 1.4 # when using only Fontaine2001 model
-    mass_separation_2 = 1.4 # when using only Fontaine2001 model
-    if 'Althaus2010' in normal_mass_model or normal_mass_model == 'Camisassa2017' or \
+    mass_separation_1 = 0.45
+    mass_separation_2 = 0.99
+    if 'Althaus2010_' in normal_mass_model or normal_mass_model == 'Camisassa2017' or \
        normal_mass_model == 'PG':
         if for_comparison == True:
             mass_seperation_1 = 0.501
@@ -148,7 +161,7 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
         mass_seperation_1 = 0.501
     
     if high_mass_model == 'Fontaine2001':
-        mass_separation_2 = 1.4
+        mass_seperation_2 = 0.99
     if high_mass_model == 'ONe':
         mass_separation_2 = 1.09
     if high_mass_model == 'MESA':
@@ -165,11 +178,27 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
     else:
         spec_suffix = '0204'; spec_suffix2 = 'DA'; spec_suffix3 = 'H'
     
-    # read cooling tracks
+    # define the initial-final mass relation for calculating the total age for some models
+    IFMR        = interp1d((0.19, 0.3, 0.4, 0.50, 0.55, 0.65, 0.75, 0.85, 1.0, 1.25, 1.35),
+                           (0.3, 0.5, 0.7, 0.95, 1, 2, 3, 3.5, 5, 8, 9),
+                           fill_value = 0, bounds_error=False) # mass_WD, mass_ini
+    t_index     = -3
+    
+    # initialize data points of cooling tracks
+    logg        = np.zeros(0)
+    age         = np.zeros(0) 
+    age_cool    = np.zeros(0)
+    logteff     = np.zeros(0)
+    mass_array  = np.zeros(0)
+    Mbol        = np.zeros(0)
+    
+    # read data from cooling models
     # Fontaine et al. 2001
     for mass in ['020','030','040','050','060','070','080','090','095','100','105',
                  '110','115','120','125','130']:
-        if int(mass)/100 < np.min((mass_separation_1, mass_separation_2)):
+        if int(mass)/100 < mass_separation_1 or \
+           (normal_mass_model == 'Fontaine2001' and int(mass)/100 < mass_separation_2 ) or \
+           (high_mass_model == 'Fontaine2001' and int(mass)/100 > mass_separation_2 ):
             f       = open('models/Fontaine_AllSequences/CO_' + mass + spec_suffix)
             text    = f.read()
             example = "      1    57674.0025    8.36722799  7.160654E+08  4.000000E+05  4.042436E+33\n"+\
@@ -218,13 +247,13 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
             Cool = Cool[(Cool['log(TEFF)'] > tmin) * (Cool['log(TEFF)'] < tmax)][::1]
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass) / 1000 ))
             logg        = np.concatenate(( logg, smooth(np.array(Cool['Log(grav)'])) ))
-            age         = np.concatenate(( age, Cool['age/Myr)'] * 1e6 + \
+            age         = np.concatenate(( age, Cool['age/Myr'] * 1e6 + \
                                                 (IFMR(int(mass)/1000))**(t_index) * 1e10 ))
-            age_cool    = np.concatenate(( age_cool, Cool['age/Myr)'] * 1e6 ))
+            age_cool    = np.concatenate(( age_cool, Cool['age/Myr'] * 1e6 ))
             logteff     = np.concatenate(( logteff, smooth(np.array(Cool['log(TEFF)'])) ))
             Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * smooth(np.array(Cool['log(L)'])) ))
             # additional
-            logT_c      = Cool['logT_C']
+            logT_c      = Cool['logT_c']
             logrho_c    = Cool['logRo_c']
             mass_accurate= Cool['Mass']
             logL_nu     = Cool['Log(Lnu)']
@@ -355,17 +384,20 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
     # massive MESA model (Lauffer et al. 2019)
     if high_mass_model == 'MESA': 
         if spec_suffix3 == 'He':
-            mesa_masslist = ['1.0124','1.019','1.0241','1.0358','1.0645','1.0877',
-                             '1.1102','1.1254','1.1313','1.1322','1.1466','1.151',
-                             '1.2163','1.22','1.2671','1.3075']
+#             mesa_masslist = ['1.0124','1.019','1.0241','1.0358','1.0645','1.0877',
+#                              '1.1102','1.1254','1.1313','1.1322','1.1466','1.151',
+#                              '1.2163','1.22','1.2671','1.3075']
+            mesa_masslist = ['1.0124','1.0241','1.0358','1.0645','1.0877',
+                             '1.1102','1.1313','1.151',
+                             '1.2163','1.2671','1.3075']
         else:
-            mesa_masslist = ['1.0124','1.019','1.0241','1.0358','1.0645','1.0877',
-                             '1.1102','1.125','1.1309','1.1322','1.1466','1.151',
-                             '1.2163','1.22','1.2671','1.3075']
+            mesa_masslist = ['1.0124','1.0241','1.0358','1.0645','1.0877',
+                             '1.1102','1.1309','1.1466',
+                             '1.2163','1.2671','1.3075']
         for mass in mesa_masslist:
             Cool = Table.read('models/MESA_model/' + spec_suffix3 + '_atm-M' + mass + '.dat',
                               format='csv', header_start=1, data_start=2) 
-            Cool = Cool[(Cool['# log Teff [K]'] > tmin) * (Cool['# log Teff [K]'] < tmax)][::1]
+            Cool = Cool[(Cool['# log Teff [K]'] > tmin) * (Cool['# log Teff [K]'] < tmax)][::10]
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * float(mass) ))
             logg        = np.concatenate(( logg, np.array(Cool['log g [cm/s^2]']) ))
             age         = np.concatenate(( age, Cool['total age [Gyr]'] * 1e9 ))
@@ -470,7 +502,7 @@ def interp_xy_z_func(x, y, z, interp_type='linear'):
 #----------------------------------------------------------------------------------------------------   
 
 
-def read_and_get_mappings(normal_mass_model, high_mass_model, spec_type):
+def main(normal_mass_model, high_mass_model, spec_type):
     # make atmosphere grid and mapping: logteff, logg --> bp-rp,  G-Mbol
     grid_G_Mbol, grid_G_Mbol_func = interp_atm(spec_type, 'G_Mbol', 
                                                T_logg_grid=(tmin,tmax,dt,loggmin,loggmax,dlogg))
@@ -549,28 +581,28 @@ def read_and_get_mappings(normal_mass_model, high_mass_model, spec_type):
 
 tmin = 3.5; tmax = 5.1; dt = 0.01
 loggmin = 6.5; loggmax = 9.6; dlogg = 0.01
-HR_grid             = (-0.6, 1.5, 0.002, 10, 15, 0.01) # bp_rp, G
+HR_grid             = (-0.6, 1.5, 0.002, 8, 16, 0.01) # bp_rp, G
 interp_type         = 'linear'
 interp_type_atm     = 'linear'
 interp_bprp_factor  = 5
 
 # Fontaine et al. 2001 (CO), Camisassa et al. 2019 (ONe), PG, and Lauffer et al. 2019 (MESA) models
-DA_thick_CO     = main('Fontaine2001', 'Fontaine2001', 'DA_thick')
-DB_CO           = main('Fontaine2001', 'Fontaine2001', 'DB')
-DA_thick_ONe    = main('Fontaine2001', 'ONe', 'DA_thick')
-DB_ONe          = main('Fontaine2001', 'ONe', 'DB')
-DA_thick_LPONe  = main('Althaus2010', 'ONe', 'DA_thick')
-DB_LPONe        = main('Camisassa2017', 'ONe', 'DB')
-DB_PGONe        = main('PG', 'ONe', 'DB')
-DA_thick_MESA   = main('Fontaine2001', 'MESA', 'DA_thick')
-DB_MESA         = main('Fontaine2001', 'MESA', 'DB')
+# DA_thick_CO     = main('Fontaine2001', 'Fontaine2001', 'DA_thick')
+# DB_CO           = main('Fontaine2001', 'Fontaine2001', 'DB')
+# DA_thick_ONe    = main('Fontaine2001', 'ONe', 'DA_thick')
+# DB_ONe          = main('Fontaine2001', 'ONe', 'DB')
+# DA_thick_LPONe  = main('Althaus2010_001', 'ONe', 'DA_thick')
+# DB_LPONe        = main('Camisassa2017', 'ONe', 'DB')
+# DB_PGONe        = main('PG', 'ONe', 'DB')
+# DA_thick_MESA   = main('Fontaine2001', 'MESA', 'DA_thick')
+# DB_MESA         = main('Fontaine2001', 'MESA', 'DB')
 
 # Salaris et al. 2010 (Phase_Sep) BaSTI models. 4 and 2 are alpha-enhanced models.
-DA_thick_Phase_Sep  = main('BasTI', 'ONe', 'DA_thick')
-DB_Phase_Sep        = main('BasTI', 'ONe', 'DB')
+# DA_thick_Phase_Sep  = main('BasTI', 'ONe', 'DA_thick')
+# DB_Phase_Sep        = main('BasTI', 'ONe', 'DB')
 
-DA_thick_Phase_Sep_4= main('BasTI_4', 'ONe', 'DA_thick')
-DB_Phase_Sep_4      = main('BasTI_4', 'ONe', 'DB')
+# DA_thick_Phase_Sep_4= main('BasTI_4', 'ONe', 'DA_thick')
+# DB_Phase_Sep_4      = main('BasTI_4', 'ONe', 'DB')
 
-DA_thick_Phase_Sep_2= main('BasTI_2', 'ONe', 'DA_thick')
-DB_Phase_Sep_2      = main('BasTI_2', 'ONe', 'DB')
+# DA_thick_Phase_Sep_2= main('BasTI_2', 'ONe', 'DA_thick')
+# DB_Phase_Sep_2      = main('BasTI_2', 'ONe', 'DB')
