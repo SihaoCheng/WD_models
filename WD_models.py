@@ -121,12 +121,13 @@ def interp_atm(spec_type, color, T_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01),
         return interp(logteff, logg, G-Mbol)
 
 
-def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, 
+def read_cooling_tracks(normal_mass_model, high_mass_model, spec_type, 
                           logg_func=None, for_comparison=False):
-    """
-    Read the cooling models and store the following information of different
-    cooling tracks together in one numpy array: mass, logg, age, age_cool, 
-    logteff, Mbol
+    """ Read a set of cooling tracks
+    
+    This function reads the cooling models and stack together the data points
+    of mass, logg, age, age_cool, logteff, and Mbol from different cooling
+    tracks.
     
     Args:
     normal_mass_model:  string. One of the following: 
@@ -159,7 +160,21 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type,
                         used because it is too close to the MESA 1.0124 track.
     
     Returns:
-        mass_array, logg, age, age_cool, logteff, and Mbol of cooling tracks
+        stacked data points from a set of cooling tracks.
+        mass_array: 1d-array. The mass of WD in unit of solar mass. I only read
+                    one value for a cooling track, not tracking the mass change.
+        logg:       1d-array. in cm/s^2
+        age:        1d-array. The total age of the WD in yr. Some are read
+                    directly from the cooling tracks, but others are calculated
+                    by assuming an initial--final mass relation (IFMR) of the WD
+                    and adding the rough main-sequence age to the cooling age.
+        age_cool:   1d-array. The cooling age of the WD in yr.
+        logteff:    1d-array. The logarithm effective temperature of the WD in
+                    Kelvin (K).
+        Mbol:       1d-array. The absolute bolometric magnitude of the WD. Many
+                    are converted from the log(L/Lsun) or log(L), where I adopt:
+                        Mbol_sun = 4.75
+                        Lsun = 3.828e33 erg/s
     
     """
     # determine which cooling tracks in a model to read
@@ -303,8 +318,11 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type,
             if int(mass)/100 < mass_separation_2:
                 Cool = Table.read('models/Camisassa_2017_DB_CO/Z002/' + mass +
                                   'DB.trk', format='ascii') 
+                dn = 1
+                if int(mass)/100 > 0.95:
+                    dn = 50
                 Cool = Cool[(Cool['LOG(TEFF)'] > tmin) *
-                            (Cool['LOG(TEFF)'] < tmax)][::1]
+                            (Cool['LOG(TEFF)'] < tmax)][::dn]
                 #Cool.sort('Log(edad/Myr)')
                 mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
                 logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
@@ -491,26 +509,28 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type,
            logteff[select], Mbol[select]
 
 
-def HR_to_para(bp_rp, G, z, age, HR_grid=(-0.6, 1.5, 0.002, 10, 15, 0.01),
-               interp_type='linear'):
+def interp_HR_to_para(bp_rp, G, para, age, 
+                      HR_grid=(-0.6, 1.5, 0.002, 10, 15, 0.01),
+                      interp_type='linear'):
     """
-    Interpolate the mapping of (BR-RP, G) --> z, based on the data points from
-    many cooling tracks read from a model, and get the value of z on the grid of
-    H-R coordinates. We set select only G<16 and G>8 to avoid the turning of DA
-    cooling track which leads to multi-value mapping.
+    Interpolate the mapping of (BR-RP, G) --> para, based on the data points 
+    from many cooling tracks read from a model, and get the value of z on the
+    grid of H-R coordinates. We set select only G < 16 and G > 8 to avoid the 
+    turning of DA cooling track which leads to multi-value mapping.
     
     Args:
         bp_rp:      1d-array. The Gaia color BP-RP
         G:          1d-array. The absolute magnitude of Gaia G band
-        z:          1d-array. The target parameter for mapping (BP-RP, G) --> z
+        para:       1d-array. The target parameter for mapping (BP-RP, G) --> para
         HR_grid:    in the form of (xmin, xmax, dx, ymin, ymax, dy), the grid 
                     information of the H-R diagram coordinates BP-RP and G
         age:        1d-array. The WD age. Only used for the purpose of selecting 
                     non-NaN data points.
                   
     Returns:
-        grid_z:     the grid ...
-        grid_z_func:the function ...
+        grid_z:     2d-array. The values of z on the grid of HR diagram
+        HR_to_z:    Function. The mapping of (BP-RP, G) --> z
+    
     """
     # define the grid of H-R diagram
     grid_x, grid_y = np.mgrid[HR_grid[0]:HR_grid[1]:HR_grid[2],
@@ -518,38 +538,40 @@ def HR_to_para(bp_rp, G, z, age, HR_grid=(-0.6, 1.5, 0.002, 10, 15, 0.01),
     grid_x *= interp_bprp_factor
     
     # select only not-NaN data points
-    selected    = ~np.isnan(bp_rp + G + age + z) * (G < 16) * (G > 8)
+    selected    = ~np.isnan(bp_rp + G + age + para) * (G < 16) * (G > 8)
     
     # get the value of z on a H-R diagram grid and the interpolated mapping
-    grid_z      = griddata(np.array((bp_rp[selected]*interp_bprp_factor,
+    grid_para   = griddata(np.array((bp_rp[selected]*interp_bprp_factor,
                                      G[selected])).T, 
-                           z[selected], (grid_x, grid_y), method=interp_type)
-    grid_z_func = interpolate_2d(bp_rp[selected], G[selected], z[selected],
+                           para[selected], (grid_x, grid_y), method=interp_type)
+    HR_to_para  = interpolate_2d(bp_rp[selected], G[selected], para[selected],
                                  interp_type)
     
     # return both the grid data and interpolated mapping
-    return grid_z, grid_z_func
+    return grid_para, HR_to_para
 
 
 def interp_xy_z(x, y, z, xy_grid, xfactor=1, interp_type='linear'):
-    """Interpolate the mapping (x,y) --> z
+    """Interpolate the mapping (x, y) --> z
     
-    Interpolate the mapping (x,y)--> z, based on a series of x, y, and z values,
-    and get the value of z on the grid of (x,y) coordinates. This function is a 
-    generalized version of HR_to_para, allowing any x and y values.
+    Interpolate the mapping (x, y) --> z, based on a series of x, y, and z
+    values, and get the value of z on the grid of (x,y) coordinates. This
+    function is a generalized version of HR_to_para, allowing any x and y 
+    values.
     
     Args:
-        x:          1d-array. The x in the mapping (x,y) --> z
-        y:          1d-array. The y in the mapping (x,y) --> z
-        z:          1d-array. The target parameter for mapping (x,y) --> z
+        x:          1d-array. The x in the mapping (x, y) --> z
+        y:          1d-array. The y in the mapping (x, y) --> z
+        z:          1d-array. The target parameter for mapping (x, y) --> z
         xy_grid:    in the form of (xmin, xmax, dx, ymin, ymax, dy), the grid 
                     information of x and y
         xfactor:    Number. For balancing the interval of interpolation between
                     x and y.
     
     Returns:
-        grid_z:     the grid ...
-        grid_z_func:the function ...
+        grid_z:     2d-array. The values of z on the grid of (x, y)
+        xy_to_z:    Function. The mapping of (x, y) --> z
+    
     """
     # define the grid of (x,y)
     grid_x, grid_y = np.mgrid[xy_grid[0]:xy_grid[1]:xy_grid[2],
@@ -562,38 +584,39 @@ def interp_xy_z(x, y, z, xy_grid, xfactor=1, interp_type='linear'):
     # get the value of z on a (x,y) grid and the interpolated mapping
     grid_z      = griddata(np.array((x[selected]*xfactor, y[selected])).T,
                            z[selected], (grid_x, grid_y), method=interp_type)
-    grid_z_func = interpolate_2d(x[selected], y[selected], z[selected],
+    xy_to_z     = interpolate_2d(x[selected], y[selected], z[selected],
                                  interp_type)
     
     # return both the grid data and interpolated mapping
-    return grid_z, grid_z_func
+    return grid_z, xy_to_z
   
 
 def interp_xy_z_func(x, y, z, interp_type='linear'):
-    """Interpolate the mapping (x,y) --> z
+    """Interpolate the mapping (x, y) --> z
     
-    Interpolate the mapping (x,y)--> z, based on a series of x, y, and z values. 
-    This function is a generalized version of HR_to_para, allowing any x and y
-    values, but does not calculate the grid values as HR_to_para and
+    Interpolate the mapping (x, y) --> z, based on a series of x, y, and z
+    values. This function is a generalized version of HR_to_para, allowing any
+    x and y values, but does not calculate the grid values as HR_to_para and
     interp_xy_z do.
     
     Args:
         x:              1d-array. The Gaia color BP-RP
         y:              1d-array. The absolute magnitude of Gaia G band
-        z:              1d-array. The target parameter for mapping (x,y) --> z
+        z:              1d-array. The target parameter for mapping (x, y) --> z
     
     Returns:
-        grid_z_func:    the function ...
+        xy_to_z:        Function. The mapping of (x, y) --> z
+        
     """
     # select only not-NaN data points
     selected    = ~np.isnan(x + y + z)
     
     # get the interpolated mapping
-    grid_z_func = interpolate_2d(x[selected], y[selected], z[selected],
+    xy_to_z     = interpolate_2d(x[selected], y[selected], z[selected],
                                  interp_type)
     
-    # return the interpolated mapping
-    return grid_z_func
+    # return only the interpolated mapping
+    return xy_to_z
 
 
 #-------------------------------------------------------------------------------  
@@ -606,6 +629,63 @@ def interp_xy_z_func(x, y, z, interp_type='linear'):
 
 def load_model(normal_mass_model, high_mass_model, spec_type, 
                interp_type_atm='linear', interp_type='linear'):
+    """ Load a set of cooling tracks and interpolate the mapping to HR diagram
+    
+    This function is the main function of the WD_models package. 
+    First, it first reads the mass, logg, total age (if it exists), cooling age,
+    logteff, and absolute bolometric magnitude Mbol from white dwarf cooling
+    models with the function 'read_cooling_tracks'.
+    Then, it interpolate the mapping between parameters such as logg, teffGaia photometry
+    
+    Args:
+    normal_mass_model:  string. One of the following: 
+                        'Fontaine2001'    (http://www.astro.umontreal.ca/~bergeron/CoolingModels/),
+                        'Althaus2010_001', 'Althaus2010_0001'
+                                          (Z=0.01 and Z=0.001, only for DA, 
+                                           http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html),
+                        'Camisassa2017'   (only for DB, 
+                                           http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html),
+                        'BaSTI', 'BaSTI_2' (Z=0.02), 'BaSTI_4' (Z=0.04) 
+                                          (Salaris et al. 2010, 
+                                           http://basti.oa-teramo.inaf.it),
+                        'PG'              (only for DB).
+    high_mass_model:    string. One of the following: 
+                        'Fontaine2001' (http://www.astro.umontreal.ca/~bergeron/CoolingModels/),
+                        'ONe' (Camisassa et al. 2019, 
+                               http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html),
+                        'MESA' (Lauffer et al. 2019),
+                        'BaSTI' (Salaris et al. 2010, http://basti.oa-teramo.inaf.it)
+    spec_type:          string. One of the following:
+                        'DA_thick', 'DA_thin', 'DB'
+    logg_func:          a function for (logteff, mass) --> logg. 
+                        It is necessary only for BaSTI models, because the BaSTI
+                        models do not directly provide log g information.
+    for_comparison:     Bool. If true, more cooling tracks from different models
+                        will be used. E.g., the Fontaine2001 model has m_WD = 
+                        [..., 0.95, 1.00, ...], and the MESA model has m_WD = 
+                        [1.0124, 1.019, ...]. If true, the Fontaine2001 1.00Msun
+                        cooling track will be used; if false, it will not be 
+                        used because it is too close to the MESA 1.0124 track.
+    
+    Returns:
+        stacked data points from a set of cooling tracks.
+        mass_array: 1d-array. The mass of WD in unit of solar mass. I only read
+                    one value for a cooling track, not tracking the mass change.
+        logg:       1d-array. in cm/s^2
+        age:        1d-array. The total age of the WD in yr. Some are read
+                    directly from the cooling tracks, but others are calculated
+                    by assuming an initial--final mass relation (IFMR) of the WD
+                    and adding the rough main-sequence age to the cooling age.
+        age_cool:   1d-array. The cooling age of the WD in yr.
+        logteff:    1d-array. The logarithm effective temperature of the WD in
+                    Kelvin (K).
+        Mbol:       1d-array. The absolute bolometric magnitude of the WD. Many
+                    are converted from the log(L/Lsun) or log(L), where I adopt:
+                        Mbol_sun = 4.75
+                        Lsun = 3.828e33 erg/s
+                        
+    """
+    
     # define some alias of model names
     if normal_mass_model == 'a001':
         normal_mass_model = 'Althaus_001'
@@ -636,20 +716,22 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
         high_mass_model = 'ONe'
     
     # make atmosphere grid and mapping: logteff, logg --> bp-rp,  G-Mbol
-    grid_G_Mbol, grid_G_Mbol_func = interp_atm(spec_type, 'G_Mbol', 
-                                               T_logg_grid=(tmin,tmax,dt,loggmin,loggmax,dlogg),
-                                               interp_type_atm=interp_type_atm)
-    grid_bp_rp, grid_bp_rp_func   = interp_atm(spec_type, 'bp_rp', 
-                                               T_logg_grid=(tmin,tmax,dt,loggmin,loggmax,dlogg),
-                                               interp_type_atm=interp_type_atm)
+    grid_logteff_logg_to_G_Mbol, logteff_logg_to_G_Mbol = interp_atm(
+        spec_type, 'G_Mbol', 
+        T_logg_grid=(tmin,tmax,dt,loggmin,loggmax,dlogg),
+        interp_type_atm=interp_type_atm)
+    grid_logteff_logg_to_bp_rp, logteff_logg_to_bp_rp = interp_atm(
+        spec_type, 'bp_rp', 
+        T_logg_grid=(tmin,tmax,dt,loggmin,loggmax,dlogg),
+        interp_type_atm=interp_type_atm)
     
     
     # get for logg_func BaSTI models
     if 'BaSTI' in normal_mass_model or 'BaSTI' in high_mass_model:
         mass_array_Fontaine2001, logg_Fontaine2001, _, _, logteff_Fontaine2001, _\
-                    = open_evolution_tracks('Fontaine2001',
-                                            'Fontaine2001',
-                                            spec_type)
+                    = read_cooling_tracks('Fontaine2001',
+                                          'Fontaine2001',
+                                          spec_type)
         logg_func   = interp_xy_z_func(x=logteff_Fontaine2001,
                                        y=mass_array_Fontaine2001,
                                        z=logg_Fontaine2001)
@@ -659,14 +741,14 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
     
     # Open Evolution Tracks
     mass_array, logg, age, age_cool, logteff, Mbol \
-                    = open_evolution_tracks(normal_mass_model, 
-                                            high_mass_model,
-                                            spec_type, logg_func)
+                    = read_cooling_tracks(normal_mass_model,
+                                          high_mass_model,
+                                          spec_type, logg_func)
     
 
     # Get Colour/Magnitude for Evolution Tracks
-    G       = grid_G_Mbol_func(logteff, logg) + Mbol
-    bp_rp   = grid_bp_rp_func(logteff, logg)
+    G       = logteff_logg_to_G_Mbol(logteff, logg) + Mbol
+    bp_rp   = logteff_logg_to_bp_rp(logteff, logg)
     
     
     # Calculate the Recipical of Cooling Rate (Cooling Time per BP-RP)
@@ -677,46 +759,46 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
     
     
     # Get Parameters on HR Diagram
-    grid_mass, grid_mass_func           = HR_to_para(bp_rp, G, mass_array, 
-                                                     age, HR_grid, interp_type)
-    grid_logg, grid_logg_func           = HR_to_para(bp_rp, G, logg, 
-                                                     age, HR_grid, interp_type)
-    grid_age, grid_age_func             = HR_to_para(bp_rp, G, age, 
-                                                     age, HR_grid, interp_type)
-    grid_age_cool, grid_age_cool_func   = HR_to_para(bp_rp, G, age_cool, 
-                                                     age, HR_grid, interp_type)
-    grid_logteff, grid_logteff_func     = HR_to_para(bp_rp, G, logteff, 
-                                                     age, HR_grid, interp_type)
-    grid_Mbol, grid_Mbol_func           = HR_to_para(bp_rp, G, Mbol, 
-                                                     age, HR_grid, interp_type)
+    grid_HR_to_mass, HR_to_mass         = interp_HR_to_para(bp_rp, G, mass_array, 
+                                                            age, HR_grid, interp_type)
+    grid_HR_to_logg, HR_to_logg         = interp_HR_to_para(bp_rp, G, logg, 
+                                                            age, HR_grid, interp_type)
+    grid_HR_to_age, HR_to_age           = interp_HR_to_para(bp_rp, G, age, 
+                                                            age, HR_grid, interp_type)
+    grid_HR_to_age_cool, HR_to_age_cool = interp_HR_to_para(bp_rp, G, age_cool, 
+                                                            age, HR_grid, interp_type)
+    grid_HR_to_logteff, HR_to_logteff   = interp_HR_to_para(bp_rp, G, logteff, 
+                                                            age, HR_grid, interp_type)
+    grid_HR_to_Mbol, HR_to_Mbol         = interp_HR_to_para(bp_rp, G, Mbol, 
+                                                            age, HR_grid, interp_type)
 #     row,col = grid_mass.shape
 #     grid_mass_density                     = np.concatenate((np.zeros((row,1)),
 #                                                             grid_mass[:,2:] - grid_mass[:,:-2],
 #                                                             np.zeros((row,1)) ), axis=1)
-    grid_cool_rate, grid_cool_rate_func = HR_to_para(bp_rp, G, cool_rate,
-                                                     age, HR_grid, interp_type)
+    grid_HR_to_cool_rate, HR_to_cool_rate=interp_HR_to_para(bp_rp, G, cool_rate,
+                                                            age, HR_grid, interp_type)
     # (mass, t_cool) --> bp-rp, G
-    grid_m_agecool_bprp_func            = interp_xy_z_func(mass_array, age_cool,
+    m_agecool_to_bprp                   = interp_xy_z_func(mass_array, age_cool,
                                                            bp_rp, interp_type )
-    grid_m_agecool_G_func               = interp_xy_z_func(mass_array, age_cool,
+    m_agecool_to_G                      = interp_xy_z_func(mass_array, age_cool,
                                                            G, interp_type )
     
     
     # Return a dictionary containing all the cooling track data points, 
     # interpolation functions and interpolation grids 
-    return {'grid_logteff_logg_to_G_Mbol':grid_G_Mbol,
-            'logteff_logg_to_G_Mbol':grid_G_Mbol_func,
-            'grid_logteff_logg_to_bp_rp':grid_bp_rp,
-            'logteff_logg_to_bp_rp':grid_bp_rp_func,
+    return {'grid_logteff_logg_to_G_Mbol':grid_logteff_logg_to_G_Mbol,
+            'logteff_logg_to_G_Mbol':logteff_logg_to_G_Mbol,
+            'grid_logteff_logg_to_bp_rp':grid_logteff_logg_to_bp_rp,
+            'logteff_logg_to_bp_rp':logteff_logg_to_bp_rp,
             'mass_array':mass_array, 'logg':logg, 'logteff':logteff,
             'age':age, 'age_cool':age_cool, 'cool_rate':cool_rate,
             'Mbol':Mbol, 'G':G, 'bp_rp':bp_rp,
-            'grid_HR_to_mass':grid_mass, 'HR_to_mass':grid_mass_func,
-            'grid_HR_to_logg':grid_logg, 'HR_to_logg':grid_logg_func,
-            'grid_HR_to_age':grid_age, 'HR_to_age':grid_age_func,
-            'grid_HR_to_age_cool':grid_age_cool, 'HR_to_age_cool':grid_age_cool_func,
-            'grid_HR_to_logteff':grid_logteff, 'HR_to_logteff':grid_logteff_func,
-            'grid_HR_to_Mbol':grid_Mbol, 'HR_to_Mbol':grid_Mbol_func,
-            'grid_HR_to_cool_rate':grid_cool_rate, 'HR_to_cool_rate':grid_cool_rate_func,
-            'm_agecool_to_bprp':grid_m_agecool_bprp_func, 
-            'm_agecool_to_G':grid_m_agecool_G_func}
+            'grid_HR_to_mass':grid_HR_to_mass, 'HR_to_mass':HR_to_mass,
+            'grid_HR_to_logg':grid_HR_to_logg, 'HR_to_logg':HR_to_logg,
+            'grid_HR_to_age':grid_HR_to_age, 'HR_to_age':HR_to_age,
+            'grid_HR_to_age_cool':grid_HR_to_age_cool, 'HR_to_age_cool':HR_to_age_cool,
+            'grid_HR_to_logteff':grid_HR_to_logteff, 'HR_to_logteff':HR_to_logteff,
+            'grid_HR_to_Mbol':grid_HR_to_Mbol, 'HR_to_Mbol':HR_to_Mbol,
+            'grid_HR_to_cool_rate':grid_HR_to_cool_rate, 'HR_to_cool_rate':HR_to_cool_rate,
+            'm_agecool_to_bprp':m_agecool_to_bprp, 
+            'm_agecool_to_G':m_agecool_to_G}
