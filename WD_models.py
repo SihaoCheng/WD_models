@@ -7,11 +7,12 @@ track.
 """
 
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+
+from astropy.table import Table
 from scipy.interpolate import CloughTocher2DInterpolator, LinearNDInterpolator
 from scipy.interpolate import griddata, interp1d
-from astropy.table import Table
 
 
 #-------------------------------------------------------------------------------   
