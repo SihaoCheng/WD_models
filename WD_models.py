@@ -8,8 +8,23 @@ This package also contains the functions to read a single cooling track.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from astropy.table import Table, vstack, hstack
+from astropy.table import Table
 from scipy.interpolate import interp1d, interp2d, CloughTocher2DInterpolator, griddata, LinearNDInterpolator
+
+
+#----------------------------------------------------------------------------------------------------   
+#
+#   Define some constants that will be used as parameters of the following functions
+#
+#----------------------------------------------------------------------------------------------------  
+
+
+tmin = 3.5; tmax = 5.1; dt = 0.01
+loggmin = 6.5; loggmax = 9.6; dlogg = 0.01
+HR_grid             = (-0.6, 1.5, 0.002, 8, 16, 0.01) # bp_rp, G
+interp_type         = 'linear'
+interp_type_atm     = 'linear'
+interp_bprp_factor  = 5
 
 
 #----------------------------------------------------------------------------------------------------   
@@ -25,6 +40,7 @@ def interpolate_2d(x, y, z, method):
     elif method == 'cubic':
         interpolator = CloughTocher2DInterpolator
     return interpolator((x,y), z, rescale=True)
+    #return interp2d(x, y, z, kind=method)
   
 
 def interp_atm(spec_type, color, T_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01), interp_type_atm='linear'):
@@ -123,31 +139,6 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
                         m_WD = [1.0124, 1.019, ...]. If true, the Fontaine2001 1.00 cooling track will be
                         used; if false, it will not be used because it is too close to the MESA 1.0124 track.
     '''
-    # define some alias of model names
-    if normal_mass_model == 'a001':
-        normal_mass_model = 'Althaus_001'
-    if normal_mass_model == 'a0001':
-        normal_mass_model = 'Althaus_0001'
-    if normal_mass_model == 'f':
-        normal_mass_model = 'Fontaine2001'
-    if normal_mass_model == 'c':
-        normal_mass_model = 'Camisassa2017'
-    if normal_mass_model == 'b':
-        normal_mass_model = 'BaSTI'
-    if normal_mass_model == 'b2':
-        normal_mass_model = 'BaSTI_2'
-    if normal_mass_model == 'b4':
-        normal_mass_model = 'BaSTI_4'
-    
-    if high_mass_model == 'f':
-        high_mass_model = 'Fontaine2001'
-    if high_mass_model == 'b':
-        high_mass_model = 'BaSTI'
-    if high_mass_model == 'm':
-        high_mass_model = 'MESA'
-    if high_mass_model == 'o':
-        high_mass_model = 'ONe'
-    
     # determine which cooling tracks in a model to read
     mass_separation_1 = 0.45
     mass_separation_2 = 0.99
@@ -356,7 +347,7 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
     if high_mass_model == 'ONe':
         for mass in ['110','116','122','129']:
             Cool = Table.read('models/ONeWDs/' + mass + '_' + spec_suffix2 + '.trk',format='ascii') 
-            Cool = Cool[(Cool['LOG(TEFF)'] > tmin) * (Cool['LOG(TEFF)'] < tmax)][::1]
+            Cool = Cool[(Cool['LOG(TEFF)'] > tmin) * (Cool['LOG(TEFF)'] < tmax)][::10]
             #Cool.sort('Log(edad/Myr)')
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass) / 100 ))
             logg        = np.concatenate(( logg, smooth(np.array(Cool['Log(grav)'])) ))
@@ -387,17 +378,25 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
 #             mesa_masslist = ['1.0124','1.019','1.0241','1.0358','1.0645','1.0877',
 #                              '1.1102','1.1254','1.1313','1.1322','1.1466','1.151',
 #                              '1.2163','1.22','1.2671','1.3075']
-            mesa_masslist = ['1.0124','1.0241','1.0358','1.0645','1.0877',
-                             '1.1102','1.1313','1.151',
+#                             ['1.0124','1.019','1.0241','1.0358','1.0645','1.0877',
+#                              '1.1102','1.125','1.1309','1.1322','1.1466','1.151',
+#                              '1.2163','1.22','1.2671','1.3075']
+            mesa_masslist = ['1.0124','1.0645',
+                             '1.1102','1.151',
                              '1.2163','1.2671','1.3075']
         else:
-            mesa_masslist = ['1.0124','1.0241','1.0358','1.0645','1.0877',
-                             '1.1102','1.1309','1.1466',
+            mesa_masslist = ['1.0124','1.0645',
+                             '1.1102','1.151',
                              '1.2163','1.2671','1.3075']
         for mass in mesa_masslist:
             Cool = Table.read('models/MESA_model/' + spec_suffix3 + '_atm-M' + mass + '.dat',
-                              format='csv', header_start=1, data_start=2) 
-            Cool = Cool[(Cool['# log Teff [K]'] > tmin) * (Cool['# log Teff [K]'] < tmax)][::10]
+                              format='csv', header_start=1, data_start=2)
+            dn = 70
+            if float(mass) > 1.2:
+                dn = 120
+            if float(mass) < 1.05:
+                dn = 10
+            Cool = Cool[(Cool['# log Teff [K]'] > tmin) * (Cool['# log Teff [K]'] < tmax)][::dn]
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * float(mass) ))
             logg        = np.concatenate(( logg, np.array(Cool['log g [cm/s^2]']) ))
             age         = np.concatenate(( age, Cool['total age [Gyr]'] * 1e9 ))
@@ -503,16 +502,43 @@ def interp_xy_z_func(x, y, z, interp_type='linear'):
 
 
 def main(normal_mass_model, high_mass_model, spec_type):
+    # define some alias of model names
+    if normal_mass_model == 'a001':
+        normal_mass_model = 'Althaus_001'
+    if normal_mass_model == 'a0001':
+        normal_mass_model = 'Althaus_0001'
+    if normal_mass_model == 'f':
+        normal_mass_model = 'Fontaine2001'
+    if normal_mass_model == 'c':
+        normal_mass_model = 'Camisassa2017'
+    if normal_mass_model == 'b':
+        normal_mass_model = 'BaSTI'
+    if normal_mass_model == 'b2':
+        normal_mass_model = 'BaSTI_2'
+    if normal_mass_model == 'b4':
+        normal_mass_model = 'BaSTI_4'
+    
+    if high_mass_model == 'f':
+        high_mass_model = 'Fontaine2001'
+    if high_mass_model == 'b':
+        high_mass_model = 'BaSTI'
+    if high_mass_model == 'm':
+        high_mass_model = 'MESA'
+    if high_mass_model == 'o':
+        high_mass_model = 'ONe'
+    
     # make atmosphere grid and mapping: logteff, logg --> bp-rp,  G-Mbol
     grid_G_Mbol, grid_G_Mbol_func = interp_atm(spec_type, 'G_Mbol', 
-                                               T_logg_grid=(tmin,tmax,dt,loggmin,loggmax,dlogg))
+                                               T_logg_grid=(tmin,tmax,dt,loggmin,loggmax,dlogg),
+                                               interp_type_atm=interp_type_atm)
     grid_bp_rp, grid_bp_rp_func   = interp_atm(spec_type, 'bp_rp', 
-                                               T_logg_grid=(tmin,tmax,dt,loggmin,loggmax,dlogg))
+                                               T_logg_grid=(tmin,tmax,dt,loggmin,loggmax,dlogg),
+                                               interp_type_atm=interp_type_atm)
     
     
     # get for logg_func BaSTI models
     if 'BaSTI' in normal_mass_model or 'BaSTI' in high_mass_model:
-        mass_array_Fontaine2001, logg_Fontaine, _, _ , logteff_Fontaine2001, _ \
+        mass_array_Fontaine2001, logg_Fontaine2001,_ , _ , logteff_Fontaine2001, _ \
                     = open_evolution_tracks('Fontaine2001', 'Fontaine2001', spec_type)
         logg_func   = interp_xy_z_func(x=logteff_Fontaine2001, y=mass_array_Fontaine2001,
                                        z=logg_Fontaine2001)
@@ -531,28 +557,28 @@ def main(normal_mass_model, high_mass_model, spec_type):
     bp_rp   = grid_bp_rp_func(logteff, logg)
     
     
-    # Calculate Cooling Rate (per BP-RP)
+    # Calculate the Recipical of Cooling Rate (Cooling Time per BP-RP)
     k1          = (age_cool[1:-1] - age_cool[:-2]) / (bp_rp[1:-1] - bp_rp[:-2])
     k2          = (age_cool[2:] - age_cool[1:-1]) / (bp_rp[2:] - bp_rp[1:-1])
-    k           = k1 + (bp_rp[1:-1] - bp_rp[:-2])*(k1-k2) / (bp_rp[:-2]-bp_rp[2:])
+    k           = k1 + (bp_rp[1:-1] - bp_rp[:-2]) * (k1-k2) / (bp_rp[:-2]-bp_rp[2:])
     cool_rate   = np.concatenate(( np.array([1]), k , np.array([1]) ))
     
     
     # Get Parameters on HR Diagram
-    grid_mass, grid_mass_func             = HR_to_para( bp_rp, G, mass_array, age, HR_grid )
-    grid_logg, grid_logg_func             = HR_to_para( bp_rp, G, logg, age, HR_grid  )
-    grid_age, grid_age_func               = HR_to_para( bp_rp, G, age, age, HR_grid )
-    grid_age_cool, grid_age_cool_func     = HR_to_para( bp_rp, G, age_cool, age, HR_grid )
-    grid_logteff, grid_logteff_func       = HR_to_para( bp_rp, G, logteff, age, HR_grid )
-    grid_Mbol, grid_Mbol_func             = HR_to_para( bp_rp, G, Mbol, age, HR_grid )
+    grid_mass, grid_mass_func             = HR_to_para( bp_rp, G, mass_array, age, HR_grid, interp_type )
+    grid_logg, grid_logg_func             = HR_to_para( bp_rp, G, logg, age, HR_grid, interp_type )
+    grid_age, grid_age_func               = HR_to_para( bp_rp, G, age, age, HR_grid, interp_type )
+    grid_age_cool, grid_age_cool_func     = HR_to_para( bp_rp, G, age_cool, age, HR_grid, interp_type )
+    grid_logteff, grid_logteff_func       = HR_to_para( bp_rp, G, logteff, age, HR_grid, interp_type )
+    grid_Mbol, grid_Mbol_func             = HR_to_para( bp_rp, G, Mbol, age, HR_grid, interp_type )
 #     row,col = grid_mass.shape
 #     grid_mass_density                     = np.concatenate((np.zeros((row,1)),
 #                                                             grid_mass[:,2:] - grid_mass[:,:-2],
 #                                                             np.zeros((row,1)) ), axis=1)
-    grid_cool_rate, grid_cool_rate_func   = HR_to_para( bp_rp, G, cool_rate, age, HR_grid )
+    grid_cool_rate, grid_cool_rate_func   = HR_to_para( bp_rp, G, cool_rate, age, HR_grid, interp_type )
     # (mass, t_cool) --> bp-rp, G
-    grid_m_agecool_bprp_func              = interp_xy_z_func( mass_array, age_cool, bp_rp )
-    grid_m_agecool_G_func                 = interp_xy_z_func( mass_array, age_cool, G )
+    grid_m_agecool_bprp_func              = interp_xy_z_func( mass_array, age_cool, bp_rp, interp_type )
+    grid_m_agecool_G_func                 = interp_xy_z_func( mass_array, age_cool, G, interp_type )
     
     
     # Return a dictionary containing all the cooling track data points, interpolation functions
@@ -571,20 +597,6 @@ def main(normal_mass_model, high_mass_model, spec_type):
             'grid_m_agecool_bprp_func':grid_m_agecool_bprp_func, 
             'grid_m_agecool_G_func':grid_m_agecool_G_func}
 
-
-#----------------------------------------------------------------------------------------------------   
-#
-#   Defind
-#
-#----------------------------------------------------------------------------------------------------  
-
-
-tmin = 3.5; tmax = 5.1; dt = 0.01
-loggmin = 6.5; loggmax = 9.6; dlogg = 0.01
-HR_grid             = (-0.6, 1.5, 0.002, 8, 16, 0.01) # bp_rp, G
-interp_type         = 'linear'
-interp_type_atm     = 'linear'
-interp_bprp_factor  = 5
 
 # Fontaine et al. 2001 (CO), Camisassa et al. 2019 (ONe), PG, and Lauffer et al. 2019 (MESA) models
 # DA_thick_CO     = main('Fontaine2001', 'Fontaine2001', 'DA_thick')
