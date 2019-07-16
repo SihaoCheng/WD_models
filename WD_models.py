@@ -185,7 +185,7 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type,
             mass_separation_2 = 1.01
         else:
             mass_separation_2 = 0.99
-    if high_mass_model == 'BaSTI':
+    if high_mass_model == 'BaSTI' or high_mass_model == 'BaSTInosep':
         mass_separation_2 = 0.99
     
     # define atmosphere
@@ -331,28 +331,40 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type,
     
     # BaSTI model
     for mass in ['054','055','061','068','077','087','100','110','120']:
-        if ((normal_mass_model == 'BaSTI' and 
-             int(mass)/100 < mass_separation_2) or
-            (high_mass_model == 'BaSTI' and 
-             int(mass)/100 > mass_separation_2)
-           ):
+        normal_mass_use_BaSTI = (normal_mass_model == 'BaSTI' or 
+                                 normal_mass_model == 'BaSTInosep'
+                                )
+        high_mass_use_BaSTI = (high_mass_model == 'BaSTI' or 
+                               high_mass_model == 'BaSTInosep'
+                              )
+        sep = 'sep'
+        if normal_mass_use_BaSTI and int(mass)/100 < mass_separation_2:
+            if 'nosep' in normal_mass_model:
+                sep = 'nosep'
             Cool = Table.read('models/BaSTI/COOL' + mass + 'BaSTIfinale' + 
-                              spec_suffix2 + 'sep.sdss', format='ascii') 
-            dn = 1
-            if int(mass)/100 > 1.05:
-                dn = 5
-            Cool = Cool[(Cool['log(Teff)'] > tmin) *
-                        (Cool['log(Teff)'] < tmax)][::dn]
-            #Cool.sort('Log(edad/Myr)')
-            Cool['Log(grav)'] = logg_func(Cool['log(Teff)'], np.ones(len(Cool)) * int(mass)/100)
-            mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
-            logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
-            age         = np.concatenate(( age, 10**Cool['log(t)'] - 10**Cool['log(t)'][0] +
-                                                (IFMR(int(mass)/100))**(t_index) * 1e10 ))
-            age_cool    = np.concatenate(( age_cool, 10**Cool['log(t)'] - 10**Cool['log(t)'][0]  ))
-            logteff     = np.concatenate(( logteff, Cool['log(Teff)'] ))
-            Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['log(L/Lo)'] ))
-            del Cool
+                   spec_suffix2 + sep +'.sdss', format='ascii')
+        elif high_mass_use_BaSTI and int(mass)/100 > mass_separation_2:
+            if 'nosep' in high_mass_model:
+                sep = 'nosep'
+            Cool = Table.read('models/BaSTI/COOL' + mass + 'BaSTIfinale' + 
+                   spec_suffix2 + sep +'.sdss', format='ascii')
+        else:
+            continue
+        dn = 1
+        if int(mass)/100 > 1.05:
+            dn = 5
+        Cool = Cool[(Cool['log(Teff)'] > tmin) *
+                    (Cool['log(Teff)'] < tmax)][::dn]
+        #Cool.sort('Log(edad/Myr)')
+        Cool['Log(grav)'] = logg_func(Cool['log(Teff)'], np.ones(len(Cool)) * int(mass)/100)
+        mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
+        logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
+        age         = np.concatenate(( age, 10**Cool['log(t)'] - 10**Cool['log(t)'][0] +
+                                            (IFMR(int(mass)/100))**(t_index) * 1e10 ))
+        age_cool    = np.concatenate(( age_cool, 10**Cool['log(t)'] - 10**Cool['log(t)'][0]  ))
+        logteff     = np.concatenate(( logteff, Cool['log(Teff)'] ))
+        Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['log(L/Lo)'] ))
+        del Cool
     
     # BaSTI high-alpha model
     if 'BaSTI_' in normal_mass_model:
@@ -605,6 +617,8 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
         normal_mass_model = 'Camisassa2017'
     if normal_mass_model == 'b':
         normal_mass_model = 'BaSTI'
+    if normal_mass_model == 'bn':
+        normal_mass_model = 'BaSTInosep'
     if normal_mass_model == 'b2':
         normal_mass_model = 'BaSTI_2'
     if normal_mass_model == 'b4':
@@ -614,6 +628,8 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
         high_mass_model = 'Fontaine2001'
     if high_mass_model == 'b':
         high_mass_model = 'BaSTI'
+    if high_mass_model == 'bn':
+        high_mass_model = 'BaSTInosep'
     if high_mass_model == 'm':
         high_mass_model = 'MESA'
     if high_mass_model == 'o':
@@ -688,17 +704,19 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
     
     # Return a dictionary containing all the cooling track data points, 
     # interpolation functions and interpolation grids 
-    return {'grid_G_Mbol':grid_G_Mbol, 'grid_G_Mbol_func':grid_G_Mbol_func,
-            'grid_bp_rp':grid_bp_rp, 'grid_bp_rp_func':grid_bp_rp_func,
+    return {'grid_logteff_logg_to_G_Mbol':grid_G_Mbol,
+            'logteff_logg_to_G_Mbol':grid_G_Mbol_func,
+            'grid_logteff_logg_to_bp_rp':grid_bp_rp,
+            'logteff_logg_to_bp_rp':grid_bp_rp_func,
             'mass_array':mass_array, 'logg':logg, 'logteff':logteff,
             'age':age, 'age_cool':age_cool, 'cool_rate':cool_rate,
             'Mbol':Mbol, 'G':G, 'bp_rp':bp_rp,
-            'grid_mass':grid_mass, 'grid_mass_func':grid_mass_func,
-            'grid_logg':grid_logg, 'grid_logg_func':grid_logg_func,
-            'grid_age':grid_age, 'grid_age_func':grid_age_func,
-            'grid_age_cool':grid_age_cool, 'grid_age_cool_func':grid_age_cool_func,
-            'grid_logteff':grid_logteff, 'grid_logteff_func':grid_logteff_func,
-            'grid_Mbol':grid_Mbol, 'grid_Mbol_func':grid_Mbol_func,
-            'grid_cool_rate':grid_cool_rate, 'grid_cool_rate_func':grid_cool_rate_func,
-            'grid_m_agecool_bprp_func':grid_m_agecool_bprp_func, 
-            'grid_m_agecool_G_func':grid_m_agecool_G_func}
+            'grid_HR_to_mass':grid_mass, 'HR_to_mass':grid_mass_func,
+            'grid_HR_to_logg':grid_logg, 'HR_to_logg':grid_logg_func,
+            'grid_HR_to_age':grid_age, 'HR_to_age':grid_age_func,
+            'grid_HR_to_age_cool':grid_age_cool, 'HR_to_age_cool':grid_age_cool_func,
+            'grid_HR_to_logteff':grid_logteff, 'HR_to_logteff':grid_logteff_func,
+            'grid_HR_to_Mbol':grid_Mbol, 'HR_to_Mbol':grid_Mbol_func,
+            'grid_HR_to_cool_rate':grid_cool_rate, 'HR_to_cool_rate':grid_cool_rate_func,
+            'm_agecool_to_bprp':grid_m_agecool_bprp_func, 
+            'm_agecool_to_G':grid_m_agecool_G_func}
