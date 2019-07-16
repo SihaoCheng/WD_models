@@ -641,7 +641,7 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
         
     
     # Open Evolution Tracks
-    mass_array, logg, age, age_cool, logteff, Mbol 
+    mass_array, logg, age, age_cool, logteff, Mbol \
                     = open_evolution_tracks(normal_mass_model, 
                                             high_mass_model,
                                             spec_type, logg_func)
