@@ -1,22 +1,25 @@
-'''
-This package will read different cooling models and interpolate the conversion mappings
-between HR diagram, Teff, Mbol, etc. The mappings are stored in dictionaries for each model.
-See the main function and the lines after its definition.
-This package also contains the functions to read a single cooling track.
-'''
+"""
+This package will read different cooling models and interpolate the conversion 
+mappings between HR diagram, Teff, Mbol, etc. The mappings are stored in 
+dictionaries for each model. See the main function and the lines after its 
+definition. This package also contains the functions to read a single cooling 
+track.
+"""
 
 
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.interpolate import CloughTocher2DInterpolator, LinearNDInterpolator
+from scipy.interpolate import griddata, interp1d, 
 from astropy.table import Table
-from scipy.interpolate import interp1d, interp2d, CloughTocher2DInterpolator, griddata, LinearNDInterpolator
 
 
-#----------------------------------------------------------------------------------------------------   
+#-------------------------------------------------------------------------------   
 #
-#   Define some constants that will be used as parameters of the following functions
+#   Define some constants that will be used as parameters of the following 
+#   functions
 #
-#----------------------------------------------------------------------------------------------------  
+#-------------------------------------------------------------------------------
 
 
 tmin = 3.5; tmax = 5.1; dt = 0.01
@@ -27,11 +30,12 @@ interp_type_atm     = 'linear'
 interp_bprp_factor  = 5
 
 
-#----------------------------------------------------------------------------------------------------   
+#-------------------------------------------------------------------------------
 #
-#   Define the functions that will be used for reading cooling tracks and interpolating the mappings 
+#   Define the functions that will be used for reading cooling tracks and 
+#   interpolating the mappings 
 #
-#----------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 
 def interpolate_2d(x, y, z, method):
@@ -43,16 +47,22 @@ def interpolate_2d(x, y, z, method):
     #return interp2d(x, y, z, kind=method)
   
 
-def interp_atm(spec_type, color, T_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01), interp_type_atm='linear'):
-    '''
-    This function generates from the atmosphere model the mapping (logteff, logg) --> G, BP-RP, or G-Mbol 
+def interp_atm(spec_type, color, T_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01), 
+               interp_type_atm='linear'):
+    """interpolate the mapping (logteff, logg) --> G, BP-RP, or G-Mbol 
     
-    Arguments:
-    spec_type:    string. 'DA_thick' or 'DA_thin' or 'DB'. 
-                  See http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-    color:        string. 'G', 'BP-RP', or 'G-Mbol'. This is the target photometry of the mapping. 
-    T_logg_grid:  in the form (xmin, xmax, dx, ymin, ymax, dy), corresponding to the grid of logTeff and logg.
-    '''
+    Args:
+        spec_type:    string. 'DA_thick' or 'DA_thin' or 'DB'. 
+                      See http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+        color:        string. 'G', 'BP-RP', or 'G-Mbol'. This is the target 
+                      photometry of the mapping. 
+        T_logg_grid:  in the form (xmin, xmax, dx, ymin, ymax, dy), 
+                      corresponding to the grid of logTeff and logg.
+    
+    Returns:
+        grid_z:       2darray. The value of photometry on a (logteff, logg) grid
+        grid_z_func:  function. The interpolated mapping
+    """
     logteff     = np.zeros(0)
     logg        = np.zeros(0)
     age         = np.zeros(0)
@@ -63,13 +73,14 @@ def interp_atm(spec_type, color, T_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01), i
     
     # read the table for each mass
     for mass in ['0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','1.2']:
-        Atm_color = Table.read('models/Montreal_atm_grid/Table_Mass_'+mass+'_'+spec_type,
-                               format='ascii')
+        Atm_color = Table.read('models/Montreal_atm_grid/Table_Mass_' + mass +
+                               '_'+spec_type, format='ascii')
         selected  = Atm_color['Teff'] > 3500
         Atm_color = Atm_color[selected]
         
         # read columns
-        bp_rp   = np.concatenate(( bp_rp, Atm_color['G_BP/R'] - Atm_color['G_RP/R'] ))
+        bp_rp   = np.concatenate(( bp_rp, 
+                                   Atm_color['G_BP/R'] - Atm_color['G_RP/R'] ))
         G       = np.concatenate(( G, Atm_color['G/R'] ))
         Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
         logteff = np.concatenate(( logteff, np.log10(Atm_color['Teff']) ))
@@ -77,12 +88,14 @@ def interp_atm(spec_type, color, T_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01), i
         age     = np.concatenate(( age, Atm_color['Age'] ))
         
     # read the table for all logg
-    Atm_color = Table.read('models/Montreal_atm_grid/Table_'+spec_type, format='ascii')
+    Atm_color = Table.read('models/Montreal_atm_grid/Table_'+spec_type,
+                           format='ascii')
     selected  = Atm_color['Teff'] > 3500
     Atm_color = Atm_color[selected]
     
     # read columns
-    bp_rp   = np.concatenate(( bp_rp, Atm_color['G_BP/R'] - Atm_color['G_RP/R'] ))
+    bp_rp   = np.concatenate(( bp_rp, 
+                               Atm_color['G_BP/R'] - Atm_color['G_RP/R'] ))
     G       = np.concatenate(( G, Atm_color['G/R'] ))
     Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
     logteff = np.concatenate(( logteff,np.log10(Atm_color['Teff']) ))
@@ -94,7 +107,8 @@ def interp_atm(spec_type, color, T_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01), i
     
     # define the interpolation of mapping
     def interp(x,y,z):
-        grid_z      = griddata(np.array((x,y)).T, z, (grid_x, grid_y), method=interp_type_atm)
+        grid_z      = griddata(np.array((x,y)).T, z, (grid_x, grid_y),
+                               method=interp_type_atm)
         grid_z_func = interpolate_2d(x, y, z, interp_type_atm)
         return grid_z, grid_z_func
     
@@ -106,13 +120,14 @@ def interp_atm(spec_type, color, T_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01), i
         return interp(logteff, logg, G-Mbol)
 
 
-def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_func=None, 
-                          for_comparison=False):
-    '''
-    Read the cooling models and store the following information of different cooling
-    tracks together in one numpy array: mass, logg, age, age_cool, logteff, Mbol
+def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, 
+                          logg_func=None, for_comparison=False):
+    """
+    Read the cooling models and store the following information of different
+    cooling tracks together in one numpy array: mass, logg, age, age_cool, 
+    logteff, Mbol
     
-    Arguments:
+    Args:
     normal_mass_model:  string. One of the following: 
                         'Fontaine2001'    (http://www.astro.umontreal.ca/~bergeron/CoolingModels/),
                         'Althaus2010_001', 'Althaus2010_0001'
@@ -132,18 +147,27 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
                         'BaSTI' (Salaris et al. 2010, http://basti.oa-teramo.inaf.it)
     spec_type:          string. One of the following:
                         'DA_thick', 'DA_thin', 'DB'
-    logg_func:          a function for (logteff, mass) --> logg. It is necessary only for BaSTI models,
-                        because the BaSTI models do not directly provide log g information.
-    for_comparison:     Bool. If true, more cooling tracks from different models will be used. E.g., 
-                        the Fontaine2001 model has m_WD = [..., 0.95, 1.00, ...], and the MESA model has
-                        m_WD = [1.0124, 1.019, ...]. If true, the Fontaine2001 1.00 cooling track will be
-                        used; if false, it will not be used because it is too close to the MESA 1.0124 track.
-    '''
+    logg_func:          a function for (logteff, mass) --> logg. 
+                        It is necessary only for BaSTI models, because the BaSTI
+                        models do not directly provide log g information.
+    for_comparison:     Bool. If true, more cooling tracks from different models
+                        will be used. E.g., the Fontaine2001 model has m_WD = 
+                        [..., 0.95, 1.00, ...], and the MESA model has m_WD = 
+                        [1.0124, 1.019, ...]. If true, the Fontaine2001 1.00Msun
+                        cooling track will be used; if false, it will not be 
+                        used because it is too close to the MESA 1.0124 track.
+    
+    Returns:
+        mass_array, logg, age, age_cool, logteff, and Mbol of cooling tracks
+    
+    """
     # determine which cooling tracks in a model to read
     mass_separation_1 = 0.45
     mass_separation_2 = 0.99
-    if 'Althaus2010_' in normal_mass_model or normal_mass_model == 'Camisassa2017' or \
-       normal_mass_model == 'PG':
+    if ('Althaus2010_' in normal_mass_model or 
+        normal_mass_model == 'Camisassa2017' or 
+        normal_mass_model == 'PG'
+       ):
         if for_comparison == True:
             mass_seperation_1 = 0.501
         else:
@@ -169,10 +193,12 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
     else:
         spec_suffix = '0204'; spec_suffix2 = 'DA'; spec_suffix3 = 'H'
     
-    # define the initial-final mass relation for calculating the total age for some models
-    IFMR        = interp1d((0.19, 0.3, 0.4, 0.50, 0.55, 0.65, 0.75, 0.85, 1.0, 1.25, 1.35),
+    # define the initial-final mass relation for calculating the total age for 
+    # some models
+    IFMR        = interp1d((0.19, 0.3, 0.4, 0.50, 0.55, 0.65, 0.75, 0.85, 1.0,
+                            1.25, 1.35),
                            (0.3, 0.5, 0.7, 0.95, 1, 2, 3, 3.5, 5, 8, 9),
-                           fill_value = 0, bounds_error=False) # mass_WD, mass_ini
+                           fill_value = 0, bounds_error=False)
     t_index     = -3
     
     # initialize data points of cooling tracks
@@ -185,16 +211,24 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
     
     # read data from cooling models
     # Fontaine et al. 2001
-    for mass in ['020','030','040','050','060','070','080','090','095','100','105',
-                 '110','115','120','125','130']:
-        if int(mass)/100 < mass_separation_1 or \
-           (normal_mass_model == 'Fontaine2001' and int(mass)/100 < mass_separation_2 ) or \
-           (high_mass_model == 'Fontaine2001' and int(mass)/100 > mass_separation_2 ):
-            f       = open('models/Fontaine_AllSequences/CO_' + mass + spec_suffix)
+    for mass in ['020','030','040','050','060','070','080','090','095','100',
+                 '105','110','115','120','125','130']:
+        if (int(mass)/100 < mass_separation_1 or
+            (normal_mass_model == 'Fontaine2001' and
+             int(mass)/100 < mass_separation_2 ) or
+            (high_mass_model == 'Fontaine2001' and
+             int(mass)/100 > mass_separation_2 )
+           ):
+            f       = open('models/Fontaine_AllSequences/CO_' + mass + 
+                           spec_suffix)
             text    = f.read()
-            example = "      1    57674.0025    8.36722799  7.160654E+08  4.000000E+05  4.042436E+33\n"+\
-                      "        7.959696E+00  2.425570E+01  7.231926E+00  0.0000000000  0.000000E+00\n"+\
-                      "        6.019629E+34 -4.010597E+00 -1.991404E+00 -3.055254E-01 -3.055254E-01"          
+            example = ('      1    57674.0025    8.36722799  7.160654E+08 '
+                        ' 4.000000E+05  4.042436E+33\n'
+                        '        7.959696E+00  2.425570E+01  7.231926E+00 '
+                        ' 0.0000000000  0.000000E+00\n'
+                        '        6.019629E+34 -4.010597E+00 -1.991404E+00 '
+                        '-3.055254E-01 -3.055254E-01'
+                      )
             logg_temp       = []
             age_temp        = []
             age_cool_temp   = []
@@ -202,22 +236,29 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
             Mbol_temp       = []
             l_line          = len(example)
             for line in range(len(text)//l_line):
-                logteff_temp.append(  np.log10(float(text[line*l_line+9:line*l_line+21])) )
-                logg_temp.append(     float(text[line*l_line+22:line*l_line+35]) )
-                age_temp.append(      float(text[line*l_line+48:line*l_line+63]) + \
+                logteff_temp.append(  np.log10(float(text[line*l_line+9:
+                                                          line*l_line+21])) )
+                logg_temp.append(     float(text[line*l_line+22:
+                                                 line*l_line+35]) )
+                age_temp.append(      float(text[line*l_line+48:
+                                                 line*l_line+63]) +
                                       (IFMR(int(mass)/100))**(t_index) * 1e10 )
-                age_cool_temp.append( float(text[line*l_line+48:line*l_line+63]) )
-                Mbol_temp.append(     4.75 - 2.5 * \
-                                             np.log10(float(text[line*l_line+64:line*l_line+76]) / \
-                                                      3.828e33) )
-            mass_array  = np.concatenate(( mass_array, np.ones(len(logg_temp)) * int(mass)/100 ))
+                age_cool_temp.append( float(text[line*l_line+48:
+                                                 line*l_line+63]) )
+                Mbol_temp.append(     4.75 - 
+                                      2.5 * np.log10(float(text[line*l_line+64:
+                                                                line*l_line+76]
+                                                          ) / 3.828e33) )
+            mass_array  = np.concatenate(( mass_array, np.ones(len(age_temp)) * int(mass)/100 ))
             logg        = np.concatenate(( logg, logg_temp ))
             age         = np.concatenate(( age, age_temp ))
             age_cool    = np.concatenate(( age_cool, age_cool_temp ))
             logteff     = np.concatenate(( logteff, logteff_temp ))
             Mbol        = np.concatenate(( Mbol, Mbol_temp ))
+            f.close()
     
-    # define a smoothing function for future extension. Now it just returns the input x vector.
+    # define a smoothing function for future extension. Now it just returns the
+    # input x vector.
     def smooth(x,window_len=5,window='hanning'):
         w=eval('np.'+window+'(window_len)')
         y=np.convolve(w/w.sum(),x,mode='same')
@@ -226,23 +267,26 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
     # CO, DA (Althaus et al. 2010)
     if 'Althaus2010_' in normal_mass_model and 'DA' in spec_type:
         if '_001' in normal_mass_model:
-            Althaus_masslist = ['0524','0570','0593','0609','0632','0659','0705','0767',
-                                '0837','0877','0934']
+            Althaus_masslist = ['0524','0570','0593','0609','0632','0659',
+                                '0705','0767','0837','0877','0934']
             metallicity = '001'
         if '_0001' in normal_mass_model:
-            Althaus_masslist = ['0505','0553','0593','0627','0660','0692','0863']
+            Althaus_masslist = ['0505','0553','0593','0627','0660','0692',
+                                '0863']
             metallicity = '0001'
         for mass in Althaus_masslist:
-            Cool = Table.read('models/Althaus_2010_DA_CO/wdtracks_z' + metallicity + '/wd' + mass + \
-                              '_z' + metallicity + '.trk', format='ascii') 
-            Cool = Cool[(Cool['log(TEFF)'] > tmin) * (Cool['log(TEFF)'] < tmax)][::1]
-            mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass) / 1000 ))
-            logg        = np.concatenate(( logg, smooth(np.array(Cool['Log(grav)'])) ))
-            age         = np.concatenate(( age, Cool['age/Myr'] * 1e6 + \
-                                                (IFMR(int(mass)/1000))**(t_index) * 1e10 ))
+            Cool = Table.read('models/Althaus_2010_DA_CO/wdtracks_z' + 
+                              metallicity + '/wd' + mass + '_z' + metallicity +
+                              '.trk', format='ascii') 
+            Cool = Cool[(Cool['log(TEFF)'] > tmin) *
+                        (Cool['log(TEFF)'] < tmax)][::1]
+            mass_array  = np.concatenate(( mass_array, np.ones(len(Cool))*int(mass)/1000 ))
+            logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
+            age         = np.concatenate(( age, Cool['age/Myr'] * 1e6 +
+                                                (IFMR(int(mass)/1000))**(t_index)*1e10 ))
             age_cool    = np.concatenate(( age_cool, Cool['age/Myr'] * 1e6 ))
-            logteff     = np.concatenate(( logteff, smooth(np.array(Cool['log(TEFF)'])) ))
-            Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * smooth(np.array(Cool['log(L)'])) ))
+            logteff     = np.concatenate(( logteff, Cool['log(TEFF)'] ))
+            Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['log(L)'] ))
             # additional
             logT_c      = Cool['logT_c']
             logrho_c    = Cool['logRo_c']
@@ -250,27 +294,26 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
             logL_nu     = Cool['Log(Lnu)']
             logMH       = Cool['LogMHtot']
             logr        = np.log10(Cool['R/R_sun'])
+            del Cool
     
     # CO, DB (Camisassa et al. 2017)
     if normal_mass_model == 'Camisassa2017' and spec_type == 'DB':
         for mass in ['051','054','058','066','074','087','100']:
             if int(mass)/100 < mass_separation_2:
-                Cool = Table.read('models/Camisassa_2017_DB_CO/Z002/' + mass + 'DB.trk',
-                                  format='ascii') 
-                Cool = Cool[(Cool['LOG(TEFF)'] > tmin) * (Cool['LOG(TEFF)'] < tmax)][::1]
+                Cool = Table.read('models/Camisassa_2017_DB_CO/Z002/' + mass +
+                                  'DB.trk', format='ascii') 
+                Cool = Cool[(Cool['LOG(TEFF)'] > tmin) *
+                            (Cool['LOG(TEFF)'] < tmax)][::1]
                 #Cool.sort('Log(edad/Myr)')
-                mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass) / 100 ))
-                logg        = np.concatenate(( logg, smooth(np.array(Cool['Log(grav)'])) ))
-                age         = np.concatenate(( age, 
-                                              (10**smooth(np.array(Cool['Log(edad/Myr)'])) - \
-                                               10**Cool['Log(edad/Myr)'][0]) * 1e6 + \
-                                               (IFMR(int(mass)/100))**(t_index) * 1e10 ))
-                age_cool    = np.concatenate(( age_cool, 
-                                               (10**smooth(np.array(Cool['Log(edad/Myr)'])) - \
-                                                10**Cool['Log(edad/Myr)'][0]) * 1e6 ))
-                logteff     = np.concatenate(( logteff, smooth(np.array(Cool['LOG(TEFF)'])) ))
-                Mbol        = np.concatenate(( Mbol, 
-                                               4.75 - 2.5 * smooth(np.array(Cool['LOG(L)'])) ))
+                mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
+                logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
+                age         = np.concatenate(( age, (10**Cool['Log(edad/Myr)'] -
+                                                     10**Cool['Log(edad/Myr)'][0]) * 1e6 +
+                                                    (IFMR(int(mass)/100))**(t_index) * 1e10 ))
+                age_cool    = np.concatenate(( age_cool, (10**Cool['Log(edad/Myr)'] -
+                                                          10**Cool['Log(edad/Myr)'][0]) * 1e6 ))
+                logteff     = np.concatenate(( logteff, Cool['LOG(TEFF)'] ))
+                Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['LOG(L)'] ))
                 # additional
                 logT_c      = Cool['T_c'] + 6
                 logrho_c    = Cool['Ro_c']
@@ -283,26 +326,32 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
                 logr        = np.log10(Cool['R/R_sun'])
                 L_LH        = Cool['L.H.[erg/s)]'] / 3.828e33
                 L_PS        = Cool['Sep.Fase[erg/s]'] / 3.828e33
+                del Cool
     
     # BaSTI model
     for mass in ['054','055','061','068','077','087','100','110','120']:
-        if ( normal_mass_model == 'BaSTI' and int(mass)/100 < mass_separation_2 ) or \
-           ( high_mass_model == 'BaSTI' and int(mass)/100 > mass_separation_2 ):
-            Cool = Table.read('models/BaSTI/'+'COOL'+mass+'BaSTIfinale'+spec_suffix2+'sep.sdss',
-                              format='ascii') 
-            Cool = Cool[(Cool['log(Teff)'] > tmin) * (Cool['log(Teff)'] < tmax)][::1]#len(Cool)//100
+        if ((normal_mass_model == 'BaSTI' and 
+             int(mass)/100 < mass_separation_2) or
+            (high_mass_model == 'BaSTI' and 
+             int(mass)/100 > mass_separation_2)
+           ):
+            Cool = Table.read('models/BaSTI/COOL' + mass + 'BaSTIfinale' + 
+                              spec_suffix2 + 'sep.sdss', format='ascii') 
+            dn = 1
+            if int(mass)/100 > 1.05:
+                dn = 5
+            Cool = Cool[(Cool['log(Teff)'] > tmin) *
+                        (Cool['log(Teff)'] < tmax)][::dn]
             #Cool.sort('Log(edad/Myr)')
-            mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass) / 100 ))
-            Cool['Log(grav)'] \
-                        = logg_func( np.array(Cool['log(Teff)']), np.ones(len(Cool))*int(mass)/100 )
-            logg        = np.concatenate(( logg, smooth(np.array(Cool['Log(grav)'])) ))
-            age         = np.concatenate(( age, 10**smooth(np.array(Cool['log(t)'])) - \
-                                                10**Cool['log(t)'][0] + \
+            Cool['Log(grav)'] = logg_func(Cool['log(Teff)'], np.ones(len(Cool)) * int(mass)/100)
+            mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
+            logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
+            age         = np.concatenate(( age, 10**Cool['log(t)'] - 10**Cool['log(t)'][0] +
                                                 (IFMR(int(mass)/100))**(t_index) * 1e10 ))
-            age_cool    = np.concatenate(( age_cool, 10**smooth(np.array(Cool['log(t)'])) - \
-                                                     10**Cool['log(t)'][0]  ))
-            logteff     = np.concatenate(( logteff, smooth(np.array(Cool['log(Teff)'])) ))
-            Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * smooth(np.array(Cool['log(L/Lo)'])) ))
+            age_cool    = np.concatenate(( age_cool, 10**Cool['log(t)'] - 10**Cool['log(t)'][0]  ))
+            logteff     = np.concatenate(( logteff, Cool['log(Teff)'] ))
+            Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['log(L/Lo)'] ))
+            del Cool
     
     # BaSTI high-alpha model
     if 'BaSTI_' in normal_mass_model:
@@ -311,53 +360,64 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
                     '3250','3500','3750','4000','4250','4500','4750','5000',
                     '5250','5500','5750','6000','6250','6500','6750','7000',
                     '7250','7500','7750','8000','8250','8500','8750','9000',
-                    '9500','10000','10500','11000','11500','12000','12500','13000','13500','14000']:
-            if '4' in normal_mass_model:
-                Cool = Table.read('models/BaSTI_z42aeo/WDz402y303aenot' + time + '.' + \
-                                  spec_suffix2 + 'sep.sdss', format='ascii') 
-            if '2' in normal_mass_model:
-                Cool = Table.read('models/BaSTI_z22aeo/WDzsunysunaenot' + time + '.' + \
-                                  spec_suffix2 + 'sep.sdss', format='ascii') 
-            Cool = Cool[(Cool['log(Teff)'] > tmin) * (Cool['log(Teff)'] < tmax)][::1]#len(Cool)//100
-            #Cool.sort('Log(edad/Myr)')
-            mass_array  = np.concatenate(( mass_array, np.array(Cool['Mwd']) ))
-            Cool['Log(grav)'] = logg_func( np.array(Cool['log(Teff)']), np.array(Cool['Mwd']) )
-            logg        = np.concatenate(( logg, smooth(np.array(Cool['Log(grav)'])) ))
-            age         = np.concatenate(( age, (np.ones(len(Cool)) * int(time) * 1e6) + \
-                                                 IFMR(np.array(Cool['Mwd']))**(t_index) * 1e10 ))
-            age_cool    = np.concatenate(( age_cool, (np.ones(len(Cool)) * int(time) * 1e6)   ))
-            logteff     = np.concatenate(( logteff, smooth(np.array(Cool['log(Teff)'])) ))
-            Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * smooth(np.array(Cool['log(L/Lo)'])) ))
+                    '9500','10000','10500','11000','11500','12000','12500',
+                     '13000','13500','14000']:
+            if '4' in normal_mass_model or '2' in normal_mass_model:
+                if '4' in normal_mass_model:
+                    Cool = Table.read('models/BaSTI_z42aeo/WDz402y303aenot' + 
+                                      time + '.' + spec_suffix2 + 'sep.sdss', 
+                                      format='ascii') 
+                if '2' in normal_mass_model:
+                    Cool = Table.read('models/BaSTI_z22aeo/WDzsunysunaenot' + 
+                                      time + '.' + spec_suffix2 + 'sep.sdss', 
+                                      format='ascii') 
+                Cool = Cool[(Cool['log(Teff)'] > tmin) *
+                            (Cool['log(Teff)'] < tmax)][::1]
+                Cool['Log(grav)'] = logg_func(Cool['log(Teff)'], Cool['Mwd'])
+                mass_array  = np.concatenate(( mass_array, Cool['Mwd'] ))
+                logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
+                age         = np.concatenate(( age, (np.ones(len(Cool)) * int(time) * 1e6) +
+                                                     IFMR(Cool['Mwd'])**(t_index) * 1e10 ))
+                age_cool    = np.concatenate(( age_cool, (np.ones(len(Cool)) * int(time) * 1e6) ))
+                logteff     = np.concatenate(( logteff, Cool['log(Teff)'] ))
+                Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['log(L/Lo)'] ))
+                del Cool
     
     # PG cooling tracks (Althaus et al. 2009)
     if normal_mass_model == 'PG' and spec_type == 'DB':
-        for mass in ['0514','0530','0542','0565','0584','0609','0664','0741','0869']:
-            Cool = Table.read('models/tracksPG-DB/db-pg-'+mass+'.trk.t0.11', format='ascii',
-                              comment='#')
-            Cool = Cool[(Cool['Log(Teff)']>tmin)*(Cool['Log(Teff)']<tmax)*(Cool['age[Myr]']>0)]
+        for mass in ['0514','0530','0542','0565','0584','0609','0664','0741',
+                     '0869']:
+            Cool = Table.read('models/tracksPG-DB/db-pg-' + mass + '.trk.t0.11',
+                              format='ascii', comment='#')
+            Cool = Cool[(Cool['Log(Teff)'] > tmin) *
+                        (Cool['Log(Teff)'] < tmax) *
+                        (Cool['age[Myr]'] > 0)]
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool))*int(mass)/1000 ))
-            logg        = np.concatenate(( logg, smooth(np.array(Cool['Log(grav)'])) ))
-            age         = np.concatenate(( age, np.array(Cool['age[Myr]'])*10**6 + \
+            logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
+            age         = np.concatenate(( age, Cool['age[Myr]'] * 1e6 +
                                                 (IFMR(int(mass)/1000))**(t_index) * 1e10 ))
-            age_cool    = np.concatenate(( age_cool, np.array(Cool['age[Myr]']) * 1e6 ))
-            logteff     = np.concatenate(( logteff, smooth(np.array(Cool['Log(Teff)'])) ))
-            Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * smooth(np.array(Cool['Log(L)'])) ))
+            age_cool    = np.concatenate(( age_cool, Cool['age[Myr]'] * 1e6 ))
+            logteff     = np.concatenate(( logteff, Cool['Log(Teff)'] ))
+            Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['Log(L)'] ))
+            del Cool
     
     # Ultra-massive ONe model (Camisassa et al. 2019)
     if high_mass_model == 'ONe':
         for mass in ['110','116','122','129']:
-            Cool = Table.read('models/ONeWDs/' + mass + '_' + spec_suffix2 + '.trk',format='ascii') 
-            Cool = Cool[(Cool['LOG(TEFF)'] > tmin) * (Cool['LOG(TEFF)'] < tmax)][::10]
+            Cool = Table.read('models/ONeWDs/' + mass + '_' + spec_suffix2 +
+                              '.trk', format='ascii') 
+            Cool = Cool[(Cool['LOG(TEFF)'] > tmin) *
+                        (Cool['LOG(TEFF)'] < tmax)][::10]
             #Cool.sort('Log(edad/Myr)')
-            mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass) / 100 ))
-            logg        = np.concatenate(( logg, smooth(np.array(Cool['Log(grav)'])) ))
-            age         = np.concatenate(( age, (10**smooth(np.array(Cool['Log(edad/Myr)'])) - \
-                                                 10**Cool['Log(edad/Myr)'][0]) * 1e6 + \
+            mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
+            logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
+            age         = np.concatenate(( age, (10**Cool['Log(edad/Myr)'] -
+                                                 10**Cool['Log(edad/Myr)'][0]) * 1e6 +
                                                 (IFMR(int(mass)/100))**(t_index) * 1e10 ))
-            age_cool    = np.concatenate(( age_cool, (10**smooth(np.array(Cool['Log(edad/Myr)'])) - \
+            age_cool    = np.concatenate(( age_cool, (10**Cool['Log(edad/Myr)'] -
                                                       10**Cool['Log(edad/Myr)'][0]) * 1e6 ))
-            logteff     = np.concatenate(( logteff, smooth(np.array(Cool['LOG(TEFF)'])) ))
-            Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * smooth(np.array(Cool['LOG(L)'])) ))
+            logteff     = np.concatenate(( logteff, Cool['LOG(TEFF)'] ))
+            Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['LOG(L)'] ))
             # additional
             logT_c      = Cool['T_c'] + 6
             logrho_c    = Cool['Ro_c']
@@ -371,6 +431,7 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
             L_LH        = Cool['L.H.[erg/s)]'] / 3.828e33
             L_PS        = Cool['Sep.Fase[erg/s]'] / 3.828e33
             #/M^dot, Masa_HFC, Masa_HeFC 
+            del Cool
     
     # massive MESA model (Lauffer et al. 2019)
     if high_mass_model == 'MESA': 
@@ -389,23 +450,26 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type, logg_fu
                              '1.1102','1.151',
                              '1.2163','1.2671','1.3075']
         for mass in mesa_masslist:
-            Cool = Table.read('models/MESA_model/' + spec_suffix3 + '_atm-M' + mass + '.dat',
+            Cool = Table.read('models/MESA_model/' + spec_suffix3 + '_atm-M' +
+                              mass + '.dat',
                               format='csv', header_start=1, data_start=2)
             dn = 70
             if float(mass) > 1.2:
                 dn = 120
             if float(mass) < 1.05:
                 dn = 10
-            Cool = Cool[(Cool['# log Teff [K]'] > tmin) * (Cool['# log Teff [K]'] < tmax)][::dn]
+            Cool = Cool[(Cool['# log Teff [K]'] > tmin) *
+                        (Cool['# log Teff [K]'] < tmax)][::dn]
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * float(mass) ))
-            logg        = np.concatenate(( logg, np.array(Cool['log g [cm/s^2]']) ))
+            logg        = np.concatenate(( logg, Cool['log g [cm/s^2]'] ))
             age         = np.concatenate(( age, Cool['total age [Gyr]'] * 1e9 ))
             age_cool    = np.concatenate(( age_cool, Cool['cooling age [Gyr]'] * 1e9))
-            logteff     = np.concatenate(( logteff, np.array(Cool['# log Teff [K]']) ))
-            Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * np.array(Cool['log L/Lsun']) ))
+            logteff     = np.concatenate(( logteff, Cool['# log Teff [K]'] ))
+            Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['log L/Lsun'] ))
             # additional
             mass_accurate=Cool['mass [Msun]']
             logr        = Cool['log radius [Rsun]']
+            del Cool
     
     select = ~np.isnan(mass_array + logg + age + age_cool + logteff + Mbol) * (age_cool > 1e3)
     return mass_array[select], logg[select], age[select], age_cool[select], logteff[select], \
@@ -494,14 +558,16 @@ def interp_xy_z_func(x, y, z, interp_type='linear'):
     return grid_z_func
 
 
-#----------------------------------------------------------------------------------------------------   
+#-------------------------------------------------------------------------------  
 #
-#   Define the main function that reads a set of cooling tracks and generate useful mappings
+#   Define the main function that reads a set of cooling tracks and generate 
+#   useful mappings
 #
-#----------------------------------------------------------------------------------------------------   
+#-------------------------------------------------------------------------------   
 
 
-def main(normal_mass_model, high_mass_model, spec_type):
+def load_model(normal_mass_model, high_mass_model, spec_type, 
+               interp_type_atm='linear', interp_type='linear'):
     # define some alias of model names
     if normal_mass_model == 'a001':
         normal_mass_model = 'Althaus_001'
