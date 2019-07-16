@@ -10,7 +10,7 @@ track.
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import CloughTocher2DInterpolator, LinearNDInterpolator
-from scipy.interpolate import griddata, interp1d, 
+from scipy.interpolate import griddata, interp1d
 from astropy.table import Table
 
 
@@ -471,88 +471,113 @@ def open_evolution_tracks(normal_mass_model, high_mass_model, spec_type,
             logr        = Cool['log radius [Rsun]']
             del Cool
     
-    select = ~np.isnan(mass_array + logg + age + age_cool + logteff + Mbol) * (age_cool > 1e3)
-    return mass_array[select], logg[select], age[select], age_cool[select], logteff[select], \
-           Mbol[select]
-
-
-def HR_to_para(bp_rp, G, z, age, HR_grid=(-0.6, 1.5, 0.002, 10, 15, 0.01), interp_type='linear'):
-    '''
-    Interpolate the mapping of (BR-RP, G) --> z, based on the data points from many 
-    cooling tracks read from a model, and get the value of z on the grid of H-R coordinates.
-    We set select only G<16 and G>8 to avoid the turning of DA cooling track which
-    leads to multi-value mapping.
+    select = ~np.isnan(mass_array + logg + age + age_cool + logteff + Mbol) * \
+             (age_cool > 1e3)
     
-    Arguments:
-    bp_rp:    1d-array. The Gaia color BP-RP
-    G:        1d-array. The absolute magnitude of Gaia G band
-    z:        1d-array. The target parameter for mapping (BP-RP, G) --> z
-    HR_grid:  in the form of (xmin, xmax, dx, ymin, ymax, dy), the grid information of 
-              the H-R diagram coordinates BP-RP and G
-    age:      1d-array. The WD age. Only used for the purpose of selecting non-NaN data points.
-    '''
+    return mass_array[select], logg[select], age[select], age_cool[select], \
+           logteff[select], Mbol[select]
+
+
+def HR_to_para(bp_rp, G, z, age, HR_grid=(-0.6, 1.5, 0.002, 10, 15, 0.01),
+               interp_type='linear'):
+    """
+    Interpolate the mapping of (BR-RP, G) --> z, based on the data points from
+    many cooling tracks read from a model, and get the value of z on the grid of
+    H-R coordinates. We set select only G<16 and G>8 to avoid the turning of DA
+    cooling track which leads to multi-value mapping.
+    
+    Args:
+        bp_rp:      1d-array. The Gaia color BP-RP
+        G:          1d-array. The absolute magnitude of Gaia G band
+        z:          1d-array. The target parameter for mapping (BP-RP, G) --> z
+        HR_grid:    in the form of (xmin, xmax, dx, ymin, ymax, dy), the grid 
+                    information of the H-R diagram coordinates BP-RP and G
+        age:        1d-array. The WD age. Only used for the purpose of selecting 
+                    non-NaN data points.
+                  
+    Returns:
+        grid_z:     the grid ...
+        grid_z_func:the function ...
+    """
     # define the grid of H-R diagram
-    grid_x, grid_y = np.mgrid[HR_grid[0]:HR_grid[1]:HR_grid[2], HR_grid[3]:HR_grid[4]:HR_grid[5]]
+    grid_x, grid_y = np.mgrid[HR_grid[0]:HR_grid[1]:HR_grid[2],
+                              HR_grid[3]:HR_grid[4]:HR_grid[5]]
     grid_x *= interp_bprp_factor
     
     # select only not-NaN data points
     selected    = ~np.isnan(bp_rp + G + age + z) * (G < 16) * (G > 8)
     
     # get the value of z on a H-R diagram grid and the interpolated mapping
-    grid_z      = griddata(np.array((bp_rp[selected]*interp_bprp_factor, G[selected])).T, 
+    grid_z      = griddata(np.array((bp_rp[selected]*interp_bprp_factor,
+                                     G[selected])).T, 
                            z[selected], (grid_x, grid_y), method=interp_type)
-    grid_z_func = interpolate_2d(bp_rp[selected], G[selected], z[selected], interp_type)
+    grid_z_func = interpolate_2d(bp_rp[selected], G[selected], z[selected],
+                                 interp_type)
     
     # return both the grid data and interpolated mapping
     return grid_z, grid_z_func
 
 
 def interp_xy_z(x, y, z, xy_grid, xfactor=1, interp_type='linear'):
-    '''
-    Interpolate the mapping (x,y) --> z, based on a series of x, y, and z values, and
-    get the value of z on the grid of (x,y) coordinates.
-    This function is a generalized version of HR_to_para, allowing any x and y values.
+    """Interpolate the mapping (x,y) --> z
     
-    Arguments:
-    x:        1d-array. The x in the mapping (x,y) --> z
-    y:        1d-array. The y in the mapping (x,y) --> z
-    z:        1d-array. The target parameter for mapping (x,y) --> z
-    xy_grid:  in the form of (xmin, xmax, dx, ymin, ymax, dy), the grid information of 
-              x and y
-    xfactor:  Number. For balancing the interval of interpolation between x and y.
-    '''
+    Interpolate the mapping (x,y)--> z, based on a series of x, y, and z values,
+    and get the value of z on the grid of (x,y) coordinates. This function is a 
+    generalized version of HR_to_para, allowing any x and y values.
+    
+    Args:
+        x:          1d-array. The x in the mapping (x,y) --> z
+        y:          1d-array. The y in the mapping (x,y) --> z
+        z:          1d-array. The target parameter for mapping (x,y) --> z
+        xy_grid:    in the form of (xmin, xmax, dx, ymin, ymax, dy), the grid 
+                    information of x and y
+        xfactor:    Number. For balancing the interval of interpolation between
+                    x and y.
+    
+    Returns:
+        grid_z:     the grid ...
+        grid_z_func:the function ...
+    """
     # define the grid of (x,y)
-    grid_x, grid_y = np.mgrid[xy_grid[0]:xy_grid[1]:xy_grid[2], xy_grid[3]:xy_grid[4]:xy_grid[5]]
+    grid_x, grid_y = np.mgrid[xy_grid[0]:xy_grid[1]:xy_grid[2],
+                              xy_grid[3]:xy_grid[4]:xy_grid[5]]
     grid_x *= xfactor
     
     # select only not-NaN data points
     selected = ~np.isnan(x + y + z)
     
     # get the value of z on a (x,y) grid and the interpolated mapping
-    grid_z      = griddata(np.array((x[selected]*xfactor, y[selected])).T, z[selected], 
-                           (grid_x, grid_y), method=interp_type)
-    grid_z_func = interpolate_2d(x[selected], y[selected], z[selected], interp_type)
+    grid_z      = griddata(np.array((x[selected]*xfactor, y[selected])).T,
+                           z[selected], (grid_x, grid_y), method=interp_type)
+    grid_z_func = interpolate_2d(x[selected], y[selected], z[selected],
+                                 interp_type)
     
     # return both the grid data and interpolated mapping
     return grid_z, grid_z_func
   
 
 def interp_xy_z_func(x, y, z, interp_type='linear'):
-    '''
-    Interpolate the mapping (x,y) --> z, based on a series of x, y, and z values. 
-    This function is a generalized version of HR_to_para, allowing any x and y values,
-    but does not calculate the grid values as HR_to_para and interp_xy_z do.
+    """Interpolate the mapping (x,y) --> z
     
-    Arguments:
-    x:      1d-array. The Gaia color BP-RP
-    y:      1d-array. The absolute magnitude of Gaia G band
-    z:      1d-array. The target parameter for mapping (x,y) --> z
-    '''
+    Interpolate the mapping (x,y)--> z, based on a series of x, y, and z values. 
+    This function is a generalized version of HR_to_para, allowing any x and y
+    values, but does not calculate the grid values as HR_to_para and
+    interp_xy_z do.
+    
+    Args:
+        x:              1d-array. The Gaia color BP-RP
+        y:              1d-array. The absolute magnitude of Gaia G band
+        z:              1d-array. The target parameter for mapping (x,y) --> z
+    
+    Returns:
+        grid_z_func:    the function ...
+    """
     # select only not-NaN data points
     selected    = ~np.isnan(x + y + z)
     
     # get the interpolated mapping
-    grid_z_func = interpolate_2d(x[selected], y[selected], z[selected], interp_type)
+    grid_z_func = interpolate_2d(x[selected], y[selected], z[selected],
+                                 interp_type)
     
     # return the interpolated mapping
     return grid_z_func
@@ -604,18 +629,22 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
     
     # get for logg_func BaSTI models
     if 'BaSTI' in normal_mass_model or 'BaSTI' in high_mass_model:
-        mass_array_Fontaine2001, logg_Fontaine2001,_ , _ , logteff_Fontaine2001, _ \
-                    = open_evolution_tracks('Fontaine2001', 'Fontaine2001', spec_type)
-        logg_func   = interp_xy_z_func(x=logteff_Fontaine2001, y=mass_array_Fontaine2001,
+        mass_array_Fontaine2001, logg_Fontaine2001, _, _, logteff_Fontaine2001, _\
+                    = open_evolution_tracks('Fontaine2001',
+                                            'Fontaine2001',
+                                            spec_type)
+        logg_func   = interp_xy_z_func(x=logteff_Fontaine2001,
+                                       y=mass_array_Fontaine2001,
                                        z=logg_Fontaine2001)
     else: 
         logg_func   = None
         
     
     # Open Evolution Tracks
-    mass_array, logg, age, age_cool, logteff, Mbol = open_evolution_tracks(normal_mass_model, 
-                                                                           high_mass_model,
-                                                                           spec_type, logg_func)
+    mass_array, logg, age, age_cool, logteff, Mbol 
+                    = open_evolution_tracks(normal_mass_model, 
+                                            high_mass_model,
+                                            spec_type, logg_func)
     
 
     # Get Colour/Magnitude for Evolution Tracks
@@ -631,28 +660,38 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
     
     
     # Get Parameters on HR Diagram
-    grid_mass, grid_mass_func             = HR_to_para( bp_rp, G, mass_array, age, HR_grid, interp_type )
-    grid_logg, grid_logg_func             = HR_to_para( bp_rp, G, logg, age, HR_grid, interp_type )
-    grid_age, grid_age_func               = HR_to_para( bp_rp, G, age, age, HR_grid, interp_type )
-    grid_age_cool, grid_age_cool_func     = HR_to_para( bp_rp, G, age_cool, age, HR_grid, interp_type )
-    grid_logteff, grid_logteff_func       = HR_to_para( bp_rp, G, logteff, age, HR_grid, interp_type )
-    grid_Mbol, grid_Mbol_func             = HR_to_para( bp_rp, G, Mbol, age, HR_grid, interp_type )
+    grid_mass, grid_mass_func           = HR_to_para(bp_rp, G, mass_array, 
+                                                     age, HR_grid, interp_type)
+    grid_logg, grid_logg_func           = HR_to_para(bp_rp, G, logg, 
+                                                     age, HR_grid, interp_type)
+    grid_age, grid_age_func             = HR_to_para(bp_rp, G, age, 
+                                                     age, HR_grid, interp_type)
+    grid_age_cool, grid_age_cool_func   = HR_to_para(bp_rp, G, age_cool, 
+                                                     age, HR_grid, interp_type)
+    grid_logteff, grid_logteff_func     = HR_to_para(bp_rp, G, logteff, 
+                                                     age, HR_grid, interp_type)
+    grid_Mbol, grid_Mbol_func           = HR_to_para(bp_rp, G, Mbol, 
+                                                     age, HR_grid, interp_type)
 #     row,col = grid_mass.shape
 #     grid_mass_density                     = np.concatenate((np.zeros((row,1)),
 #                                                             grid_mass[:,2:] - grid_mass[:,:-2],
 #                                                             np.zeros((row,1)) ), axis=1)
-    grid_cool_rate, grid_cool_rate_func   = HR_to_para( bp_rp, G, cool_rate, age, HR_grid, interp_type )
+    grid_cool_rate, grid_cool_rate_func = HR_to_para(bp_rp, G, cool_rate,
+                                                     age, HR_grid, interp_type)
     # (mass, t_cool) --> bp-rp, G
-    grid_m_agecool_bprp_func              = interp_xy_z_func( mass_array, age_cool, bp_rp, interp_type )
-    grid_m_agecool_G_func                 = interp_xy_z_func( mass_array, age_cool, G, interp_type )
+    grid_m_agecool_bprp_func            = interp_xy_z_func(mass_array, age_cool,
+                                                           bp_rp, interp_type )
+    grid_m_agecool_G_func               = interp_xy_z_func(mass_array, age_cool,
+                                                           G, interp_type )
     
     
-    # Return a dictionary containing all the cooling track data points, interpolation functions
-    # and interpolation grids 
+    # Return a dictionary containing all the cooling track data points, 
+    # interpolation functions and interpolation grids 
     return {'grid_G_Mbol':grid_G_Mbol, 'grid_G_Mbol_func':grid_G_Mbol_func,
             'grid_bp_rp':grid_bp_rp, 'grid_bp_rp_func':grid_bp_rp_func,
-            'mass_array':mass_array, 'logg':logg, 'age':age, 'age_cool':age_cool,
-            'logteff':logteff, 'Mbol':Mbol, 'G':G, 'bp_rp':bp_rp, 'cool_rate':cool_rate,
+            'mass_array':mass_array, 'logg':logg, 'logteff':logteff,
+            'age':age, 'age_cool':age_cool, 'cool_rate':cool_rate,
+            'Mbol':Mbol, 'G':G, 'bp_rp':bp_rp,
             'grid_mass':grid_mass, 'grid_mass_func':grid_mass_func,
             'grid_logg':grid_logg, 'grid_logg_func':grid_logg_func,
             'grid_age':grid_age, 'grid_age_func':grid_age_func,
@@ -662,25 +701,3 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
             'grid_cool_rate':grid_cool_rate, 'grid_cool_rate_func':grid_cool_rate_func,
             'grid_m_agecool_bprp_func':grid_m_agecool_bprp_func, 
             'grid_m_agecool_G_func':grid_m_agecool_G_func}
-
-
-# Fontaine et al. 2001 (CO), Camisassa et al. 2019 (ONe), PG, and Lauffer et al. 2019 (MESA) models
-# DA_thick_CO     = main('Fontaine2001', 'Fontaine2001', 'DA_thick')
-# DB_CO           = main('Fontaine2001', 'Fontaine2001', 'DB')
-# DA_thick_ONe    = main('Fontaine2001', 'ONe', 'DA_thick')
-# DB_ONe          = main('Fontaine2001', 'ONe', 'DB')
-# DA_thick_LPONe  = main('Althaus2010_001', 'ONe', 'DA_thick')
-# DB_LPONe        = main('Camisassa2017', 'ONe', 'DB')
-# DB_PGONe        = main('PG', 'ONe', 'DB')
-# DA_thick_MESA   = main('Fontaine2001', 'MESA', 'DA_thick')
-# DB_MESA         = main('Fontaine2001', 'MESA', 'DB')
-
-# Salaris et al. 2010 (Phase_Sep) BaSTI models. 4 and 2 are alpha-enhanced models.
-# DA_thick_Phase_Sep  = main('BasTI', 'ONe', 'DA_thick')
-# DB_Phase_Sep        = main('BasTI', 'ONe', 'DB')
-
-# DA_thick_Phase_Sep_4= main('BasTI_4', 'ONe', 'DA_thick')
-# DB_Phase_Sep_4      = main('BasTI_4', 'ONe', 'DB')
-
-# DA_thick_Phase_Sep_2= main('BasTI_2', 'ONe', 'DA_thick')
-# DB_Phase_Sep_2      = main('BasTI_2', 'ONe', 'DB')
