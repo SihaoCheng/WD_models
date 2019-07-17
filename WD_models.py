@@ -480,7 +480,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
 
 
 def interp_HR_to_para(bp_rp, G, para,
-                      HR_grid=(-0.6, 1.25, 0.002, 10, 15, 0.01),
+                      HR_grid=(-0.6, 1.5, 0.002, 8, 18, 0.01),
                       interp_type='linear'):
     """
     Interpolate the mapping of (BR-RP, G) --> para, based on the data points 
@@ -608,7 +608,7 @@ def interp_xy_z_func(x, y, z, interp_type='linear'):
 
 
 def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type, 
-               HR_grid=(-0.6, 1.5, 0.002, 8, 16, 0.01),
+               HR_grid=(-0.6, 1.5, 0.002, 8, 18, 0.01),
                logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01),
                interp_type_atm='linear', interp_type='linear',
                for_comparison=False):
