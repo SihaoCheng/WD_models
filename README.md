@@ -114,30 +114,20 @@ spectral type | remarks
      others      |                               | 'm_agecool_to_bprp'
                  |                               | 'm_agecool_to_G'
     ======================================================================== 
-    cooling-track data points:
-'mass_array':   1d-array. The mass of WD in unit of solar mass. I only 
-                read one value for a cooling track, not tracking the 
-                mass change.
-'logg':         1d-array. in cm/s^2
-'age':          1d-array. The total age of the WD in yr. Some are read
-                directly from the cooling tracks, but others are 
-                calculated by assuming an initial--final mass relation
-                (IFMR) of the WD and adding the rough main-sequence age
-                to the cooling age.
-'age_cool':     1d-array. The cooling age of the WD in yr.
-'logteff':      1d-array. The logarithm effective temperature of the WD
-                in Kelvin (K).
-'Mbol':         1d-array. The absolute bolometric magnitude of the WD. 
-                Many are converted from the log(L/Lsun) or log(L), where
-                I adopt:
-                        Mbol_sun = 4.75,
-                        Lsun = 3.828e33 erg/s.
-'cool_rate^-1': 1d-array. The reciprocal of cooling rate dt / d(bp-rp),
-                in Gyr/mag.
-        'G':            1d-array. The absolute magnitude of Gaia G band,
-                        converted from the atmosphere interpolation.
-        'bp_rp':        1d-array. The Gaia color index BP-RP, converted from the
-                        atmosphere interpolation.
+
+
+cooling-track data points:
+name | remarks
+-----|---------
+'mass_array':   | 1d-array. The mass of WD in unit of solar mass. I only read one value for a cooling track, not tracking the mass change.
+'logg':         | 1d-array. in cm/s^2
+'age':          | 1d-array. The total age of the WD in yr. Some are read directly from the cooling tracks, but others are calculated by assuming an initial--final mass relation (IFMR) of the WD and adding the rough main-sequence age to the cooling age.
+'age_cool':     | 1d-array. The cooling age of the WD in yr.
+'logteff':      | 1d-array. The logarithm effective temperature of the WD in Kelvin (K).
+'Mbol':         | 1d-array. The absolute bolometric magnitude of the WD. Many are converted from the log(L/Lsun) or log(L), where I adopt: Mbol_sun = 4.75, Lsun = 3.828e33 erg/s.
+'cool_rate^-1': | 1d-array. The reciprocal of cooling rate dt / d(bp-rp), in Gyr/mag.
+'G':            | 1d-array. The absolute magnitude of Gaia G band, converted from the atmosphere interpolation.
+'bp_rp':        | 1d-array. The Gaia color index BP-RP, converted from the atmosphere interpolation.
 
 
 
