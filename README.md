@@ -3,7 +3,7 @@ I provide a python module for transformation between the *Gaia* H--R diagram and
 
 
 One of the main usage of this module is to convert H--R diagram coordinate into WD parameters. Below is an example:
-it will first read the cooling tracks of hydrogen-atmosphere (DA) WDs from the "Fontaine2001" model for low-mass WDs (<0.5 Msun), from the "Althaus2010, Z=0.01" model for normal-mass WDs (0.5 to 1.0 Msun), and from the "ONe" model for high-mass WDs (>1.0 Msun); then, it will calculate the cooling age for two sample coordinates on the H--R diagram.
+it will first read the cooling tracks from three existing WD models and then calculate the cooling age for two sample coordinates on the H--R diagram, based on the interpolation of the cooling tracks.
 ```
 import WD_models
 
