@@ -25,10 +25,6 @@ from scipy.interpolate import griddata, interp1d
 
 tmin = 3.5; tmax = 5.1; dt = 0.01
 loggmin = 6.5; loggmax = 9.6; dlogg = 0.01
-HR_grid             = (-0.6, 1.5, 0.002, 8, 16, 0.01) # bp_rp, G
-interp_type         = 'linear'
-interp_type_atm     = 'linear'
-interp_bprp_factor  = 5
 
 
 #-------------------------------------------------------------------------------
@@ -494,7 +490,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
 
 
 def interp_HR_to_para(bp_rp, G, para,
-                      HR_grid=(-0.6, 1.5, 0.002, 10, 15, 0.01),
+                      HR_grid=(-0.6, 1.25, 0.002, 10, 15, 0.01),
                       interp_type='linear'):
     """
     Interpolate the mapping of (BR-RP, G) --> para, based on the data points 
@@ -508,8 +504,6 @@ def interp_HR_to_para(bp_rp, G, para,
         para:       1d-array. The target parameter for mapping (BP-RP, G) --> para
         HR_grid:    in the form of (xmin, xmax, dx, ymin, ymax, dy), the grid 
                     information of the H-R diagram coordinates BP-RP and G
-        age:        1d-array. The WD age. Only used for the purpose of selecting 
-                    non-NaN data points.
                   
     Returns:
         grid_z:     2d-array. The values of z on the grid of HR diagram
@@ -517,6 +511,7 @@ def interp_HR_to_para(bp_rp, G, para,
     
     """
     # define the grid of H-R diagram
+    interp_bprp_factor  = 5
     grid_x, grid_y = np.mgrid[HR_grid[0]:HR_grid[1]:HR_grid[2],
                               HR_grid[3]:HR_grid[4]:HR_grid[5]]
     grid_x *= interp_bprp_factor
@@ -527,7 +522,8 @@ def interp_HR_to_para(bp_rp, G, para,
     # get the value of z on a H-R diagram grid and the interpolated mapping
     grid_para   = griddata(np.array((bp_rp[selected]*interp_bprp_factor,
                                      G[selected])).T, 
-                           para[selected], (grid_x, grid_y), method=interp_type)
+                           para[selected], (grid_x, grid_y), method=interp_type,
+                           rescale=True)
     HR_to_para  = interpolate_2d(bp_rp[selected], G[selected], para[selected],
                                  interp_type)
     
@@ -612,6 +608,7 @@ def interp_xy_z_func(x, y, z, interp_type='linear'):
 
 
 def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type, 
+               HR_grid=(-0.6, 1.5, 0.002, 8, 16, 0.01),
                interp_type_atm='linear', interp_type='linear'):
     """ Load a set of cooling tracks and interpolate the HR diagram mapping
     
@@ -662,10 +659,6 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
             'DA_thick'                      thick hydrogen atmosphere
             'DA_thin'                       thin hydrogen atmosphere
             'DB'                            pure-helium atmosphere
-        logg_func:          Function. 
-            This is a function for (logteff, mass) --> logg. It is necessary 
-            only for BaSTI models, because the BaSTI models do not directly 
-            provide log g information.
         for_comparison:     Bool. 
             If true, cooling tracks with very similar masses from different 
             models will be used, which might lead to strange result of
@@ -674,6 +667,8 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
             the MESA model has m_WD = [1.0124, 1.019, ...]. If true, the 
             Fontaine2001 1.00Msun cooling track will be used; if false, it will
             not be used because it is too close to the MESA 1.0124Msun track.
+        HR_grid:           in the form of (xmin, xmax, dx, ymin, ymax, dy).
+            The grid information of the H-R diagram coordinates BP-RP and G.
         
     Returns:
         A Dictionary.
