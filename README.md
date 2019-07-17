@@ -91,11 +91,11 @@ spectral type | remarks
 'DB'          | pure-helium atmosphere
      
 ## Output of the function `load_model`
-    A Dictionary.
-    It contains the atmosphere grids and mapping, cooling-track data points,
-    and parameter mappings based on the cooling tracks. 
-    The keys of this dictionary are:
-        interpolation results:
+
+The function `load_model` returns a dictionary, which contains the atmosphere grids and mapping, parameter mappings, and stacked cooling-track data points. The keys of this dictionary are:
+
+### Interpolation results
+
     ========================================================================
       category   | interpolated values on a grid | interpolated mapping
       var. type  |     2d-array                  |     Function
@@ -115,8 +115,7 @@ spectral type | remarks
                  |                               | 'm_agecool_to_G'
     ======================================================================== 
 
-
-cooling-track data points:
+### Cooling-track data points
 
 name | remarks
 -----|---------
@@ -132,7 +131,6 @@ name | remarks
 
 
 
-It reads the table of synthetic colors (http://www.astro.umontreal.ca/~bergeron/CoolingModels/),
 generates the values of the Gaia color BP-RP and the bolometric correction
 G-Mbol of Gaia G band, and interpolates the mapping:
         (logteff, logg) --> BP-RP or G-Mbol.
