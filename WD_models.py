@@ -730,9 +730,9 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
         low_mass_model = 'Fontaine2001'
     
     if normal_mass_model == 'a001':
-        normal_mass_model = 'Althaus_001'
+        normal_mass_model = 'Althaus2010_001'
     if normal_mass_model == 'a0001':
-        normal_mass_model = 'Althaus_0001'
+        normal_mass_model = 'Althaus2010_0001'
     if normal_mass_model == 'f':
         normal_mass_model = 'Fontaine2001'
     if normal_mass_model == 'c':
