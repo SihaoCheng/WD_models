@@ -9,19 +9,19 @@ The function `load_model` in the module reads a set of cooling tracks assigned b
 ```
 import WD_models
 
-# loading a set of models
 model = WD_models.load_model(low_mass_model='Fontaine2001',
                              normal_mass_model='Althaus2010_001',
                              high_mass_model='ONe',
                              spec_type='DA_thick',
                              )
                              
-# calculate the cooling age (in Gyr) of two WDs with (BP-RP, G) = (0.25, 13) and (0.25, 14)
+# the cooling age at (BP-RP, G) = (0.25, 13) and (0.25, 14)
 age_cool = model['HR_to_age_cool']([0.25, 0.25], [13,14])
+
 print(age_cool)
 ```
 
-The output is `>> array([  1.27785237e+09,   2.70284467e+09])`. Available functions for other WD parameters are listed in table ? below.
+The output is `>> array([ 1.27785237,  2.70284467])`, in unit of Gyr. Available functions for other WD parameters are listed in table ? below.
 
 ### 2. Other conversions
 
@@ -38,16 +38,16 @@ age_cool = m_logteff_to_agecool(1.1, np.log10(10000))
 print(age_cool)
 ```
 
-The output is: `>> 2.1926053524257165`. Note that there are shorter versions for the names of WD models.
-For other mappings not included in this output, 
+The output is: `>> 2.1926053524257165`. Note that there are shorter versions for the names of WD models, which are also listed in table ? below.
+
 
 low_mass_model (less than about 0.5 Msun):
-            ''                              no low-mass model will be read
-            'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+''                              |no low-mass model will be read
+'Fontaine2001' or 'f'           |http://www.astro.umontreal.ca/~bergeron/CoolingModels/
 
 normal_mass_model (about 0.5 to 1.0 Msun):
-            ''                              no normal-mass model will be read
-            'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            ''                              |no normal-mass model will be read
+            'Fontaine2001' or 'f'           |http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'Althaus2010_001' or 'a001'     Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
             'Althaus2010_0001' or 'a0001'   Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
             'Camisassa2017' or 'c'          only for DB, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html
