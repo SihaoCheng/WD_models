@@ -107,8 +107,8 @@ def interp_atm(spec_type, color, T_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01),
                               T_logg_grid[3]:T_logg_grid[4]:T_logg_grid[5]]
     
     # define the interpolation of mapping
-    def interp(x,y,z):
-        grid_z      = griddata(np.array((x,y)).T, z, (grid_x, grid_y),
+    def interp(x, y, z):
+        grid_z      = griddata(np.array((x, y)).T, z, (grid_x, grid_y),
                                method=interp_type_atm)
         grid_z_func = interpolate_2d(x, y, z, interp_type_atm)
         return grid_z, grid_z_func
@@ -489,11 +489,11 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
     select = ~np.isnan(mass_array + logg + age + age_cool + logteff + Mbol) * \
              (age_cool > 1e3)
     
-    return mass_array[select], logg[select], age[select], age_cool[select], \
+    return mass_array[select], logg[select], age[select]*1e-9, age_cool[select]*1e-9, \
            logteff[select], Mbol[select]
 
 
-def interp_HR_to_para(bp_rp, G, para, age, 
+def interp_HR_to_para(bp_rp, G, para,
                       HR_grid=(-0.6, 1.5, 0.002, 10, 15, 0.01),
                       interp_type='linear'):
     """
@@ -522,7 +522,7 @@ def interp_HR_to_para(bp_rp, G, para, age,
     grid_x *= interp_bprp_factor
     
     # select only not-NaN data points
-    selected    = ~np.isnan(bp_rp + G + age + para) * (G < 16) * (G > 8)
+    selected    = ~np.isnan(bp_rp + G + para) * (G < 16) * (G > 8)
     
     # get the value of z on a H-R diagram grid and the interpolated mapping
     grid_para   = griddata(np.array((bp_rp[selected]*interp_bprp_factor,
@@ -795,19 +795,19 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
         
     # Get Parameters on HR Diagram
     grid_HR_to_mass, HR_to_mass         = interp_HR_to_para(bp_rp, G, mass_array, 
-                                                            age, HR_grid, interp_type)
+                                                            HR_grid, interp_type)
     grid_HR_to_logg, HR_to_logg         = interp_HR_to_para(bp_rp, G, logg, 
-                                                            age, HR_grid, interp_type)
+                                                            HR_grid, interp_type)
     grid_HR_to_age, HR_to_age           = interp_HR_to_para(bp_rp, G, age, 
-                                                            age, HR_grid, interp_type)
+                                                            HR_grid, interp_type)
     grid_HR_to_age_cool, HR_to_age_cool = interp_HR_to_para(bp_rp, G, age_cool, 
-                                                            age, HR_grid, interp_type)
+                                                            HR_grid, interp_type)
     grid_HR_to_logteff, HR_to_logteff   = interp_HR_to_para(bp_rp, G, logteff, 
-                                                            age, HR_grid, interp_type)
+                                                            HR_grid, interp_type)
     grid_HR_to_Mbol, HR_to_Mbol         = interp_HR_to_para(bp_rp, G, Mbol, 
-                                                            age, HR_grid, interp_type)
+                                                            HR_grid, interp_type)
     grid_HR_to_rate_inv, HR_to_rate_inv = interp_HR_to_para(bp_rp, G, rate_inv,
-                                                            age, HR_grid, interp_type)
+                                                            HR_grid, interp_type)
     # (mass, t_cool) --> bp-rp, G
     m_agecool_to_bprp                   = interp_xy_z_func(mass_array, age_cool,
                                                            bp_rp, interp_type)
