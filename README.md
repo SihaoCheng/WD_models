@@ -1,5 +1,5 @@
 # WD_models
-I provide a python functions to convert between many WD physical parameters (L, Teff, log g, etc) and H-R diagram position, based on various existing WD models. The functions are obtained through interpolating the cooling tracks.
+I provide a python script for transformation between many WD physical parameters (L, Teff, log g, etc) and H-R diagram position, based on various existing WD models. The functions are obtained through interpolating the cooling tracks.
 
 
 It reads the table of synthetic colors (http://www.astro.umontreal.ca/~bergeron/CoolingModels/),
@@ -14,6 +14,27 @@ logteff and Gaia photometry. A typical form of these mappings is:
         (BP-RP, G) --> para,
 from the HR diagram to WD parameters.
 
+(```)
+import WD_models
+model = WD_models.load_model('b', 'b', spec_type, 'linear', 'linear')
+m_logteff_to_agecool = WD_models.interp_xy_z_func(
+    model['mass_array'], model['logteff'], model['age_cool'], 'linear')
+(```)
+
+
+
+
+""" Load a set of cooling tracks and interpolate the HR diagram mapping
+    
+This function reads a set of cooling tracks assigned by the user and returns
+many useful grid-values for plotting the contour of WD parameters on the
+Gaia H--R diagram and functions for mapping between Gaia photometry and 
+WD parameters.
+
+For other mappings not included in the output, the user can generate the
+interpolated grid values and mapping function based on the cooling-track 
+data points and atmosphere models that are also provided in the output.
+E.g., for the mapping (mass, logteff) --> cooling age,
 (''')
 import WD_models
 model = WD_models.load_model('b', 'b', spec_type, 'linear', 'linear')
@@ -21,30 +42,9 @@ m_logteff_to_agecool = WD_models.interp_xy_z_func(
     model['mass_array'], model['logteff'], model['age_cool'], 'linear')
 (''')
 
-
-
-
-""" Load a set of cooling tracks and interpolate the HR diagram mapping
-    
-    This function reads a set of cooling tracks assigned by the user and returns
-    many useful grid-values for plotting the contour of WD parameters on the
-    Gaia H--R diagram and functions for mapping between Gaia photometry and 
-    WD parameters.
-    
-    For other mappings not included in the output, the user can generate the
-    interpolated grid values and mapping function based on the cooling-track 
-    data points and atmosphere models that are also provided in the output.
-    E.g., for the mapping (mass, logteff) --> cooling age,
-    (''')
-    import WD_models
-    model = WD_models.load_model('b', 'b', spec_type, 'linear', 'linear')
-    m_logteff_to_agecool = WD_models.interp_xy_z_func(
-        model['mass_array'], model['logteff'], model['age_cool'], 'linear')
-    (''')
-    
-    Args:
-        low_mass_model:     String. Specifying the cooling model used for low-
-                            mass WDs (<~0.5Msun). Its value should be one of the
+Args:
+    low_mass_model:     String. Specifying the cooling model used for low-
+                        mass WDs (<~0.5Msun). Its value should be one of the
                             following: 
             ''                              no low-mass model will be read
             'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
@@ -86,50 +86,50 @@ m_logteff_to_agecool = WD_models.interp_xy_z_func(
             Fontaine2001 1.00Msun cooling track will be used; if false, it will
             not be used because it is too close to the MESA 1.0124Msun track.
         
-    Returns:
-        A Dictionary.
-        It contains the atmosphere grids and mapping, cooling-track data points,
-        and parameter mappings based on the cooling tracks. 
-        The keys of this dictionary are:
-            interpolation results:
-        ========================================================================
-          category   | interpolated values on a grid | interpolated mapping
-          var. type  |     2d-array                  |     Function
-        ========================================================================
-           atm.      | 'grid_logteff_logg_to_G_Mbol' | 'logteff_logg_to_G_Mbol'
-                     | 'grid_logteff_logg_to_bp_rp'  | 'logteff_logg_to_bp_rp'
-        ------------------------------------------------------------------------
-         HR -->      | 'grid_HR_to_mass'             | 'HR_to_mass'
-         WD para.    | 'grid_HR_to_logg'             | 'HR_to_logg'
-                     | 'grid_HR_to_age'              | 'HR_to_age'
-                     | 'grid_HR_to_age_cool'         | 'HR_to_age_cool'
-                     | 'grid_HR_to_logteff'          | 'HR_to_logteff'
-                     | 'grid_HR_to_Mbol'             | 'HR_to_Mbol'
-                     | 'grid_HR_to_cool_rate^-1'     | 'HR_to_cool_rate^-1'
-        ------------------------------------------------------------------------
-         others      |                               | 'm_agecool_to_bprp'
-                     |                               | 'm_agecool_to_G'
-        ======================================================================== 
-            cooling-track data points:
-        'mass_array':   1d-array. The mass of WD in unit of solar mass. I only 
-                        read one value for a cooling track, not tracking the 
-                        mass change.
-        'logg':         1d-array. in cm/s^2
-        'age':          1d-array. The total age of the WD in yr. Some are read
-                        directly from the cooling tracks, but others are 
-                        calculated by assuming an initial--final mass relation
-                        (IFMR) of the WD and adding the rough main-sequence age
-                        to the cooling age.
-        'age_cool':     1d-array. The cooling age of the WD in yr.
-        'logteff':      1d-array. The logarithm effective temperature of the WD
-                        in Kelvin (K).
-        'Mbol':         1d-array. The absolute bolometric magnitude of the WD. 
-                        Many are converted from the log(L/Lsun) or log(L), where
-                        I adopt:
-                                Mbol_sun = 4.75,
-                                Lsun = 3.828e33 erg/s.
-        'cool_rate^-1': 1d-array. The reciprocal of cooling rate dt / d(bp-rp),
-                        in Gyr/mag.
+Returns:
+    A Dictionary.
+    It contains the atmosphere grids and mapping, cooling-track data points,
+    and parameter mappings based on the cooling tracks. 
+    The keys of this dictionary are:
+        interpolation results:
+   ========================================================================
+      category   | interpolated values on a grid | interpolated mapping
+      var. type  |     2d-array                  |     Function
+   ========================================================================
+       atm.      | 'grid_logteff_logg_to_G_Mbol' | 'logteff_logg_to_G_Mbol'
+                 | 'grid_logteff_logg_to_bp_rp'  | 'logteff_logg_to_bp_rp'
+   ------------------------------------------------------------------------
+     HR -->      | 'grid_HR_to_mass'             | 'HR_to_mass'
+     WD para.    | 'grid_HR_to_logg'             | 'HR_to_logg'
+                 | 'grid_HR_to_age'              | 'HR_to_age'
+                 | 'grid_HR_to_age_cool'         | 'HR_to_age_cool'
+                 | 'grid_HR_to_logteff'          | 'HR_to_logteff'
+                 | 'grid_HR_to_Mbol'             | 'HR_to_Mbol'
+                 | 'grid_HR_to_cool_rate^-1'     | 'HR_to_cool_rate^-1'
+   ------------------------------------------------------------------------
+     others      |                               | 'm_agecool_to_bprp'
+                 |                               | 'm_agecool_to_G'
+   ======================================================================== 
+    cooling-track data points:
+'mass_array':   1d-array. The mass of WD in unit of solar mass. I only 
+                read one value for a cooling track, not tracking the 
+                mass change.
+'logg':         1d-array. in cm/s^2
+'age':          1d-array. The total age of the WD in yr. Some are read
+                directly from the cooling tracks, but others are 
+                calculated by assuming an initial--final mass relation
+                (IFMR) of the WD and adding the rough main-sequence age
+                to the cooling age.
+'age_cool':     1d-array. The cooling age of the WD in yr.
+'logteff':      1d-array. The logarithm effective temperature of the WD
+                in Kelvin (K).
+'Mbol':         1d-array. The absolute bolometric magnitude of the WD. 
+                Many are converted from the log(L/Lsun) or log(L), where
+                I adopt:
+                        Mbol_sun = 4.75,
+                        Lsun = 3.828e33 erg/s.
+'cool_rate^-1': 1d-array. The reciprocal of cooling rate dt / d(bp-rp),
+                in Gyr/mag.
         'G':            1d-array. The absolute magnitude of Gaia G band,
                         converted from the atmosphere interpolation.
         'bp_rp':        1d-array. The Gaia color index BP-RP, converted from the
