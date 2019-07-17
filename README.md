@@ -3,9 +3,7 @@ I provide a python module for transformation between the *Gaia* H--R diagram and
 
 The function `load_model` in the module reads a set of cooling tracks assigned by the user and returns a dictionary containing many useful functions for parameter conversion. The keys of this dictionary are listed in table ? below.
 
-## Example usage
-### 1. Converting H--R diagram coordinate into WD parameters
-
+## Example 1: converting H--R diagram coordinate into WD parameters
 ```python
 import WD_models
 
@@ -20,13 +18,11 @@ age_cool = model['HR_to_age_cool']([0.25, 0.25], [13,14])
 
 print(age_cool)
 ```
-
 The output is `>> array([ 1.27785237,  2.70284467])`, in unit of Gyr. Available functions for other WD parameters are listed in table ? below.
 
-### 2. Other conversions
+## Example 2: other conversions
 
 If the function for a desired conversion is not provided in the output of `load_model`, the user can generate the interpolated grid values and mapping function based on the cooling-track data points and atmosphere grid provided in the output of `load_model`. For example, for the mapping (mass, logteff) --> cooling age:
-
 ```python
 model = WD_models.load_model('f', 'a001', 'o', 'DA_thick')
 
@@ -37,35 +33,53 @@ age_cool = m_logteff_to_agecool(1.1, np.log10(10000))
 
 print(age_cool)
 ```
+The output is `>> 2.1926053524257165` Gyr. Note that there are shorter versions for the names of WD models, which are also listed in table ? below.
 
-The output is: `>> 2.1926053524257165`. Note that there are shorter versions for the names of WD models, which are also listed in table ? below.
+## Example 3: comparing different models
+```python
+model_A = WD_models.load_model('', 'b', 'b', 'DA_thick')
+model_B = WD_models.load_model('', 'b', 'b', 'DB')
+
+d_age_cool = (model_A['HR_to_age_cool'](0, 13) - 
+              model_B['HR_to_age_cool'](0, 13))
+
+print(d_age_cool)
+```
+The output is `>> 0.274022022781` Gyr.
 
 
 low_mass_model (less than about 0.5 Msun):
+model names | remarks & reference
+--------------------------------|------------------------------------------
 ''                              |no low-mass model will be read
 'Fontaine2001' or 'f'           |http://www.astro.umontreal.ca/~bergeron/CoolingModels/
 
 normal_mass_model (about 0.5 to 1.0 Msun):
-            ''                              |no normal-mass model will be read
-            'Fontaine2001' or 'f'           |http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Althaus2010_001' or 'a001'     Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
-            'Althaus2010_0001' or 'a0001'   Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
-            'Camisassa2017' or 'c'          only for DB, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html
-            'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-            'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-            'PG'                            only for DB
+model names | remarks & reference
+--------------------------------|------------------------------------------
+''                              |no normal-mass model will be read
+'Fontaine2001' or 'f'           |http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+'Althaus2010_001' or 'a001'     |Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
+'Althaus2010_0001' or 'a0001'   |Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
+'Camisassa2017' or 'c'          |only for DB, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html
+'BaSTI' or 'b'                  |with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+'BaSTI_nosep' or 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+'PG'                            |only for DB
+
 high_mass_model (higher than 1.0 Msun):
-            ''                              no high-mass model will be read
-            'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'ONe' or 'o'                    Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
-            'MESA' or 'm'                   Lauffer et al. 2019
-            'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-            'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-        spec_type:          String. Specifying the atmosphere composition.
-                            Its value should be one of the following:
-            'DA_thick'                      thick hydrogen atmosphere
-            'DA_thin'                       thin hydrogen atmosphere
-            'DB'                            pure-helium atmosphere
+model names | remarks & reference
+--------------------------------|------------------------------------------
+''                              |no high-mass model will be read
+'Fontaine2001' or 'f'           |http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+'ONe' or 'o'                    |Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
+'MESA' or 'm'                   |Lauffer et al. 2019
+'BaSTI' or 'b'                  |with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+'BaSTI_nosep' or 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+
+spec_type:
+'DA_thick'                      thick hydrogen atmosphere
+'DA_thin'                       thin hydrogen atmosphere
+'DB'                            pure-helium atmosphere
         
 Returns:
     A Dictionary.
