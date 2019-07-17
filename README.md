@@ -3,7 +3,7 @@ I provide a python module for transformation between the *Gaia* H--R diagram and
 
 The function `load_model` in the module reads a set of cooling tracks assigned by the user and returns many useful functions for parameter conversion. 
 
-## Example usage
+## 1. Example usage
 1. converting H--R diagram coordinate into WD parameters
 ```
 import WD_models
