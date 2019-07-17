@@ -624,12 +624,12 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
     interpolated grid values and mapping function based on the cooling-track 
     data points and atmosphere models that are also provided in the output.
     E.g., for the mapping (mass, logteff) --> cooling age,
-    (''')
+    (```)
     import WD_models
     model = WD_models.load_model('b', 'b', spec_type, 'linear', 'linear')
     m_logteff_to_agecool = WD_models.interp_xy_z_func(
         model['mass_array'], model['logteff'], model['age_cool'], 'linear')
-    (''')
+    (```)
     
     Args:
         low_mass_model:     String. Specifying the cooling model used for low-
