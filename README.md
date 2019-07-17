@@ -6,7 +6,7 @@ The function `load_model` in the module reads a set of cooling tracks assigned b
 ## Example usage
 ### 1. Converting H--R diagram coordinate into WD parameters
 
-```
+```python
 import WD_models
 
 model = WD_models.load_model(low_mass_model='Fontaine2001',
@@ -27,7 +27,7 @@ The output is `>> array([ 1.27785237,  2.70284467])`, in unit of Gyr. Available 
 
 If the function for a desired conversion is not provided in the output of `load_model`, the user can generate the interpolated grid values and mapping function based on the cooling-track data points and atmosphere grid provided in the output of `load_model`. For example, for the mapping (mass, logteff) --> cooling age:
 
-```
+```python
 model = WD_models.load_model('f', 'a001', 'o', 'DA_thick')
 
 m_logteff_to_agecool = WD_models.interp_xy_z_func(
