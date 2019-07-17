@@ -4,7 +4,8 @@ I provide a python module for transformation between the *Gaia* H--R diagram and
 The function `load_model` in the module reads a set of cooling tracks assigned by the user and returns a dictionary containing many useful functions for parameter conversion. The keys of this dictionary are listed in table ? below.
 
 ## Example usage
-1. Converting H--R diagram coordinate into WD parameters
+### 1. Converting H--R diagram coordinate into WD parameters
+
 ```
 import WD_models
 
@@ -19,9 +20,10 @@ model = WD_models.load_model(low_mass_model='Fontaine2001',
 age_cool = model['HR_to_age_cool']([0.25, 0.25], [13,14])
 print(age_cool)
 ```
+
 The output is: `>> array([  1.27785237e+09,   2.70284467e+09])`. Available functions for similar conversion are listed in table ? below.
 
-2. Other conversions
+### 2. Other conversions
 
 If the function for a desired conversion is not provided in the output of `load_model`, the user can generate the interpolated grid values and mapping function based on the cooling-track data points and atmosphere models provided in the output of `load_model`. For example, for the mapping (mass, logteff) --> cooling age,
 ```
