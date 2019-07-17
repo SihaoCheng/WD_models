@@ -49,14 +49,14 @@ The output is `>> 0.274022022781` Gyr.
 
 ## Models included
 
-- low_mass_model (less than about 0.5 Msun)
+### Low_mass_model (less than about 0.5 Msun)
 
 model names | remarks & reference
 ------------|----------------------
 ''                              |no low-mass model will be read
 'Fontaine2001' or 'f'           |http://www.astro.umontreal.ca/~bergeron/CoolingModels/
 
-- normal_mass_model (about 0.5 to 1.0 Msun)
+### Normal_mass_model (about 0.5 to 1.0 Msun)
 
 model names | remarks & reference
 ------------|----------------------
@@ -69,7 +69,7 @@ model names | remarks & reference
 'BaSTI_nosep' or 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
 'PG'                            |only for DB
 
-- high_mass_model (higher than 1.0 Msun)
+### High_mass_model (higher than 1.0 Msun)
 
 model names | remarks & reference
 ------------|----------------------
@@ -80,15 +80,15 @@ model names | remarks & reference
 'BaSTI' or 'b'                  |with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
 'BaSTI_nosep' or 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
 
-- atmosphere sythetic colors
+### Atmosphere sythetic colors
 
 We interpolate the table of sythetic colors from http://www.astro.umontreal.ca/~bergeron/CoolingModels/). The spectral type can be one of the following:
 
 spectral type | remarks
 --------------|----------------------
-'DA_thick'                      thick hydrogen atmosphere
-'DA_thin'                       thin hydrogen atmosphere
-'DB'                            pure-helium atmosphere
+'DA_thick'    |                  thick hydrogen atmosphere
+'DA_thin'     |                  thin hydrogen atmosphere
+'DB'          |                  pure-helium atmosphere
         
 Returns:
     A Dictionary.
