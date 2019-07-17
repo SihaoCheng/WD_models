@@ -1,0 +1,24 @@
+Three distinct families of DA models are available:
+
+1) A set of 21 evolutionary sequences referring to pure C-core models
+with standard "thick" H and He layers, i.e., with log M(H)/M* = -4.0
+and log M(He)/M* = -2.0. Hence the notation C_0200204 for the sequence
+with M* = 0.2 Msun, etc. These sequences are similar except for the
+value of the total mass (21 values between 0.2 and 1.3 Msun). These
+are the sequences published in Fontaine, Brassard, & Bergeron (2001,
+PASP, 113, 409).
+
+2) A set of 16 evolutionary sequences for mixed C/O core composition
+(50/50 by mass fraction mixed uniformly) and for standard "thick" H and
+He layers. The notation is CO_0200204 for the sequence with M* = 0.2
+Msun, etc. There are 16 different values of the total mass, again
+between 0.2 and 1.3 Msun. 
+
+3) A similar set of 16 evolutionary sequences for *mixed* C/O core
+composition (50/50 by mass fraction mixed uniformly), but for "thin" H
+layers with log M(H)/M* = -10.0 instead of -4.0.
+
+The C_ files have headers that should be self-explanatory, while the
+CO_ files do not have such headers, but the format is identical
+to that of the C_ files. A sample header is provided in the file
+SampleHeader.
