@@ -37,9 +37,12 @@ For example, for the mapping (mass, logteff) --> cooling age:
 ```python
 model = WD_models.load_model('f', 'a001', 'o', 'DA_thick')
 
-m_logteff_to_agecool = WD_models.interp_xy_z_func(
-    model['mass_array'], model['logteff'], model['age_cool'], 'linear')
-    
+m_logteff_to_agecool = WD_models.interp_xy_z_func(x=model['mass_array'],
+                                                  y=model['logteff'],
+                                                  z=model['age_cool'],
+                                                  interp_type='linear'
+                                                  )
+# the cooling age for (m_WD, Teff) = (1.1 Msun, 10000 K)
 age_cool = m_logteff_to_agecool(1.1, np.log10(10000))
 
 print(age_cool)
