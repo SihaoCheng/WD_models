@@ -130,34 +130,34 @@ def read_cooling_tracks(normal_mass_model, high_mass_model, spec_type,
     tracks.
     
     Args:
-    normal_mass_model:  string. One of the following: 
-                        'Fontaine2001'    (http://www.astro.umontreal.ca/~bergeron/CoolingModels/),
-                        'Althaus2010_001', 'Althaus2010_0001'
-                                          (Z=0.01 and Z=0.001, only for DA, 
-                                           http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html),
-                        'Camisassa2017'   (only for DB, 
-                                           http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html),
-                        'BaSTI', 'BaSTI_2' (Z=0.02), 'BaSTI_4' (Z=0.04) 
-                                          (Salaris et al. 2010, 
-                                           http://basti.oa-teramo.inaf.it),
-                        'PG'              (only for DB).
-    high_mass_model:    string. One of the following: 
-                        'Fontaine2001' (http://www.astro.umontreal.ca/~bergeron/CoolingModels/),
-                        'ONe' (Camisassa et al. 2019, 
-                               http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html),
-                        'MESA' (Lauffer et al. 2019),
-                        'BaSTI' (Salaris et al. 2010, http://basti.oa-teramo.inaf.it)
-    spec_type:          string. One of the following:
-                        'DA_thick', 'DA_thin', 'DB'
-    logg_func:          a function for (logteff, mass) --> logg. 
-                        It is necessary only for BaSTI models, because the BaSTI
-                        models do not directly provide log g information.
-    for_comparison:     Bool. If true, more cooling tracks from different models
-                        will be used. E.g., the Fontaine2001 model has m_WD = 
-                        [..., 0.95, 1.00, ...], and the MESA model has m_WD = 
-                        [1.0124, 1.019, ...]. If true, the Fontaine2001 1.00Msun
-                        cooling track will be used; if false, it will not be 
-                        used because it is too close to the MESA 1.0124 track.
+        normal_mass_model:  string. One of the following: 
+            'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'Althaus2010_001' or 'a001'     Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
+            'Althaus2010_0001' or 'a0001'   Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
+            'Camisassa2017' or 'c'          only for DB, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html
+            'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+            'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+            'PG'                            only for DB
+        high_mass_model:    string. One of the following: 
+            'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'ONe' or 'o'                    Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
+            'MESA' or 'm'                   Lauffer et al. 2019
+            'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+            'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+        spec_type:          string. One of the following:
+            'DA_thick'
+            'DA_thin'
+            'DB'
+        logg_func:          Function. 
+            This is a function for (logteff, mass) --> logg. It is necessary 
+            only for BaSTI models, because the BaSTI models do not directly 
+            provide log g information.
+        for_comparison:     Bool. 
+            If true, more cooling tracks from different models will be used. 
+            E.g., the Fontaine2001 model has m_WD = [..., 0.95, 1.00, ...], and
+            the MESA model has m_WD = [1.0124, 1.019, ...]. If true, the 
+            Fontaine2001 1.00Msun cooling track will be used; if false, it will
+            not be used because it is too close to the MESA 1.0124Msun track.
     
     Returns:
         stacked data points from a set of cooling tracks.
@@ -350,10 +350,10 @@ def read_cooling_tracks(normal_mass_model, high_mass_model, spec_type,
     # BaSTI model
     for mass in ['054','055','061','068','077','087','100','110','120']:
         normal_mass_use_BaSTI = (normal_mass_model == 'BaSTI' or 
-                                 normal_mass_model == 'BaSTInosep'
+                                 normal_mass_model == 'BaSTI_nosep'
                                 )
         high_mass_use_BaSTI = (high_mass_model == 'BaSTI' or 
-                               high_mass_model == 'BaSTInosep'
+                               high_mass_model == 'BaSTI_nosep'
                               )
         sep = 'sep'
         if normal_mass_use_BaSTI and int(mass)/100 < mass_separation_2:
@@ -383,36 +383,6 @@ def read_cooling_tracks(normal_mass_model, high_mass_model, spec_type,
         logteff     = np.concatenate(( logteff, Cool['log(Teff)'] ))
         Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['log(L/Lo)'] ))
         del Cool
-    
-    # BaSTI high-alpha model
-    if 'BaSTI_' in normal_mass_model:
-        for time in ['200','300','400','500','600','700','800','900','1000',
-                    '1250','1500','1750','2000','2250','2500','2750','3000',
-                    '3250','3500','3750','4000','4250','4500','4750','5000',
-                    '5250','5500','5750','6000','6250','6500','6750','7000',
-                    '7250','7500','7750','8000','8250','8500','8750','9000',
-                    '9500','10000','10500','11000','11500','12000','12500',
-                     '13000','13500','14000']:
-            if '4' in normal_mass_model or '2' in normal_mass_model:
-                if '4' in normal_mass_model:
-                    Cool = Table.read('models/BaSTI_z42aeo/WDz402y303aenot' + 
-                                      time + '.' + spec_suffix2 + 'sep.sdss', 
-                                      format='ascii') 
-                if '2' in normal_mass_model:
-                    Cool = Table.read('models/BaSTI_z22aeo/WDzsunysunaenot' + 
-                                      time + '.' + spec_suffix2 + 'sep.sdss', 
-                                      format='ascii') 
-                Cool = Cool[(Cool['log(Teff)'] > tmin) *
-                            (Cool['log(Teff)'] < tmax)][::1]
-                Cool['Log(grav)'] = logg_func(Cool['log(Teff)'], Cool['Mwd'])
-                mass_array  = np.concatenate(( mass_array, Cool['Mwd'] ))
-                logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
-                age         = np.concatenate(( age, (np.ones(len(Cool)) * int(time) * 1e6) +
-                                                     IFMR(Cool['Mwd'])**(t_index) * 1e10 ))
-                age_cool    = np.concatenate(( age_cool, (np.ones(len(Cool)) * int(time) * 1e6) ))
-                logteff     = np.concatenate(( logteff, Cool['log(Teff)'] ))
-                Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['log(L/Lo)'] ))
-                del Cool
     
     # PG cooling tracks (Althaus et al. 2009)
     if normal_mass_model == 'PG' and spec_type == 'DB':
@@ -631,42 +601,43 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
                interp_type_atm='linear', interp_type='linear'):
     """ Load a set of cooling tracks and interpolate the mapping to HR diagram
     
-    This function is the main function of the WD_models package. 
-    First, it first reads the mass, logg, total age (if it exists), cooling age,
+    This function is the main function of the WD_models package:
+    First, it reads the table of synthetic colors 
+    First, it reads the mass, logg, total age (if it exists), cooling age,
     logteff, and absolute bolometric magnitude Mbol from white dwarf cooling
-    models with the function 'read_cooling_tracks'.
-    Then, it interpolate the mapping between parameters such as logg, teffGaia photometry
+    models with the function 'read_cooling_tracks';
+    Then, it interpolates the mapping between parameters such as logg, teffGaia photometry
     
     Args:
-    normal_mass_model:  string. One of the following: 
-                        'Fontaine2001'    (http://www.astro.umontreal.ca/~bergeron/CoolingModels/),
-                        'Althaus2010_001', 'Althaus2010_0001'
-                                          (Z=0.01 and Z=0.001, only for DA, 
-                                           http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html),
-                        'Camisassa2017'   (only for DB, 
-                                           http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html),
-                        'BaSTI', 'BaSTI_2' (Z=0.02), 'BaSTI_4' (Z=0.04) 
-                                          (Salaris et al. 2010, 
-                                           http://basti.oa-teramo.inaf.it),
-                        'PG'              (only for DB).
-    high_mass_model:    string. One of the following: 
-                        'Fontaine2001' (http://www.astro.umontreal.ca/~bergeron/CoolingModels/),
-                        'ONe' (Camisassa et al. 2019, 
-                               http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html),
-                        'MESA' (Lauffer et al. 2019),
-                        'BaSTI' (Salaris et al. 2010, http://basti.oa-teramo.inaf.it)
-    spec_type:          string. One of the following:
-                        'DA_thick', 'DA_thin', 'DB'
-    logg_func:          a function for (logteff, mass) --> logg. 
-                        It is necessary only for BaSTI models, because the BaSTI
-                        models do not directly provide log g information.
-    for_comparison:     Bool. If true, more cooling tracks from different models
-                        will be used. E.g., the Fontaine2001 model has m_WD = 
-                        [..., 0.95, 1.00, ...], and the MESA model has m_WD = 
-                        [1.0124, 1.019, ...]. If true, the Fontaine2001 1.00Msun
-                        cooling track will be used; if false, it will not be 
-                        used because it is too close to the MESA 1.0124 track.
-    
+        normal_mass_model:  string. One of the following: 
+            'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'Althaus2010_001' or 'a001'     Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
+            'Althaus2010_0001' or 'a0001'   Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
+            'Camisassa2017' or 'c'          only for DB, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html
+            'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+            'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+            'PG'                            only for DB
+        high_mass_model:    string. One of the following: 
+            'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'ONe' or 'o'                    Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
+            'MESA' or 'm'                   Lauffer et al. 2019
+            'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+            'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+        spec_type:          string. One of the following:
+            'DA_thick'
+            'DA_thin'
+            'DB'
+        logg_func:          Function. 
+            This is a function for (logteff, mass) --> logg. It is necessary 
+            only for BaSTI models, because the BaSTI models do not directly 
+            provide log g information.
+        for_comparison:     Bool. 
+            If true, more cooling tracks from different models will be used. 
+            E.g., the Fontaine2001 model has m_WD = [..., 0.95, 1.00, ...], and
+            the MESA model has m_WD = [1.0124, 1.019, ...]. If true, the 
+            Fontaine2001 1.00Msun cooling track will be used; if false, it will
+            not be used because it is too close to the MESA 1.0124Msun track.
+        
     Returns:
         stacked data points from a set of cooling tracks.
         mass_array: 1d-array. The mass of WD in unit of solar mass. I only read
@@ -698,18 +669,14 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
     if normal_mass_model == 'b':
         normal_mass_model = 'BaSTI'
     if normal_mass_model == 'bn':
-        normal_mass_model = 'BaSTInosep'
-    if normal_mass_model == 'b2':
-        normal_mass_model = 'BaSTI_2'
-    if normal_mass_model == 'b4':
-        normal_mass_model = 'BaSTI_4'
+        normal_mass_model = 'BaSTI_nosep'
     
     if high_mass_model == 'f':
         high_mass_model = 'Fontaine2001'
     if high_mass_model == 'b':
         high_mass_model = 'BaSTI'
     if high_mass_model == 'bn':
-        high_mass_model = 'BaSTInosep'
+        high_mass_model = 'BaSTI_nosep'
     if high_mass_model == 'm':
         high_mass_model = 'MESA'
     if high_mass_model == 'o':
