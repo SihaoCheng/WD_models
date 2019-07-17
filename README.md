@@ -2,8 +2,8 @@
 I provide a python module for transformation between the *Gaia* H--R diagram and many white dwarf (WD) physical parameters (L, Teff, log *g*, etc), based on an interpolation of cooling tracks from various existing WD models. This module is a python 3 script and will use functions from the following packages: `astropy, matplotlib, numpy, scipy`.
 
 
-One of the main usage of this module is to convert H--R diagram coordinate into WD parameters. Below is an example:
-it will first read the cooling tracks from three existing WD models and then calculate the cooling age for two sample coordinates on the H--R diagram, based on the interpolation of the cooling tracks.
+## Example usage
+- H--R diagram to WD parameters
 ```
 import WD_models
 
