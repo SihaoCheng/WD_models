@@ -49,14 +49,16 @@ The output is `>> 0.274022022781` Gyr.
 
 
 low_mass_model (less than about 0.5 Msun):
+
 model names | remarks & reference
---------------------------------|------------------------------------------
+------------|----------------------
 ''                              |no low-mass model will be read
 'Fontaine2001' or 'f'           |http://www.astro.umontreal.ca/~bergeron/CoolingModels/
 
 normal_mass_model (about 0.5 to 1.0 Msun):
+
 model names | remarks & reference
---------------------------------|------------------------------------------
+------------|----------------------
 ''                              |no normal-mass model will be read
 'Fontaine2001' or 'f'           |http://www.astro.umontreal.ca/~bergeron/CoolingModels/
 'Althaus2010_001' or 'a001'     |Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
@@ -67,8 +69,9 @@ model names | remarks & reference
 'PG'                            |only for DB
 
 high_mass_model (higher than 1.0 Msun):
+
 model names | remarks & reference
---------------------------------|------------------------------------------
+------------|----------------------
 ''                              |no high-mass model will be read
 'Fontaine2001' or 'f'           |http://www.astro.umontreal.ca/~bergeron/CoolingModels/
 'ONe' or 'o'                    |Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
