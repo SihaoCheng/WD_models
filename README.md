@@ -1,12 +1,20 @@
 # WD_models
-I provide a python module for transformation between the *Gaia* H--R diagram and many white dwarf (WD) physical parameters (L, Teff, log *g*, etc), based on an interpolation of cooling tracks from various existing WD models. This module is a python 3 script and will use functions from the following packages: `astropy, matplotlib, numpy, scipy`.
+I provide a python module for transformation between the *Gaia* H--R diagram and many white dwarf (WD) physical parameters (L, Teff, log *g*, etc), based on an interpolation of cooling tracks from various existing WD models (listed below). This module is written for python 3 and will use Functions from the following packages: `astropy, matplotlib, numpy, scipy`. It is designed mainly for the following purposes:
 
-The function `load_model` in the module reads a set of cooling tracks assigned by the user and returns a dictionary containing many useful functions for parameter conversion. The keys of this dictionary are listed in table ? below.
+1. converting the coordinates of *Gaia* H--R diagram into WD parameters;
+2. plotting the contour of WD parameters on the *Gaia* H--R diagram.
+
+However, one can also achieve conversions between any desired WD parameters easily (see Example 2 below), based on the tools provided in this module.
+
+
+## Import
+Please download the script `WD_models.py` and folder `models/` to the same directory, and simply import the module in python 3:
+```python
+import WD_models
+```
 
 ## Example 1: converting H--R diagram coordinate into WD parameters
 ```python
-import WD_models
-
 model = WD_models.load_model(low_mass_model='Fontaine2001',
                              normal_mass_model='Althaus2010_001',
                              high_mass_model='ONe',
@@ -19,11 +27,11 @@ age_cool = model['HR_to_age_cool']([0.25, 0.25], [13,14])
 print(age_cool)
 >> array([ 1.27785237,  2.70284467])
 ```
-The outputs are in unit of Gyr. Available functions for other WD parameters are listed in table ? below.
+The outputs are in unit of Gyr. The *Function* `load_model` in the module reads a set of cooling tracks assigned by the user and returns a dictionary containing many useful functions for parameter conversion. The keys of this dictionary (available functions for other parameters) are listed in table ? below.
 
-## Example 2: other conversions
+## Example 2: conversions between any desired WD parameters
 
-If the function for a desired conversion is not provided in the output of `load_model`, the user can generate the interpolated grid values and mapping function with the function `interp_xy_z_func`, `interp_xy_z_func`, or `interp_HR_to_para`, based on the cooling-track data points and atmosphere grid provided as the output of `load_model`. 
+If the conversion of a desired conversion is not provided in the output of `load_model`, the user can generate the interpolated grid values and mapping function with the function `interp_xy_z_func`, `interp_xy_z_func`, or `interp_HR_to_para`, based on the cooling-track data points and atmosphere grid provided as the output of `load_model`. 
 
 For example, for the mapping (mass, logteff) --> cooling age:
 ```python
