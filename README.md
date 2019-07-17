@@ -1,11 +1,11 @@
 # WD_models
-I provide a python module for transformation between the *Gaia* H--R diagram and many white dwarf (WD) physical parameters (L, Teff, log g, etc), based on an interpolation of cooling tracks from various existing WD models.
+I provide a python module for transformation between the *Gaia* H--R diagram and many white dwarf (WD) physical parameters (L, Teff, log *g*, etc), based on an interpolation of cooling tracks from various existing WD models.
 
 This module is a python 3 script and uses functions from the following packages:
 astropy, matplotlib, numpy, scipy
 
 One of the main usage of this module is to convert H--R diagram coordinate into WD parameters. Below is an example:
-it will first read the cooling tracks of hydrogen-atmosphere (DA) WDs from the "Fontaine2001" model for low-mass WDs (<~0.5 Msun), from the "Althaus2010, Z=0.01" model for normal-mass WDs (0.5~1.0 Msun), and from the "ONe" model for high-mass WDs (>~1.0 Msun); then, it will calculate the cooling age for two sample coordinates on the H--R diagram.
+it will first read the cooling tracks of hydrogen-atmosphere (DA) WDs from the "Fontaine2001" model for low-mass WDs (<0.5 Msun), from the "Althaus2010, Z=0.01" model for normal-mass WDs (0.5 to 1.0 Msun), and from the "ONe" model for high-mass WDs (>1.0 Msun); then, it will calculate the cooling age for two sample coordinates on the H--R diagram.
 ```
 import WD_models
 
