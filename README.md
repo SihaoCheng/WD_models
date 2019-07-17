@@ -22,6 +22,7 @@ print(age_cool)
 The output is: `>> array([  1.27785237e+09,   2.70284467e+09])`. Available functions for similar conversion are listed in table ? below.
 
 2. Other conversions
+
 If the function for a desired conversion is not provided in the output of `load_model`, the user can generate the interpolated grid values and mapping function based on the cooling-track data points and atmosphere models provided in the output of `load_model`. For example, for the mapping (mass, logteff) --> cooling age,
 ```
 model = WD_models.load_model('f', 'a001', 'o', 'DA_thick')
