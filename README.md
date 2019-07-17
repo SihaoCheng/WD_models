@@ -5,12 +5,13 @@ This module is a python 3 script and uses functions from the following packages:
 astropy, matplotlib, numpy, scipy
 
 One of the main usage of this module is to convert H--R diagram coordinate into WD parameters. Below is an example:
+it will first read the cooling tracks of hydrogen-atmosphere (DA) WDs from the "Fontaine2001" model for low-mass WDs (<~0.5 Msun), from the "Althaus2010, Z=0.01" model for normal-mass WDs (0.5~1.0 Msun), and from the "ONe" model for high-mass WDs (>~1.0 Msun); then, it will calculate the cooling age for two sample coordinates on the H--R diagram.
 ```
 import WD_models
 
 # loading a set of models
 model = WD_models.load_model(low_mass_model='Fontaine2001',
-                             normal_mass_model='Althaus2010',
+                             normal_mass_model='Althaus2010_001',
                              high_mass_model='ONe',
                              spec_type='DA_thick',
                              )
@@ -19,48 +20,19 @@ model = WD_models.load_model(low_mass_model='Fontaine2001',
 # (BP-RP, G) = (0.25, 13) and (0.25, 14)
 print(model['HR_to_age_cool']([0.25, 0.25], [13,14]))
 ```
-The output is the following:
-`>> array([  1.33032809e+09,   2.56344548e+09]) `
+The output is: `>> array([  1.27785237e+09,   2.70284467e+09])`
 
-This function reads a set of cooling tracks assigned by the user and returns many useful grid-values for plotting the contour of WD parameters on the Gaia H--R diagram and functions for mapping between Gaia photometry and WD parameters.
-
-For other mappings not included in the output, the user can generate the interpolated grid values and mapping function based on the cooling-track data points and atmosphere models that are also provided in the output. E.g., for the mapping (mass, logteff) --> cooling age,
-(''')
-import WD_models
-model = WD_models.load_model('b', 'b', spec_type, 'linear', 'linear')
+The function `load_model` reads a set of cooling tracks assigned by the user and returns many useful functions for mapping between Gaia photometry and WD parameters and grid-values for plotting the contour of WD parameters. For other mappings not included in this output, the user can generate the interpolated grid values and mapping function based on the cooling-track data points and atmosphere models that are also provided in the output. 
+E.g., for the mapping (mass, logteff) --> cooling age,
+```
+model = WD_models.load_model('f', 'a001', 'o', 'DA_thick')
 m_logteff_to_agecool = WD_models.interp_xy_z_func(
     model['mass_array'], model['logteff'], model['age_cool'], 'linear')
-(''')
+```
+Note that the name of models can be abbreviated . The details are listed below:
 
 
-
-
-
-It reads the table of synthetic colors (http://www.astro.umontreal.ca/~bergeron/CoolingModels/),
-generates the values of the Gaia color BP-RP and the bolometric correction
-G-Mbol of Gaia G band, and interpolates the mapping:
-        (logteff, logg) --> BP-RP or G-Mbol.
-Then, it reads the mass, logg, total age (if it exists), cooling age,
-logteff, and absolute bolometric magnitude Mbol from white dwarf cooling
-models, and stacks the data points from different cooling tracks. 
-  Finally, it interpolates the mapping between parameters such as logg, 
-logteff and Gaia photometry. A typical form of these mappings is:
-        (BP-RP, G) --> para,
-from the HR diagram to WD parameters.
-
-(```)
-import WD_models
-model = WD_models.load_model('b', 'b', spec_type, 'linear', 'linear')
-m_logteff_to_agecool = WD_models.interp_xy_z_func(
-    model['mass_array'], model['logteff'], model['age_cool'], 'linear')
-(```)
-
-
-
-
-
-Args:
-    low_mass_model:     String. Specifying the cooling model used for low-
+low_mass_model:     String. Specifying the cooling model used for low-
                         mass WDs (<~0.5Msun). Its value should be one of the
                             following: 
             ''                              no low-mass model will be read
@@ -151,3 +123,24 @@ Returns:
                         converted from the atmosphere interpolation.
         'bp_rp':        1d-array. The Gaia color index BP-RP, converted from the
                         atmosphere interpolation.
+
+
+
+
+
+
+It reads the table of synthetic colors (http://www.astro.umontreal.ca/~bergeron/CoolingModels/),
+generates the values of the Gaia color BP-RP and the bolometric correction
+G-Mbol of Gaia G band, and interpolates the mapping:
+        (logteff, logg) --> BP-RP or G-Mbol.
+Then, it reads the mass, logg, total age (if it exists), cooling age,
+logteff, and absolute bolometric magnitude Mbol from white dwarf cooling
+models, and stacks the data points from different cooling tracks. 
+  Finally, it interpolates the mapping between parameters such as logg, 
+logteff and Gaia photometry. A typical form of these mappings is:
+        (BP-RP, G) --> para,
+from the HR diagram to WD parameters.
+
+
+
+
