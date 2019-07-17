@@ -17,8 +17,9 @@ model = WD_models.load_model(low_mass_model='Fontaine2001',
 age_cool = model['HR_to_age_cool']([0.25, 0.25], [13,14])
 
 print(age_cool)
+>> array([ 1.27785237,  2.70284467])
 ```
-The output is `>> array([ 1.27785237,  2.70284467])`, in unit of Gyr. Available functions for other WD parameters are listed in table ? below.
+The outputs are in unit of Gyr. Available functions for other WD parameters are listed in table ? below.
 
 ## Example 2: other conversions
 
@@ -34,8 +35,9 @@ m_logteff_to_agecool = WD_models.interp_xy_z_func(
 age_cool = m_logteff_to_agecool(1.1, np.log10(10000))
 
 print(age_cool)
+>> 2.1926053524257165
 ```
-The output is `>> 2.1926053524257165` Gyr. Note that there are shorter versions for the names of WD models, which are also listed in table ? below.
+Note that there are shorter versions for the names of WD models, which are also listed in table ? below.
 
 ## Example 3: comparing different models
 ```python
@@ -46,8 +48,8 @@ d_age_cool = (model_A['HR_to_age_cool'](0, 13) -
               model_B['HR_to_age_cool'](0, 13))
 
 print(d_age_cool)
+>> 0.274022022781
 ```
-The output is `>> 0.274022022781` Gyr.
 
 ## Available models included in this module
 
