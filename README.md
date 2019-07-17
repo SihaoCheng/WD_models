@@ -117,6 +117,7 @@ spectral type | remarks
 
 
 cooling-track data points:
+
 name | remarks
 -----|---------
 'mass_array':   | 1d-array. The mass of WD in unit of solar mass. I only read one value for a cooling track, not tracking the mass change.
