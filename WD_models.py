@@ -121,8 +121,8 @@ def interp_atm(spec_type, color, T_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01),
         return interp(logteff, logg, G-Mbol)
 
 
-def read_cooling_tracks(normal_mass_model, high_mass_model, spec_type, 
-                          logg_func=None, for_comparison=False):
+def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
+                        spec_type, logg_func=None, for_comparison=False):
     """ Read a set of cooling tracks
     
     This function reads the cooling models and stack together the data points
@@ -130,7 +130,15 @@ def read_cooling_tracks(normal_mass_model, high_mass_model, spec_type,
     tracks.
     
     Args:
-        normal_mass_model:  string. One of the following: 
+        low_mass_model:     String. Specifying the cooling model used for low-
+                            mass WDs (<~0.5Msun). Its value should be one of the
+                            following: 
+            ''                              no low-mass model will be read
+            'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+        normal_mass_model:  String. Specifying the cooling model used for 
+                            normal-mass WDs (about 0.5~1.0Msun). Its value 
+                            should be one of the following:
+            ''                              no normal-mass model will be read
             'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'Althaus2010_001' or 'a001'     Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
             'Althaus2010_0001' or 'a0001'   Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
@@ -138,16 +146,20 @@ def read_cooling_tracks(normal_mass_model, high_mass_model, spec_type,
             'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
             'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
             'PG'                            only for DB
-        high_mass_model:    string. One of the following: 
+        high_mass_model:    String. Specifying the cooling model used for 
+                            high-mass WDs (>~1.0Msun). Should be one of the
+                            following: 
+            ''                              no high-mass model will be read
             'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'ONe' or 'o'                    Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
             'MESA' or 'm'                   Lauffer et al. 2019
             'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
             'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-        spec_type:          string. One of the following:
-            'DA_thick'
-            'DA_thin'
-            'DB'
+        spec_type:          String. Specifying the atmosphere composition.
+                            Its value should be one of the following:
+            'DA_thick'                      thick hydrogen atmosphere
+            'DA_thin'                       thin hydrogen atmosphere
+            'DB'                            pure-helium atmosphere
         logg_func:          Function. 
             This is a function for (logteff, mass) --> logg. It is necessary 
             only for BaSTI models, because the BaSTI models do not directly 
@@ -173,8 +185,8 @@ def read_cooling_tracks(normal_mass_model, high_mass_model, spec_type,
                     Kelvin (K).
         Mbol:       1d-array. The absolute bolometric magnitude of the WD. Many
                     are converted from the log(L/Lsun) or log(L), where I adopt:
-                        Mbol_sun = 4.75
-                        Lsun = 3.828e33 erg/s
+                            Mbol_sun = 4.75,
+                            Lsun = 3.828e33 erg/s.
     
     """
     # determine which cooling tracks in a model to read
@@ -229,9 +241,11 @@ def read_cooling_tracks(normal_mass_model, high_mass_model, spec_type,
     # Fontaine et al. 2001
     for mass in ['020','030','040','050','060','070','080','090','095','100',
                  '105','110','115','120','125','130']:
-        if (int(mass)/100 < mass_separation_1 or
+        if ((low_mass_model == 'Fontaine2001' and
+             int(mass)/100 < mass_separation_1) or
             (normal_mass_model == 'Fontaine2001' and
-             int(mass)/100 < mass_separation_2 ) or
+             int(mass)/100 > mass_separation_1 and
+             int(mass)/100 < mass_separation_2) or
             (high_mass_model == 'Fontaine2001' and
              int(mass)/100 > mass_separation_2 )
            ):
@@ -597,19 +611,36 @@ def interp_xy_z_func(x, y, z, interp_type='linear'):
 #-------------------------------------------------------------------------------   
 
 
-def load_model(normal_mass_model, high_mass_model, spec_type, 
+def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type, 
                interp_type_atm='linear', interp_type='linear'):
-    """ Load a set of cooling tracks and interpolate the mapping to HR diagram
+    """ Load a set of cooling tracks and interpolate the HR diagram mapping
     
-    This function is the main function of the WD_models package:
-    First, it reads the table of synthetic colors 
-    First, it reads the mass, logg, total age (if it exists), cooling age,
-    logteff, and absolute bolometric magnitude Mbol from white dwarf cooling
-    models with the function 'read_cooling_tracks';
-    Then, it interpolates the mapping between parameters such as logg, teffGaia photometry
+    This function reads a set of cooling tracks assigned by the user and returns
+    many useful grid-values for plotting the contour of WD parameters on the
+    Gaia H--R diagram and functions for mapping between Gaia photometry and 
+    WD parameters.
+    
+    For other mappings not included in the output, the user can generate the
+    interpolated grid values and mapping function based on the cooling-track 
+    data points and atmosphere models that are also provided in the output.
+    E.g., for the mapping (mass, logteff) --> cooling age,
+    (''')
+    import WD_models
+    model = WD_models.load_model('b', 'b', spec_type, 'linear', 'linear')
+    m_logteff_to_agecool = WD_models.interp_xy_z_func(
+        model['mass_array'], model['logteff'], model['age_cool'], 'linear')
+    (''')
     
     Args:
-        normal_mass_model:  string. One of the following: 
+        low_mass_model:     String. Specifying the cooling model used for low-
+                            mass WDs (<~0.5Msun). Its value should be one of the
+                            following: 
+            ''                              no low-mass model will be read
+            'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+        normal_mass_model:  String. Specifying the cooling model used for 
+                            normal-mass WDs (about 0.5~1.0Msun). Its value 
+                            should be one of the following:
+            ''                              no normal-mass model will be read
             'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'Althaus2010_001' or 'a001'     Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
             'Althaus2010_0001' or 'a0001'   Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
@@ -617,47 +648,87 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
             'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
             'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
             'PG'                            only for DB
-        high_mass_model:    string. One of the following: 
+        high_mass_model:    String. Specifying the cooling model used for 
+                            high-mass WDs (>~1.0Msun). Should be one of the
+                            following: 
+            ''                              no high-mass model will be read
             'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'ONe' or 'o'                    Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
             'MESA' or 'm'                   Lauffer et al. 2019
             'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
             'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-        spec_type:          string. One of the following:
-            'DA_thick'
-            'DA_thin'
-            'DB'
+        spec_type:          String. Specifying the atmosphere composition.
+                            Its value should be one of the following:
+            'DA_thick'                      thick hydrogen atmosphere
+            'DA_thin'                       thin hydrogen atmosphere
+            'DB'                            pure-helium atmosphere
         logg_func:          Function. 
             This is a function for (logteff, mass) --> logg. It is necessary 
             only for BaSTI models, because the BaSTI models do not directly 
             provide log g information.
         for_comparison:     Bool. 
-            If true, more cooling tracks from different models will be used. 
+            If true, cooling tracks with very similar masses from different 
+            models will be used, which might lead to strange result of
+            interpolation. 
             E.g., the Fontaine2001 model has m_WD = [..., 0.95, 1.00, ...], and
             the MESA model has m_WD = [1.0124, 1.019, ...]. If true, the 
             Fontaine2001 1.00Msun cooling track will be used; if false, it will
             not be used because it is too close to the MESA 1.0124Msun track.
         
     Returns:
-        stacked data points from a set of cooling tracks.
-        mass_array: 1d-array. The mass of WD in unit of solar mass. I only read
-                    one value for a cooling track, not tracking the mass change.
-        logg:       1d-array. in cm/s^2
-        age:        1d-array. The total age of the WD in yr. Some are read
-                    directly from the cooling tracks, but others are calculated
-                    by assuming an initial--final mass relation (IFMR) of the WD
-                    and adding the rough main-sequence age to the cooling age.
-        age_cool:   1d-array. The cooling age of the WD in yr.
-        logteff:    1d-array. The logarithm effective temperature of the WD in
-                    Kelvin (K).
-        Mbol:       1d-array. The absolute bolometric magnitude of the WD. Many
-                    are converted from the log(L/Lsun) or log(L), where I adopt:
-                        Mbol_sun = 4.75
-                        Lsun = 3.828e33 erg/s
+        A Dictionary.
+        It contains the atmosphere grids and mapping, cooling-track data points,
+        and parameter mappings based on the cooling tracks. 
+        The keys of this dictionary are:
+            interpolation results:
+        ========================================================================
+          category   | interpolated values on a grid | interpolated mapping
+          var. type  |     2d-array                  |     Function
+        ========================================================================
+           atm.      | 'grid_logteff_logg_to_G_Mbol' | 'logteff_logg_to_G_Mbol'
+                     | 'grid_logteff_logg_to_bp_rp'  | 'logteff_logg_to_bp_rp'
+        ------------------------------------------------------------------------
+         HR -->      | 'grid_HR_to_mass'             | 'HR_to_mass'
+         WD para.    | 'grid_HR_to_logg'             | 'HR_to_logg'
+                     | 'grid_HR_to_age'              | 'HR_to_age'
+                     | 'grid_HR_to_age_cool'         | 'HR_to_age_cool'
+                     | 'grid_HR_to_logteff'          | 'HR_to_logteff'
+                     | 'grid_HR_to_Mbol'             | 'HR_to_Mbol'
+                     | 'grid_HR_to_cool_rate^-1'     | 'HR_to_cool_rate^-1'
+        ------------------------------------------------------------------------
+         others      |                               | 'm_agecool_to_bprp'
+                     |                               | 'm_agecool_to_G'
+        ======================================================================== 
+            cooling-track data points:
+        'mass_array':   1d-array. The mass of WD in unit of solar mass. I only 
+                        read one value for a cooling track, not tracking the 
+                        mass change.
+        'logg':         1d-array. in cm/s^2
+        'age':          1d-array. The total age of the WD in yr. Some are read
+                        directly from the cooling tracks, but others are 
+                        calculated by assuming an initial--final mass relation
+                        (IFMR) of the WD and adding the rough main-sequence age
+                        to the cooling age.
+        'age_cool':     1d-array. The cooling age of the WD in yr.
+        'logteff':      1d-array. The logarithm effective temperature of the WD
+                        in Kelvin (K).
+        'Mbol':         1d-array. The absolute bolometric magnitude of the WD. 
+                        Many are converted from the log(L/Lsun) or log(L), where
+                        I adopt:
+                                Mbol_sun = 4.75,
+                                Lsun = 3.828e33 erg/s.
+        'cool_rate^-1': 1d-array. The reciprocal of cooling rate dt / d(bp-rp),
+                        in Gyr/mag.
+        'G':            1d-array. The absolute magnitude of Gaia G band,
+                        converted from the atmosphere interpolation.
+        'bp_rp':        1d-array. The Gaia color index BP-RP, converted from the
+                        atmosphere interpolation.
                         
     """
-    
     # define some alias of model names
+    if low_mass_model == 'f':
+        low_mass_model = 'Fontaine2001'
+    
     if normal_mass_model == 'a001':
         normal_mass_model = 'Althaus_001'
     if normal_mass_model == 'a0001':
@@ -691,12 +762,12 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
         spec_type, 'bp_rp', 
         T_logg_grid=(tmin,tmax,dt,loggmin,loggmax,dlogg),
         interp_type_atm=interp_type_atm)
-    
-    
+
     # get for logg_func BaSTI models
     if 'BaSTI' in normal_mass_model or 'BaSTI' in high_mass_model:
         mass_array_Fontaine2001, logg_Fontaine2001, _, _, logteff_Fontaine2001, _\
                     = read_cooling_tracks('Fontaine2001',
+                                          'Fontaine2001',
                                           'Fontaine2001',
                                           spec_type)
         logg_func   = interp_xy_z_func(x=logteff_Fontaine2001,
@@ -704,27 +775,24 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
                                        z=logg_Fontaine2001)
     else: 
         logg_func   = None
-        
     
-    # Open Evolution Tracks
+    # Open Evolutionary Tracks
     mass_array, logg, age, age_cool, logteff, Mbol \
-                    = read_cooling_tracks(normal_mass_model,
+                    = read_cooling_tracks(low_mass_model,
+                                          normal_mass_model,
                                           high_mass_model,
                                           spec_type, logg_func)
-    
 
     # Get Colour/Magnitude for Evolution Tracks
-    G       = logteff_logg_to_G_Mbol(logteff, logg) + Mbol
-    bp_rp   = logteff_logg_to_bp_rp(logteff, logg)
-    
+    G         = logteff_logg_to_G_Mbol(logteff, logg) + Mbol
+    bp_rp     = logteff_logg_to_bp_rp(logteff, logg)
     
     # Calculate the Recipical of Cooling Rate (Cooling Time per BP-RP)
-    k1          = (age_cool[1:-1] - age_cool[:-2]) / (bp_rp[1:-1] - bp_rp[:-2])
-    k2          = (age_cool[2:] - age_cool[1:-1]) / (bp_rp[2:] - bp_rp[1:-1])
-    k           = k1 + (bp_rp[1:-1] - bp_rp[:-2]) * (k1-k2) / (bp_rp[:-2]-bp_rp[2:])
-    cool_rate   = np.concatenate(( np.array([1]), k , np.array([1]) ))
-    
-    
+    k1        = (age_cool[1:-1] - age_cool[:-2]) / (bp_rp[1:-1] - bp_rp[:-2])
+    k2        = (age_cool[2:] - age_cool[1:-1]) / (bp_rp[2:] - bp_rp[1:-1])
+    k         = k1 + (bp_rp[1:-1] - bp_rp[:-2]) * (k1-k2) / (bp_rp[:-2]-bp_rp[2:])
+    rate_inv  = np.concatenate(( np.array([1]), k , np.array([1]) ))
+        
     # Get Parameters on HR Diagram
     grid_HR_to_mass, HR_to_mass         = interp_HR_to_para(bp_rp, G, mass_array, 
                                                             age, HR_grid, interp_type)
@@ -738,18 +806,13 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
                                                             age, HR_grid, interp_type)
     grid_HR_to_Mbol, HR_to_Mbol         = interp_HR_to_para(bp_rp, G, Mbol, 
                                                             age, HR_grid, interp_type)
-#     row,col = grid_mass.shape
-#     grid_mass_density                     = np.concatenate((np.zeros((row,1)),
-#                                                             grid_mass[:,2:] - grid_mass[:,:-2],
-#                                                             np.zeros((row,1)) ), axis=1)
-    grid_HR_to_cool_rate, HR_to_cool_rate=interp_HR_to_para(bp_rp, G, cool_rate,
+    grid_HR_to_rate_inv, HR_to_rate_inv = interp_HR_to_para(bp_rp, G, rate_inv,
                                                             age, HR_grid, interp_type)
     # (mass, t_cool) --> bp-rp, G
     m_agecool_to_bprp                   = interp_xy_z_func(mass_array, age_cool,
-                                                           bp_rp, interp_type )
+                                                           bp_rp, interp_type)
     m_agecool_to_G                      = interp_xy_z_func(mass_array, age_cool,
-                                                           G, interp_type )
-    
+                                                           G, interp_type)
     
     # Return a dictionary containing all the cooling track data points, 
     # interpolation functions and interpolation grids 
@@ -758,7 +821,7 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
             'grid_logteff_logg_to_bp_rp':grid_logteff_logg_to_bp_rp,
             'logteff_logg_to_bp_rp':logteff_logg_to_bp_rp,
             'mass_array':mass_array, 'logg':logg, 'logteff':logteff,
-            'age':age, 'age_cool':age_cool, 'cool_rate':cool_rate,
+            'age':age, 'age_cool':age_cool, 'cool_rate^-1':rate_inv,
             'Mbol':Mbol, 'G':G, 'bp_rp':bp_rp,
             'grid_HR_to_mass':grid_HR_to_mass, 'HR_to_mass':HR_to_mass,
             'grid_HR_to_logg':grid_HR_to_logg, 'HR_to_logg':HR_to_logg,
@@ -766,6 +829,6 @@ def load_model(normal_mass_model, high_mass_model, spec_type,
             'grid_HR_to_age_cool':grid_HR_to_age_cool, 'HR_to_age_cool':HR_to_age_cool,
             'grid_HR_to_logteff':grid_HR_to_logteff, 'HR_to_logteff':HR_to_logteff,
             'grid_HR_to_Mbol':grid_HR_to_Mbol, 'HR_to_Mbol':HR_to_Mbol,
-            'grid_HR_to_cool_rate':grid_HR_to_cool_rate, 'HR_to_cool_rate':HR_to_cool_rate,
+            'grid_HR_to_cool_rate^-1':grid_HR_to_rate_inv, 'HR_to_cool_rate^-1':HR_to_rate_inv,
             'm_agecool_to_bprp':m_agecool_to_bprp, 
             'm_agecool_to_G':m_agecool_to_G}
