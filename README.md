@@ -1,5 +1,35 @@
 # WD_models
-I provide a python script for transformation between many WD physical parameters (L, Teff, log g, etc) and H-R diagram position, based on various existing WD models. The functions are obtained through interpolating the cooling tracks.
+I provide a python module for transformation between the *Gaia* H--R diagram and many white dwarf (WD) physical parameters (L, Teff, log g, etc), based on an interpolation of cooling tracks from various existing WD models.
+
+This module is a python 3 script and uses functions from the following packages:
+astropy, matplotlib, numpy, scipy
+
+One of the main usage of this module is to convert H--R diagram coordinate into WD parameters. Below is an example:
+(```)
+import WD_models
+
+# loading a set of models
+model = WD_models.load_model(low_mass_model='Fontaine2001',
+                             normal_mass_model='Althaus2010',
+                             high_mass_model='ONe',
+                             spec_type='DA_thick',
+                             )
+# calculate the cooling age of two WDs with (BP-RP, G) = (0.25, 13) and (0.25, 14)
+print(model['HR_to_age_cool']([0.25, 0.25], [13,14])) 
+>> array([  1.33032809e+09,   2.56344548e+09]) # the cooling age in Gyr
+(```)
+This function reads a set of cooling tracks assigned by the user and returns many useful grid-values for plotting the contour of WD parameters on the Gaia H--R diagram and functions for mapping between Gaia photometry and WD parameters.
+
+For other mappings not included in the output, the user can generate the interpolated grid values and mapping function based on the cooling-track data points and atmosphere models that are also provided in the output. E.g., for the mapping (mass, logteff) --> cooling age,
+(''')
+import WD_models
+model = WD_models.load_model('b', 'b', spec_type, 'linear', 'linear')
+m_logteff_to_agecool = WD_models.interp_xy_z_func(
+    model['mass_array'], model['logteff'], model['age_cool'], 'linear')
+(''')
+
+
+
 
 
 It reads the table of synthetic colors (http://www.astro.umontreal.ca/~bergeron/CoolingModels/),
@@ -24,23 +54,6 @@ m_logteff_to_agecool = WD_models.interp_xy_z_func(
 
 
 
-""" Load a set of cooling tracks and interpolate the HR diagram mapping
-    
-This function reads a set of cooling tracks assigned by the user and returns
-many useful grid-values for plotting the contour of WD parameters on the
-Gaia H--R diagram and functions for mapping between Gaia photometry and 
-WD parameters.
-
-For other mappings not included in the output, the user can generate the
-interpolated grid values and mapping function based on the cooling-track 
-data points and atmosphere models that are also provided in the output.
-E.g., for the mapping (mass, logteff) --> cooling age,
-(''')
-import WD_models
-model = WD_models.load_model('b', 'b', spec_type, 'linear', 'linear')
-m_logteff_to_agecool = WD_models.interp_xy_z_func(
-    model['mass_array'], model['logteff'], model['age_cool'], 'linear')
-(''')
 
 Args:
     low_mass_model:     String. Specifying the cooling model used for low-
