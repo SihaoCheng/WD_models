@@ -22,7 +22,9 @@ The output is `>> array([ 1.27785237,  2.70284467])`, in unit of Gyr. Available 
 
 ## Example 2: other conversions
 
-If the function for a desired conversion is not provided in the output of `load_model`, the user can generate the interpolated grid values and mapping function based on the cooling-track data points and atmosphere grid provided in the output of `load_model`. For example, for the mapping (mass, logteff) --> cooling age:
+If the function for a desired conversion is not provided in the output of `load_model`, the user can generate the interpolated grid values and mapping function with the function `interp_xy_z_func`, `interp_xy_z_func`, or `interp_HR_to_para`, based on the cooling-track data points and atmosphere grid provided as the output of `load_model`. 
+
+For example, for the mapping (mass, logteff) --> cooling age:
 ```python
 model = WD_models.load_model('f', 'a001', 'o', 'DA_thick')
 
