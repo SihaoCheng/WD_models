@@ -8,16 +8,13 @@ The function `load_model` in the module reads a set of cooling tracks assigned b
 
 ```python
 import WD_models
-
 model = WD_models.load_model(low_mass_model='Fontaine2001',
                              normal_mass_model='Althaus2010_001',
                              high_mass_model='ONe',
                              spec_type='DA_thick',
-                             )
-                             
+                             )                  
 # the cooling age at (BP-RP, G) = (0.25, 13) and (0.25, 14)
 age_cool = model['HR_to_age_cool']([0.25, 0.25], [13,14])
-
 print(age_cool)
 ```
 
@@ -29,12 +26,9 @@ If the function for a desired conversion is not provided in the output of `load_
 
 ```python
 model = WD_models.load_model('f', 'a001', 'o', 'DA_thick')
-
 m_logteff_to_agecool = WD_models.interp_xy_z_func(
     model['mass_array'], model['logteff'], model['age_cool'], 'linear')
-
 age_cool = m_logteff_to_agecool(1.1, np.log10(10000))
-
 print(age_cool)
 ```
 
