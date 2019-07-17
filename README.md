@@ -21,17 +21,24 @@ age_cool = model['HR_to_age_cool']([0.25, 0.25], [13,14])
 print(age_cool)
 ```
 
-The output is: `>> array([  1.27785237e+09,   2.70284467e+09])`. Available functions for similar conversion are listed in table ? below.
+The output is `>> array([  1.27785237e+09,   2.70284467e+09])`. Available functions for other WD parameters are listed in table ? below.
 
 ### 2. Other conversions
 
-If the function for a desired conversion is not provided in the output of `load_model`, the user can generate the interpolated grid values and mapping function based on the cooling-track data points and atmosphere models provided in the output of `load_model`. For example, for the mapping (mass, logteff) --> cooling age,
+If the function for a desired conversion is not provided in the output of `load_model`, the user can generate the interpolated grid values and mapping function based on the cooling-track data points and atmosphere grid provided in the output of `load_model`. For example, for the mapping (mass, logteff) --> cooling age:
+
 ```
 model = WD_models.load_model('f', 'a001', 'o', 'DA_thick')
+
 m_logteff_to_agecool = WD_models.interp_xy_z_func(
     model['mass_array'], model['logteff'], model['age_cool'], 'linear')
+
+age_cool = m_logteff_to_agecool(1.1, np.log10(10000))
+
+print(age_cool)
 ```
-Note that there are shorter versions for the names of WD models.
+
+The output is: `>> 2.1926053524257165`. Note that there are shorter versions for the names of WD models.
 For other mappings not included in this output, 
 
 low_mass_model (less than about 0.5 Msun):
