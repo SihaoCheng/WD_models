@@ -52,9 +52,9 @@ print(d_age_cool)
 
 ## Example 2: plotting contours on the H--R diagram
 
-The contours can be plotted using the grid data in the output of `load_model` function. To make sure the coordinates matching, the argument `HR_grid` of the function `load_model` should be used, and the same values should also be used for the `extent` of contour plotting. 
-
 ![](example_2.png)
+
+The contours can be plotted using the grid data in the output of `load_model` function. To make sure the coordinates matching, the argument `HR_grid` of the function `load_model` should be used, and the same values should also be used for the `extent` of contour plotting. 
 ```python
 HR_grid = (-0.6, 1.25, 0.002, 10, 15, 0.01)
 model  = WD_models.load_model('f', 'f', 'f', 'DA_thick', HR_grid=HR_grid) 
@@ -90,9 +90,9 @@ plt.show()
 
 ## Example 3: the effect of phase separation
 
-Here I show an interesting visualization based on BaSTI cooling cooing tracks with and without phase separation.
-
 ![](example_3.png)
+
+Here I show an interesting visualization based on BaSTI cooling cooing tracks with and without phase separation.
 ```python
 # load the BaSTI models with and without phase separation
 HR_grid = (-0.6, 1.25, 0.002, 10, 15, 0.01)
