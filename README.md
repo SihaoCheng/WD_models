@@ -79,7 +79,8 @@ plt.contour(model['grid_HR_to_mass'].T,
             aspect='auto', origin='lower')
 plt.colorbar()
 
-plt.title('Mass and cooling-age contours on the HR diagram,\nusing the Montreal cooling model')
+plt.title('Mass and cooling-age contours on the HR diagram,\n' +
+          'using the Montreal cooling model')
 plt.gca().invert_yaxis()
 plt.xlabel('BP - RP')
 plt.ylabel('$\\rm M_G$')
@@ -104,7 +105,8 @@ plt.figure(figsize=(6,5),dpi=100)
 plt.scatter(model['color'], model['Mag'], c=model['logteff'], s=1)
 plt.colorbar()
 
-plt.title('DA WD cooling tracks (Fontaine et al. 2001)\non SDSS HR diagram,  color-coded by log(Teff)')
+plt.title('DA WD cooling tracks (Fontaine et al. 2001)\non SDSS HR diagram, ' +
+          'color-coded by log(Teff)')
 plt.xlabel('g - i')
 plt.ylabel('$\\rm M_g$')
 plt.gca().invert_yaxis()
