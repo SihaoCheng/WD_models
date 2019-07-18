@@ -1,10 +1,12 @@
 # WD_models
-I provide a python module for transformation between the *Gaia* H--R diagram and many white dwarf (WD) physical parameters (L, Teff, log *g*, etc), based on an interpolation of cooling tracks from various existing WD models (listed below). This module is written for python 3 and will use Functions from the following packages: `astropy, matplotlib, numpy, scipy`. It is designed mainly for the following purposes:
+I provide a python module for transformation between broad-band photometry and many white dwarf (WD) physical parameters (mass, cooling age, Teff, etc), based on an interpolation of cooling tracks from various existing WD models (see below). In particular, this module makes it very easy to reading WD parameters according to its coordinate on the *Gaia* H--R diagram. 
 
-1. converting the coordinates of *Gaia* H--R diagram into WD parameters;
-2. plotting the contour of WD parameters on the *Gaia* H--R diagram.
+This module is written for python 3 and will use Functions from the following packages: `astropy, matplotlib, numpy, scipy`. It is designed mainly for the following purposes:
 
-However, one can also achieve conversions between any desired WD parameters easily (see Example 2 below), based on the tools provided in this module.
+1. converting the coordinates of *Gaia* (and other) H--R diagram into WD parameters;
+2. plotting contours of WD parameters on the *Gaia* (and other) H--R diagram.
+
+The tools provided with the module also make it easy to transform between any desired WD parameters (see Example 2 below).
 
 
 ## Import
