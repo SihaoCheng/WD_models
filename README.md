@@ -31,6 +31,25 @@ print(age_cool)
 ```
 The outputs are in unit of Gyr. The *Function* `load_model` in the module reads a set of cooling tracks and returns a dictionary containing many useful functions for parameter transformation and grid data for ploting contours. The keys of this dictionary are listed in table ? below.
 
+With the argument `HR_bands`, one can change the passband for both the color index and absolute magnitude of the H--R diagram. It can be any combination from the following bands: G, bp, rp (Gaia), u, g, r, i, z (SDSS), U, B, V, R, I, J, H, K (Johnson). For example:
+```python
+model = WD_models.load_model('f', 'a001', 'o', 'DA_thick',
+                             HR_bands=('u-g', 'G'),
+                             )
+```
+Also, shorter names for the same cooling models are used here. (See "Available models included in this module" below.)
+
+Loading two sets of models allows the comparison between cooling models. For example:
+```python
+model_A = WD_models.load_model('', 'b', 'b', 'DA_thick')
+model_B = WD_models.load_model('', 'b', 'b', 'DB')
+
+d_age_cool = model_A['HR_to_age_cool'](0, 13) - model_B['HR_to_age_cool'](0, 13)
+
+print(d_age_cool)
+>> 0.269691616685
+```
+
 ## Example 2: plotting contours on the H--R diagram
 ```python
 HR_grid = (-0.6, 1.25, 0.002, 10, 15, 0.01)
@@ -58,34 +77,14 @@ plt.contour(model['grid_HR_to_mass'].T,
            )
 plt.colorbar()
 
+plt.title('mass and cooling-age contours')
 plt.gca().invert_yaxis()
 plt.xlabel('BP - RP')
 plt.ylabel('$\\rm M_G$')
 plt.show()
 ```
-![output](example_2.png)
-
-
-
-
-With the argument `HR_bands`, one can change the passband for both the color index and absolute magnitude of the H--R diagram. It can be any combination from the following bands: G, bp, rp (Gaia), u, g, r, i, z (SDSS), U, B, V, R, I, J, H, K (Johnson). For example:
-```python
-model = WD_models.load_model('f', 'a001', 'o', 'DA_thick',
-                             HR_bands=('u-g', 'G'),
-                             )
-```
-Also, shorter names for the same cooling models are used here. (See "Available models included in this module" below.)
-
-## Example 2: comparing different models
-```python
-model_A = WD_models.load_model('', 'b', 'b', 'DA_thick')
-model_B = WD_models.load_model('', 'b', 'b', 'DB')
-
-d_age_cool = model_A['HR_to_age_cool'](0, 13) - model_B['HR_to_age_cool'](0, 13)
-
-print(d_age_cool)
->> 0.269691616685
-```
+![](example_2.png)
+The contours are plotted from a grid data. To make sure the coordinate matching, the argument `HR_grid` of the function `load_model` should be used, and the `extent` of contour plotting should use the same values. 
 
 ## Example 3: conversions between any desired WD parameters
 
@@ -108,14 +107,9 @@ age_cool = m_logteff_to_agecool(1.1, np.log10(10000))
 print(age_cool)
 >> 2.1917495897185257
 ```
-Again, this customized mapping function `m_logteff_to_agecool` accepts numpy array as input.
+As other transformation functions, this customized mapping function `m_logteff_to_agecool` also accepts numpy array as input.
 
-
-
-## Example 5: 
-
-
-## Example 6: effects of phase separation
+## Example 4: a comprehensive usage: the effect of phase separation
 
 
 
