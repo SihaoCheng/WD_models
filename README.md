@@ -1,5 +1,5 @@
 # WD_models
-I provide a python module for transformation between broad-band photometry and many white dwarf (WD) physical parameters (mass, cooling age, Teff, etc), based on an interpolation of cooling tracks from various existing WD models (see below). In particular, this module makes it easy to reading WD parameters according to its coordinate on the *Gaia* H--R diagram. 
+I provide a python module for transformation between broad-band photometry and many white dwarf (WD) physical parameters (mass, cooling age, Teff, etc), based on an interpolation of atmosphere grid and cooling tracks from various existing WD models (see below). In particular, this module makes it easy to reading WD parameters according to its coordinate on the *Gaia* H--R diagram. 
 
 This module is written for python 3 and will use functions from the following packages: `astropy, matplotlib, numpy, scipy`. It is designed mainly for the following purposes:
 
