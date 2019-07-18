@@ -20,9 +20,7 @@ import WD_models
 model = WD_models.load_model(low_mass_model='Fontaine2001',
                              normal_mass_model='Althaus2010_001',
                              high_mass_model='ONe',
-                             spec_type='DA_thick',
-                             )
-                             
+                             spec_type='DA_thick')
 # the cooling age at (BP-RP, G) = (0.25, 13) and (0.25, 14)
 age_cool = model['HR_to_age_cool']([0.25, 0.25], [13,14])
 
@@ -34,8 +32,7 @@ The outputs are in unit of Gyr. The *Function* `load_model` in the module reads 
 With the argument `HR_bands`, one can change the passband for both the color index and absolute magnitude of the H--R diagram. It can be any combination from the following bands: G, bp, rp (Gaia), u, g, r, i, z (SDSS), U, B, V, R, I, J, H, K (Johnson). For example:
 ```python
 model = WD_models.load_model('f', 'a001', 'o', 'DA_thick',
-                             HR_bands=('u-g', 'G'),
-                             )
+                             HR_bands=('u-g', 'G'))
 ```
 Also, shorter names for the same cooling models are used here. (See "Available models included in this module" below.)
 
