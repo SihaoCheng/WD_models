@@ -5,8 +5,9 @@ based on an interpolation of cooling tracks from various existing WD models. In
 particular, this module makes it easy to reading WD parameters according to its
 coordinate on the *Gaia* H--R diagram. 
 
-This module is written for python 3. It is designed mainly for the following 
-purposes:
+This module is written for python 3. To use this module, the fold "models/"
+containing various existing cooling tracks should be downloaded together with
+this script. This module is designed mainly for the following purposes:
 
 1.  converting the coordinates of *Gaia* (and other) H--R diagram into WD 
     parameters;
