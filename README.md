@@ -1,12 +1,12 @@
 # WD_models
-I provide a python module for transformation between broad-band photometry and many white dwarf (WD) physical parameters (mass, cooling age, Teff, etc), based on an interpolation of cooling tracks from various existing WD models (see below). In particular, this module makes it very easy to reading WD parameters according to its coordinate on the *Gaia* H--R diagram. 
+I provide a python module for transformation between broad-band photometry and many white dwarf (WD) physical parameters (mass, cooling age, Teff, etc), based on an interpolation of cooling tracks from various existing WD models (see below). In particular, this module makes it easy to reading WD parameters according to its coordinate on the *Gaia* H--R diagram. 
 
-This module is written for python 3 and will use Functions from the following packages: `astropy, matplotlib, numpy, scipy`. It is designed mainly for the following purposes:
+This module is written for python 3 and will use functions from the following packages: `astropy, matplotlib, numpy, scipy`. It is designed mainly for the following purposes:
 
 1. converting the coordinates of *Gaia* (and other) H--R diagram into WD parameters;
 2. plotting contours of WD parameters on the *Gaia* (and other) H--R diagram.
 
-The tools provided with the module also make it easy to transform between any desired WD parameters (see Example 2 below).
+The tools provided with the module also make it easy to transform between any desired WD parameters. Below, I introduce the basic usage and give some examples. Some detailed information of the cooling tracks models and are also shown.
 
 
 ## Import
@@ -27,30 +27,40 @@ model = WD_models.load_model(low_mass_model='Fontaine2001',
 age_cool = model['HR_to_age_cool']([0.25, 0.25], [13,14])
 
 print(age_cool)
->> array([ 1.27785237,  2.70284467])
+>> [ 1.27785237  2.70106702]
 ```
-The outputs are in unit of Gyr. The *Function* `load_model` in the module reads a set of cooling tracks assigned by the user and returns a dictionary containing many useful functions for parameter conversion. The keys of this dictionary (available functions for other parameters) are listed in table ? below.
+The outputs are in unit of Gyr. The *Function* `load_model` in the module reads a set of cooling tracks and returns a dictionary containing many useful functions for parameter transformation and grid data for ploting contours. The keys of this dictionary are listed in table ? below.
+
+With the argument `HR_bands`, one can change the passband for both the color index and absolute magnitude of the H--R diagram. It can be any combination from the following bands: G, bp, rp (Gaia), u, g, r, i, z (SDSS), U, B, V, R, I, J, H, K (Johnson). For example:
+```python
+model = WD_models.load_model('f', 'a001', 'o', 'DA_thick',
+                             HR_bands=('u-g', 'G'),
+                             )
+```
+Also, shorter names for the same cooling models are used here. (See "Available models included in this module" below.)
 
 ## Example 2: conversions between any desired WD parameters
 
-If the conversion of a desired conversion is not provided in the output of `load_model`, the user can generate the interpolated grid values and mapping function with the function `interp_xy_z_func`, `interp_xy_z_func`, or `interp_HR_to_para`, based on the cooling-track data points and atmosphere grid provided as the output of `load_model`. 
+If a desired transformation function is not provided in the output of `load_model`, (e.g., (mass, Teff) --> cooling age,) the user can generate the mapping with the function `interp_xy_z_func`, `interp_xy_z`, or `interp_HR_to_para` in this module, based on the cooling-track data points and atmosphere grid provided as the output of `load_model`. 
 
 For example, for the mapping (mass, logteff) --> cooling age:
 ```python
 model = WD_models.load_model('f', 'a001', 'o', 'DA_thick')
 
+# interpolate the desired mapping
 m_logteff_to_agecool = WD_models.interp_xy_z_func(x=model['mass_array'],
                                                   y=model['logteff'],
                                                   z=model['age_cool'],
-                                                  interp_type='linear'
+                                                  interp_type='linear',
                                                   )
+                                                  
 # the cooling age for (m_WD, Teff) = (1.1 Msun, 10000 K)
 age_cool = m_logteff_to_agecool(1.1, np.log10(10000))
 
 print(age_cool)
->> 2.1926053524257165
+>> 2.1917495897185257
 ```
-Note that there are shorter versions for the names of WD models, which are also listed in table ? below.
+Again, this customized mapping function `m_logteff_to_agecool` accepts numpy array as input.
 
 ## Example 3: comparing different models
 ```python
@@ -61,8 +71,49 @@ d_age_cool = (model_A['HR_to_age_cool'](0, 13) -
               model_B['HR_to_age_cool'](0, 13))
 
 print(d_age_cool)
->> 0.274022022781
+>> 0.269691616685
 ```
+
+## Example 4: plotting contours on the H--R diagram
+
+```python
+HR_grid = (-0.6, 1.25, 0.002, 10, 15, 0.01)
+model  = WD_models.load_model('f', 'f', 'f', 'DA_thick', HR_grid=HR_grid) 
+
+# get rid of some artifects of interpolation
+grid_x, grid_y = np.mgrid[HR_grid[0]:HR_grid[1]:HR_grid[2], HR_grid[3]:HR_grid[4]:HR_grid[5]]
+model['grid_HR_to_age_cool'][model['HR_to_mass'](grid_x, grid_y) < 0.21] = np.nan
+
+plt.figure(figsize=(6,5),dpi=100)
+
+# plot cooling age contours
+CS = plt.contour(model['grid_HR_to_age_cool'].T,
+                 levels=[1,2,3,4,5,6,7,8,9,10,11], 
+                 extent=(HR_grid[0],HR_grid[1],HR_grid[3],HR_grid[4]),
+                 aspect='auto', origin='lower', cmap='cool',
+                )
+plt.clabel(CS, inline=True, use_clabeltext=True)
+
+# plot mass contours
+plt.contour(model['grid_HR_to_mass'].T,
+            levels=[0.21,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.29], 
+            extent=(HR_grid[0],HR_grid[1],HR_grid[3],HR_grid[4]),
+            aspect='auto', origin='lower',
+           )
+plt.colorbar()
+
+plt.gca().invert_yaxis()
+plt.xlabel('BP - RP')
+plt.ylabel('$\\rm M_G$')
+plt.show()
+```
+
+## Example 5: 
+
+
+## Example 5: effects of phase separation
+
+
 
 ## Available models included in this module
 
@@ -117,8 +168,8 @@ The function `load_model` returns a dictionary, which contains the atmosphere gr
       category   | interpolated values on a grid | interpolated mapping
       var. type  |     2d-array                  |     Function
     ========================================================================
-       atm.      | 'grid_logteff_logg_to_G_Mbol' | 'logteff_logg_to_G_Mbol'
-                 | 'grid_logteff_logg_to_bp_rp'  | 'logteff_logg_to_bp_rp'
+       atm.      | 'grid_logteff_logg_to_BC'     | 'logteff_logg_to_BC'
+                 | 'grid_logteff_logg_to_color'  | 'logteff_logg_to_color'
     ------------------------------------------------------------------------
      HR -->      | 'grid_HR_to_mass'             | 'HR_to_mass'
      WD para.    | 'grid_HR_to_logg'             | 'HR_to_logg'
@@ -128,8 +179,8 @@ The function `load_model` returns a dictionary, which contains the atmosphere gr
                  | 'grid_HR_to_Mbol'             | 'HR_to_Mbol'
                  | 'grid_HR_to_cool_rate^-1'     | 'HR_to_cool_rate^-1'
     ------------------------------------------------------------------------
-     others      |                               | 'm_agecool_to_bprp'
-                 |                               | 'm_agecool_to_G'
+     others      |                               | 'm_agecool_to_color'
+                 |                               | 'm_agecool_to_Mag'
     ======================================================================== 
 
 ### Cooling-track data points
@@ -143,8 +194,8 @@ name | remarks
 'logteff':      | 1d-array. The logarithm effective temperature of the WD in Kelvin (K).
 'Mbol':         | 1d-array. The absolute bolometric magnitude of the WD. Many are converted from the log(L/Lsun) or log(L), where I adopt: Mbol_sun = 4.75, Lsun = 3.828e33 erg/s.
 'cool_rate^-1': | 1d-array. The reciprocal of cooling rate dt / d(bp-rp), in Gyr/mag.
-'G':            | 1d-array. The absolute magnitude of Gaia G band, converted from the atmosphere interpolation.
-'bp_rp':        | 1d-array. The Gaia color index BP-RP, converted from the atmosphere interpolation.
+'Mag':          | 1d-array. The chosen absolute magnitude, converted from the atmosphere interpolation.
+'color':        | 1d-array. The chosen color index, converted from the atmosphere interpolation.
 
 
 
