@@ -22,7 +22,7 @@ model = WD_models.load_model(low_mass_model='Fontaine2001',
                              normal_mass_model='Althaus2010_001',
                              high_mass_model='ONe',
                              spec_type='DA_thick')
-                             
+
 # the cooling age at (BP-RP, G) = (0.25, 13) and (0.25, 14)
 age_cool = model['HR_to_age_cool']([0.25, 0.25], [13,14])
 
