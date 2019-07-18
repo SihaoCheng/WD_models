@@ -55,7 +55,7 @@ print(d_age_cool)
 The contours can be plotted using the grid data in the output of `load_model` function. To make sure the coordinates matching, the argument `HR_grid` of the function `load_model` should be used, and the same values should also be used for the `extent` of contour plotting. 
 ```python
 HR_grid = (-0.6, 1.25, 0.002, 10, 15, 0.01)
-model = WD_models.load_model('f', 'f', 'f', 'DA_thick', HR_grid=HR_grid) 
+model  = WD_models.load_model('f', 'f', 'f', 'DA_thick', HR_grid=HR_grid) 
 
 # get rid of some artifects of interpolation
 grid_x, grid_y = np.mgrid[HR_grid[0]:HR_grid[1]:HR_grid[2], HR_grid[3]:HR_grid[4]:HR_grid[5]]
@@ -65,19 +65,19 @@ plt.figure(figsize=(6,5),dpi=100)
 
 # plot cooling age contours
 CS = plt.contour(model['grid_HR_to_age_cool'].T,
-                 levels=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 
+                 levels=[1,2,3,4,5,6], 
                  extent=(HR_grid[0],HR_grid[1],HR_grid[3],HR_grid[4]),
                  aspect='auto', origin='lower', cmap='cool')
 plt.clabel(CS, inline=True, use_clabeltext=True)
 
 # plot mass contours
 plt.contour(model['grid_HR_to_mass'].T,
-            levels=[0.21, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.29], 
+            levels=[0.21,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.29], 
             extent=(HR_grid[0],HR_grid[1],HR_grid[3],HR_grid[4]),
             aspect='auto', origin='lower')
 plt.colorbar()
 
-plt.title('Mass and cooling-age contours\nfrom the Montreal cooling model')
+plt.title('Mass and cooling-age contours on the HR diagram,\nusing the Montreal cooling model')
 plt.gca().invert_yaxis()
 plt.xlabel('BP - RP')
 plt.ylabel('$\\rm M_G$')
