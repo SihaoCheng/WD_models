@@ -51,6 +51,10 @@ print(d_age_cool)
 ```
 
 ## Example 2: plotting contours on the H--R diagram
+
+The contours can be plotted using the grid data in the output of `load_model` function. To make sure the coordinates matching, the argument `HR_grid` of the function `load_model` should be used, and the same values should also be used for the `extent` of contour plotting. 
+
+![](example_2.png)
 ```python
 HR_grid = (-0.6, 1.25, 0.002, 10, 15, 0.01)
 model  = WD_models.load_model('f', 'f', 'f', 'DA_thick', HR_grid=HR_grid) 
@@ -77,16 +81,63 @@ plt.contour(model['grid_HR_to_mass'].T,
            )
 plt.colorbar()
 
-plt.title('mass and cooling-age contours')
+plt.title('Mass and cooling-age contours\nfrom the Montreal cooling model')
 plt.gca().invert_yaxis()
 plt.xlabel('BP - RP')
 plt.ylabel('$\\rm M_G$')
 plt.show()
 ```
-![](example_2.png)
-The contours are plotted from a grid data. To make sure the coordinate matching, the argument `HR_grid` of the function `load_model` should be used, and the `extent` of contour plotting should use the same values. 
 
-## Example 3: conversions between any desired WD parameters
+## Example 3: the effect of phase separation
+
+Here I show an interesting visualization based on BaSTI cooling cooing tracks with and without phase separation.
+
+![](example_3.png)
+```python
+# load the BaSTI models with and without phase separation
+HR_grid = (-0.6, 1.25, 0.002, 10, 15, 0.01)
+model_1  = WD_models.load_model('f', 'b', 'b', 'DA_thick', HR_grid=HR_grid) 
+model_2  = WD_models.load_model('f', 'bn', 'bn', 'DA_thick', HR_grid=HR_grid)
+
+plt.figure(figsize=(6,5),dpi=100)
+
+# plot the mass contour
+CS = plt.contour(model_1['grid_HR_to_mass'].T,
+                 levels=[0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.19], 
+                 extent=(HR_grid[0],HR_grid[1],HR_grid[3],HR_grid[4]),
+                 aspect='auto', origin='lower', cmap='jet', vmin=-1000,
+                 )
+plt.clabel(CS, inline=True, use_clabeltext=True)
+
+# plot the slowing-down effect of phase separation
+contrast = ((model_1['grid_HR_to_cool_rate^-1'] - model_2['grid_HR_to_cool_rate^-1']) /
+            (model_2['grid_HR_to_cool_rate^-1'])).T
+plt.contourf(contrast, 
+             levels=[0.00,0.10,0.20,0.30,0.40,0.50],
+             extent=(HR_grid[0],HR_grid[1],HR_grid[3],HR_grid[4]),
+             aspect='auto', origin='lower', cmap='binary', vmin=0.05, vmax=0.65
+            )
+plt.colorbar()
+
+# plot the legend
+plt.plot([0,0],[1,1],'-', color='gray', lw=10, 
+         label='$\\Delta\\zeta/\\zeta_0$,\n' +
+                'where $\\zeta=$d$t$/d(bp-rp) is\n' + 
+                'the inverse of cooling rate')
+plt.legend()
+
+# set the figure
+plt.title('The relative effect of phase separation (p.s.)\n' +
+          'on WD cooling, calculated from the BaSTI\n' + 
+          'DA models with and without p.s.')
+plt.xlabel('BP - RP')
+plt.ylabel('$\\rm M_G$')
+plt.xlim(-0.6,1.25)
+plt.ylim(15,10)
+plt.show()
+```
+
+## Example 4: conversions between any desired WD parameters
 
 If a desired transformation function is not provided in the output of `load_model`, (e.g., (mass, Teff) --> cooling age,) the user can generate the mapping with the function `interp_xy_z_func`, `interp_xy_z`, or `interp_HR_to_para` in this module, based on the cooling-track data points and atmosphere grid provided as the output of `load_model`. 
 
@@ -108,10 +159,6 @@ print(age_cool)
 >> 2.1917495897185257
 ```
 As other transformation functions, this customized mapping function `m_logteff_to_agecool` also accepts numpy array as input.
-
-## Example 4: a comprehensive usage: the effect of phase separation
-
-
 
 ## Available models included in this module
 
