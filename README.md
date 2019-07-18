@@ -137,7 +137,7 @@ plt.ylim(15,10)
 plt.show()
 ```
 
-## Example 4: conversions between any desired WD parameters
+## Example 4: transformation between any desired WD parameters
 
 If a desired transformation function is not provided in the output of `load_model`, (e.g., (mass, Teff) --> cooling age,) the user can generate the mapping with the function `interp_xy_z_func`, `interp_xy_z`, or `interp_HR_to_para` in this module, based on the cooling-track data points and atmosphere grid provided as the output of `load_model`. 
 
