@@ -1,9 +1,25 @@
 """
-This package will read different cooling models and interpolate the conversion 
-mappings between HR diagram, Teff, Mbol, etc. The mappings are stored in 
-dictionaries for each model. See the main function and the lines after its 
-definition. This package also contains the functions to read a single cooling 
-track.
+This python module provides the tools to transform between broad-band photometry
+and many white dwarf (WD) physical parameters (mass, cooling age, Teff, etc), 
+based on an interpolation of cooling tracks from various existing WD models. In
+particular, this module makes it easy to reading WD parameters according to its
+coordinate on the *Gaia* H--R diagram. 
+
+This module is written for python 3. It is designed mainly for the following 
+purposes:
+
+1.  converting the coordinates of *Gaia* (and other) H--R diagram into WD 
+    parameters;
+2.  plotting contours of WD parameters on the *Gaia* (and other) H--R diagram.
+
+The tools provided with the module also make it easy to transform between any
+desired WD parameters. For details please refer to the doctrine of the 
+functions. There are also descriptions and examples on my Github:
+    https://github.com/SihaoCheng/WD_models
+For questions or suggestions, please do not hesitate to contact me: 
+    s.cheng@jhu.edu
+
+18 Jul 2019
 """
 
 
@@ -34,12 +50,18 @@ def interpolate_2d(x, y, z, method):
 
 def interp_atm(spec_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01), 
                interp_type_atm='linear'):
-    """interpolate the mapping (logteff, logg) --> G, BP-RP, or G-Mbol 
+    """interpolate the mapping (logteff, logg) --> photometry
+    
+    This function interpolates the mapping (logteff, logg) --> color index or
+    bolometric correction (BC) of a passband.
+    The choices include: 
+    BC:             Gaia G, SDSS ugriz, and Johnson UBVRIJHK
+    color index:    Gaia BP-RP; any two passbands from SDSS and Johnson systems
     
     Args:
         spec_type:          String. {'DA_thick', 'DA_thin', 'DB'}
             See http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-        color:              String. {'G', 'BP-RP', 'G-Mbol'}
+        color:              String. {'G-Mbol', 'bp-rp', 'V-Mbol', 'u-g', 'B-z', etc.}
             The target photometry of the mapping. 
         logteff_logg_grid: (xmin, xmax, dx, ymin, ymax, dy). *Optional*
             corresponding to the grid of logTeff and logg.
@@ -54,13 +76,25 @@ def interp_atm(spec_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.
                                 (logteff, logg) --> photometry
         
     """
-    logteff     = np.zeros(0)
-    logg        = np.zeros(0)
-    age         = np.zeros(0)
-    mass_array  = np.zeros(0)
-    G           = np.zeros(0)
-    bp_rp       = np.zeros(0)
-    Mbol        = np.zeros(0)
+    logteff     = np.zeros(0) # atmospheric parameter
+    logg        = np.zeros(0) # atmospheric parameter
+    Mbol        = np.zeros(0) # Bolometric
+    bp_Mag      = np.zeros(0) # Gaia
+    rp_Mag      = np.zeros(0) # Gaia 
+    G_Mag       = np.zeros(0) # Gaia color
+    u_Mag       = np.zeros(0) # SDSS
+    g_Mag       = np.zeros(0) # SDSS
+    r_Mag       = np.zeros(0) # SDSS
+    i_Mag       = np.zeros(0) # SDSS
+    z_Mag       = np.zeros(0) # SDSS
+    U_Mag       = np.zeros(0) # Johnson
+    B_Mag       = np.zeros(0) # Johnson
+    V_Mag       = np.zeros(0) # Johnson
+    R_Mag       = np.zeros(0) # Johnson
+    I_Mag       = np.zeros(0) # Johnson
+    J_Mag       = np.zeros(0) # Johnson
+    H_Mag       = np.zeros(0) # Johnson
+    K_Mag       = np.zeros(0) # Johnson
     
     # read the table for each mass
     for mass in ['0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','1.2']:
@@ -70,13 +104,25 @@ def interp_atm(spec_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.
         Atm_color = Atm_color[selected]
         
         # read columns
-        bp_rp   = np.concatenate(( bp_rp, 
-                                   Atm_color['G_BP/R'] - Atm_color['G_RP/R'] ))
-        G       = np.concatenate(( G, Atm_color['G/R'] ))
-        Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
         logteff = np.concatenate(( logteff, np.log10(Atm_color['Teff']) ))
         logg    = np.concatenate(( logg, Atm_color['logg'] ))
-        age     = np.concatenate(( age, Atm_color['Age'] ))
+        Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
+        bp_Mag  = np.concatenate(( bp_Mag, Atm_color['G_BP/R'] ))
+        rp_Mag  = np.concatenate(( rp_Mag, Atm_color['G_RP/R'] ))
+        G_Mag   = np.concatenate(( G_Mag, Atm_color['G/R'] ))
+        u_Mag   = np.concatenate(( u_Mag, Atm_color['u'] ))
+        g_Mag   = np.concatenate(( g_Mag, Atm_color['g'] ))
+        r_Mag   = np.concatenate(( r_Mag, Atm_color['r'] ))
+        i_Mag   = np.concatenate(( i_Mag, Atm_color['i'] ))
+        z_Mag   = np.concatenate(( z_Mag, Atm_color['z'] ))
+        U_Mag   = np.concatenate(( U_Mag, Atm_color['U'] ))
+        B_Mag   = np.concatenate(( B_Mag, Atm_color['B'] ))
+        V_Mag   = np.concatenate(( V_Mag, Atm_color['V'] ))
+        R_Mag   = np.concatenate(( R_Mag, Atm_color['R'] ))
+        I_Mag   = np.concatenate(( I_Mag, Atm_color['I'] ))
+        J_Mag   = np.concatenate(( J_Mag, Atm_color['J'] ))
+        H_Mag   = np.concatenate(( H_Mag, Atm_color['H'] ))
+        K_Mag   = np.concatenate(( K_Mag, Atm_color['K'] ))
         
     # read the table for all logg
     Atm_color = Table.read('models/Montreal_atm_grid/Table_'+spec_type,
@@ -85,30 +131,43 @@ def interp_atm(spec_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.
     Atm_color = Atm_color[selected]
     
     # read columns
-    bp_rp   = np.concatenate(( bp_rp, 
-                               Atm_color['G_BP/R'] - Atm_color['G_RP/R'] ))
-    G       = np.concatenate(( G, Atm_color['G/R'] ))
-    Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
     logteff = np.concatenate(( logteff,np.log10(Atm_color['Teff']) ))
     logg    = np.concatenate(( logg, Atm_color['logg'] ))
-    age     = np.concatenate(( age, Atm_color['Age'] ))        
+    Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
+    bp_Mag  = np.concatenate(( bp_Mag, Atm_color['G_BP/R'] ))
+    rp_Mag  = np.concatenate(( rp_Mag, Atm_color['G_RP/R'] ))
+    G_Mag   = np.concatenate(( G_Mag, Atm_color['G/R'] ))
+    u_Mag   = np.concatenate(( u_Mag, Atm_color['u'] ))
+    g_Mag   = np.concatenate(( g_Mag, Atm_color['g'] ))
+    r_Mag   = np.concatenate(( r_Mag, Atm_color['r'] ))
+    i_Mag   = np.concatenate(( i_Mag, Atm_color['i'] ))
+    z_Mag   = np.concatenate(( z_Mag, Atm_color['z'] ))
+    U_Mag   = np.concatenate(( U_Mag, Atm_color['U'] ))
+    B_Mag   = np.concatenate(( B_Mag, Atm_color['B'] ))
+    V_Mag   = np.concatenate(( V_Mag, Atm_color['V'] ))
+    R_Mag   = np.concatenate(( R_Mag, Atm_color['R'] ))
+    I_Mag   = np.concatenate(( I_Mag, Atm_color['I'] ))
+    J_Mag   = np.concatenate(( J_Mag, Atm_color['J'] ))
+    H_Mag   = np.concatenate(( H_Mag, Atm_color['H'] ))
+    K_Mag   = np.concatenate(( K_Mag, Atm_color['K'] ))
     
     grid_x, grid_y = np.mgrid[logteff_logg_grid[0]:logteff_logg_grid[1]:logteff_logg_grid[2],
                               logteff_logg_grid[3]:logteff_logg_grid[4]:logteff_logg_grid[5]]
     
     # define the interpolation of mapping
-    def interp(x, y, z):
+    def interp(x, y, z, interp_type_atm='linear'):
         grid_z      = griddata(np.array((x, y)).T, z, (grid_x, grid_y),
                                method=interp_type_atm)
-        grid_z_func = interpolate_2d(x, y, z, interp_type_atm)
-        return grid_z, grid_z_func
+        z_func      = interpolate_2d(x, y, z, interp_type_atm)
+        return grid_z, z_func
     
-    if color == 'G':
-        return interp(logteff, logg, G)
-    if color == 'bp_rp':
-        return interp(logteff, logg, bp_rp)
-    if color == 'G_Mbol':
-        return interp(logteff, logg, G-Mbol)
+    division = color.find('-')
+    if '-Mbol' in color:
+        z = eval(color[:division] + '_Mag - Mbol')
+    else:
+        z = eval(color[:division] + '_Mag - ' + color[division+1:] + '_Mag')
+    
+    return interp(logteff, logg, z, interp_type_atm)
 
 
 def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
@@ -607,7 +666,8 @@ def interp_xy_z_func(x, y, z, interp_type='linear'):
 #-------------------------------------------------------------------------------   
 
 
-def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type, 
+def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
+               HR_bands=('bp_rp', 'G'),
                HR_grid=(-0.6, 1.5, 0.002, 8, 18, 0.01),
                logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01),
                interp_type_atm='linear', interp_type='linear',
@@ -667,6 +727,15 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
             'DA_thick'                      thick hydrogen atmosphere
             'DA_thin'                       thin hydrogen atmosphere
             'DB'                            pure-helium atmosphere
+        HR_bands:          (String, String). *Optional*
+            The passbands for the color and absolute magnitude on the H--R
+            diagram. It can be any combination from the following bands:
+                G, bp, rp (Gaia), u, g, r, i, z (SDSS), U, B, V, R, I, J,
+                H, K (Johnson).
+            Color should be in the format of:
+                'bp-rp', 'G-bp', 'U-B', 'u-g', 'G-i', etc. 
+            Absolute magnitude should be in the format of:
+                'G', 'bp', 'U', 'u', etc. 
         HR_grid:           (xmin, xmax, dx, ymin, ymax, dy). *Optional*
             The grid information of the H-R diagram coordinates BP-RP and G.
         logteff_logg_grid: (xmin, xmax, dx, ymin, ymax, dy). *Optional*
@@ -696,8 +765,8 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
           category   | interpolated values on a grid | interpolated mapping
           var. type  |     2d-array                  |     Function
         ========================================================================
-           atm.      | 'grid_logteff_logg_to_G_Mbol' | 'logteff_logg_to_G_Mbol'
-                     | 'grid_logteff_logg_to_bp_rp'  | 'logteff_logg_to_bp_rp'
+           atm.      | 'grid_logteff_logg_to_BC'     | 'logteff_logg_to_BC'
+                     | 'grid_logteff_logg_to_color'  | 'logteff_logg_to_color'
         ------------------------------------------------------------------------
          HR -->      | 'grid_HR_to_mass'             | 'HR_to_mass'
          WD para.    | 'grid_HR_to_logg'             | 'HR_to_logg'
@@ -707,8 +776,8 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
                      | 'grid_HR_to_Mbol'             | 'HR_to_Mbol'
                      | 'grid_HR_to_cool_rate^-1'     | 'HR_to_cool_rate^-1'
         ------------------------------------------------------------------------
-         others      |                               | 'm_agecool_to_bprp'
-                     |                               | 'm_agecool_to_G'
+         others      |                               | 'm_agecool_to_color'
+                     |                               | 'm_agecool_to_Mag'
         ======================================================================== 
             cooling-track data points:
         'mass_array':   1d-array. The mass of WD in unit of solar mass. I only 
@@ -730,9 +799,9 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
                                 Lsun = 3.828e33 erg/s.
         'cool_rate^-1': 1d-array. The reciprocal of cooling rate dt / d(bp-rp),
                         in Gyr/mag.
-        'G':            1d-array. The absolute magnitude of Gaia G band,
+        'Mag':          1d-array. The absolute magnitude of the chosen passband
                         converted from the atmosphere interpolation.
-        'bp_rp':        1d-array. The Gaia color index BP-RP, converted from the
+        'color':        1d-array. The chosen color index, converted from the
                         atmosphere interpolation.
                         
     """
@@ -765,14 +834,15 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
         high_mass_model = 'ONe'
     
     # make atmosphere grid and mapping: logteff, logg --> bp-rp,  G-Mbol
-    grid_logteff_logg_to_G_Mbol, logteff_logg_to_G_Mbol = interp_atm(
-        spec_type, 'G_Mbol', 
+    grid_logteff_logg_to_color, logteff_logg_to_color = interp_atm(
+        spec_type, HR_bands[0], 
         logteff_logg_grid=logteff_logg_grid,
         interp_type_atm=interp_type_atm)
-    grid_logteff_logg_to_bp_rp, logteff_logg_to_bp_rp = interp_atm(
-        spec_type, 'bp_rp', 
+    grid_logteff_logg_to_BC, logteff_logg_to_BC = interp_atm(
+        spec_type, HR_bands[1] + '-Mbol', 
         logteff_logg_grid=logteff_logg_grid,
         interp_type_atm=interp_type_atm)
+
 
     # get for logg_func BaSTI models
     if 'BaSTI' in normal_mass_model or 'BaSTI' in high_mass_model:
@@ -795,45 +865,45 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
                                           spec_type, logg_func, for_comparison)
 
     # Get Colour/Magnitude for Evolution Tracks
-    G         = logteff_logg_to_G_Mbol(logteff, logg) + Mbol
-    bp_rp     = logteff_logg_to_bp_rp(logteff, logg)
+    Mag         = logteff_logg_to_BC(logteff, logg) + Mbol
+    color       = logteff_logg_to_color(logteff, logg)
     
     # Calculate the Recipical of Cooling Rate (Cooling Time per BP-RP)
-    k1        = (age_cool[1:-1] - age_cool[:-2]) / (bp_rp[1:-1] - bp_rp[:-2])
-    k2        = (age_cool[2:] - age_cool[1:-1]) / (bp_rp[2:] - bp_rp[1:-1])
-    k         = k1 + (bp_rp[1:-1] - bp_rp[:-2]) * (k1-k2) / (bp_rp[:-2]-bp_rp[2:])
+    k1        = (age_cool[1:-1] - age_cool[:-2]) / (color[1:-1] - color[:-2])
+    k2        = (age_cool[2:] - age_cool[1:-1]) / (color[2:] - color[1:-1])
+    k         = k1 + (color[1:-1] - color[:-2]) * (k1-k2) / (color[:-2]-color[2:])
     rate_inv  = np.concatenate(( np.array([1]), k , np.array([1]) ))
         
     # Get Parameters on HR Diagram
-    grid_HR_to_mass, HR_to_mass         = interp_HR_to_para(bp_rp, G, mass_array, 
+    grid_HR_to_mass, HR_to_mass         = interp_HR_to_para(color, Mag, mass_array, 
                                                             HR_grid, interp_type)
-    grid_HR_to_logg, HR_to_logg         = interp_HR_to_para(bp_rp, G, logg, 
+    grid_HR_to_logg, HR_to_logg         = interp_HR_to_para(color, Mag, logg, 
                                                             HR_grid, interp_type)
-    grid_HR_to_age, HR_to_age           = interp_HR_to_para(bp_rp, G, age, 
+    grid_HR_to_age, HR_to_age           = interp_HR_to_para(color, Mag, age, 
                                                             HR_grid, interp_type)
-    grid_HR_to_age_cool, HR_to_age_cool = interp_HR_to_para(bp_rp, G, age_cool, 
+    grid_HR_to_age_cool, HR_to_age_cool = interp_HR_to_para(color, Mag, age_cool, 
                                                             HR_grid, interp_type)
-    grid_HR_to_logteff, HR_to_logteff   = interp_HR_to_para(bp_rp, G, logteff, 
+    grid_HR_to_logteff, HR_to_logteff   = interp_HR_to_para(color, Mag, logteff, 
                                                             HR_grid, interp_type)
-    grid_HR_to_Mbol, HR_to_Mbol         = interp_HR_to_para(bp_rp, G, Mbol, 
+    grid_HR_to_Mbol, HR_to_Mbol         = interp_HR_to_para(color, Mag, Mbol, 
                                                             HR_grid, interp_type)
-    grid_HR_to_rate_inv, HR_to_rate_inv = interp_HR_to_para(bp_rp, G, rate_inv,
+    grid_HR_to_rate_inv, HR_to_rate_inv = interp_HR_to_para(color, Mag, rate_inv,
                                                             HR_grid, interp_type)
     # (mass, t_cool) --> bp-rp, G
-    m_agecool_to_bprp                   = interp_xy_z_func(mass_array, age_cool,
-                                                           bp_rp, interp_type)
-    m_agecool_to_G                      = interp_xy_z_func(mass_array, age_cool,
-                                                           G, interp_type)
+    m_agecool_to_color                  = interp_xy_z_func(mass_array, age_cool,
+                                                           color, interp_type)
+    m_agecool_to_Mag                    = interp_xy_z_func(mass_array, age_cool,
+                                                           Mag, interp_type)
     
     # Return a dictionary containing all the cooling track data points, 
     # interpolation functions and interpolation grids 
-    return {'grid_logteff_logg_to_G_Mbol':grid_logteff_logg_to_G_Mbol,
-            'logteff_logg_to_G_Mbol':logteff_logg_to_G_Mbol,
-            'grid_logteff_logg_to_bp_rp':grid_logteff_logg_to_bp_rp,
-            'logteff_logg_to_bp_rp':logteff_logg_to_bp_rp,
+    return {'grid_logteff_logg_to_BC':grid_logteff_logg_to_BC,
+            'logteff_logg_to_BC':logteff_logg_to_BC,
+            'grid_logteff_logg_to_color':grid_logteff_logg_to_color,
+            'logteff_logg_to_color':logteff_logg_to_color,
             'mass_array':mass_array, 'logg':logg, 'logteff':logteff,
             'age':age, 'age_cool':age_cool, 'cool_rate^-1':rate_inv,
-            'Mbol':Mbol, 'G':G, 'bp_rp':bp_rp,
+            'Mbol':Mbol, 'Mag':Mag, 'color':color,
             'grid_HR_to_mass':grid_HR_to_mass, 'HR_to_mass':HR_to_mass,
             'grid_HR_to_logg':grid_HR_to_logg, 'HR_to_logg':HR_to_logg,
             'grid_HR_to_age':grid_HR_to_age, 'HR_to_age':HR_to_age,
@@ -841,5 +911,5 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
             'grid_HR_to_logteff':grid_HR_to_logteff, 'HR_to_logteff':HR_to_logteff,
             'grid_HR_to_Mbol':grid_HR_to_Mbol, 'HR_to_Mbol':HR_to_Mbol,
             'grid_HR_to_cool_rate^-1':grid_HR_to_rate_inv, 'HR_to_cool_rate^-1':HR_to_rate_inv,
-            'm_agecool_to_bprp':m_agecool_to_bprp, 
-            'm_agecool_to_G':m_agecool_to_G}
+            'm_agecool_to_color':m_agecool_to_color, 
+            'm_agecool_to_Mag':m_agecool_to_Mag}
