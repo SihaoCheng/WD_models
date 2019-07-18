@@ -189,6 +189,8 @@ As other transformation functions, this customized mapping function `m_logteff_t
 
 ## Available models included in this module
 
+I include several classical and recent cooling models published in the literature. If you have a model and want it to be included, please send me your cooling tracks and I am willing to add it here.
+
 ### Low-mass models (less than about 0.5 Msun)
 
 model names | remarks & reference
