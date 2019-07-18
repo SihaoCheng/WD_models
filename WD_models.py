@@ -668,7 +668,7 @@ def interp_xy_z_func(x, y, z, interp_type='linear'):
 
 
 def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
-               HR_bands=('bp_rp', 'G'),
+               HR_bands=('bp-rp', 'G'),
                HR_grid=(-0.6, 1.5, 0.002, 8, 18, 0.01),
                logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01),
                interp_type_atm='linear', interp_type='linear',
