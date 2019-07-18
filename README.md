@@ -6,7 +6,7 @@ This module is written for python 3 and will use functions from the following pa
 1. converting the coordinates of *Gaia* (and other) H--R diagram into WD parameters;
 2. plotting contours of WD parameters on the *Gaia* (and other) H--R diagram.
 
-The tools provided with the module also make it easy to transform between any desired WD parameters. Below, I introduce the basic usage and give some examples. Some detailed information of the cooling tracks models and are also shown.
+The tools provided with the module also make it easy to transform between any desired WD parameters. Below, I introduce the basic usage and give some examples. Some detailed information of the cooling tracks models and are also shown. For questions or suggestions, please do not hesitate to contact me: s.cheng@jhu.edu
 
 
 ## Import
@@ -14,6 +14,7 @@ Please download the script `WD_models.py` and folder `models/` to the same direc
 ```python
 import WD_models
 ```
+
 
 ## Example 1: converting H--R diagram coordinate into WD parameters
 ```python
@@ -48,6 +49,7 @@ print(d_age_cool)
 >> 0.269691616685
 ```
 
+
 ## Example 2: plotting contours on the H--R diagram
 
 ![](example_2.png)
@@ -57,7 +59,7 @@ The contours can be plotted using the grid data in the output of `load_model` fu
 HR_grid = (-0.6, 1.25, 0.002, 10, 15, 0.01)
 model  = WD_models.load_model('f', 'f', 'f', 'DA_thick', HR_grid=HR_grid) 
 
-# get rid of some artifects of interpolation
+# get rid of some artifacts of interpolation
 grid_x, grid_y = np.mgrid[HR_grid[0]:HR_grid[1]:HR_grid[2], HR_grid[3]:HR_grid[4]:HR_grid[5]]
 model['grid_HR_to_age_cool'][model['HR_to_mass'](grid_x, grid_y) < 0.21] = np.nan
 
@@ -84,9 +86,37 @@ plt.ylabel('$\\rm M_G$')
 plt.show()
 ```
 
-## Example 3: the effect of phase separation
+## Example 3: plotting cooling tracks on H--R diagram
 
-![](example_3.png) 
+![](example_3.png)
+
+For DA white dwarfs, there is a turing of color at low temperature. So, when interpolating the mapping HR --> WD parameters, I cut off the low-temperature part to avoid artifacts. This cut can be set with the argument `logteff_logg_grid`, which includes six elements for (xmin, xmax, dx, ymin, ymax, dy), and the default value for min_logteff is 3.5, i.e. Teff about 3200 K. 
+
+For ploting the cooling-tracks data points on the H--R diagram, the low-temperature cut-off is not necessary. So, the first element in `logteff_logg_grid` can be set to a lower value to avoid this cut:
+```python
+logteff_logg_grid = (3.0, 5.1, 0.01, 6.5, 9.6, 0.01)
+
+model = WD_models.load_model('f', 'f', 'f', 'DA_thick', 
+                             HR_bands=('g-i','g'), 
+                             logteff_logg_grid=logteff_logg_grid)
+
+plt.figure(figsize=(6,5),dpi=100)
+plt.scatter(model['color'], model['Mag'], c=model['logteff'], s=1)
+plt.colorbar()
+
+plt.title('DA WD cooling tracks (Fontaine et al. 2001)\non SDSS HR diagram,  color-coded by log(Teff)')
+plt.xlabel('g - i')
+plt.ylabel('$\\rm M_g$')
+plt.gca().invert_yaxis()
+plt.show()
+```
+Note that this H--R diagram is for SDSS passbands.
+
+
+
+## Example 4: the effect of phase separation
+
+![](example_4.png) 
 
 Here I show an interesting visualization based on the BaSTI cooing tracks with and without phase separation.
 ```python
@@ -131,7 +161,8 @@ plt.ylim(15,10)
 plt.show()
 ```
 
-## Example 4: transformation between any desired WD parameters
+
+## Example 5: transformation between any desired WD parameters
 
 If a desired transformation function is not provided in the output of `load_model`, (e.g., (mass, Teff) --> cooling age,) the user can generate the mapping with the function `interp_xy_z_func`, `interp_xy_z`, or `interp_HR_to_para` in this module, based on the cooling-track data points and atmosphere grid provided as the output of `load_model`. 
 
@@ -152,6 +183,7 @@ print(age_cool)
 >> 2.1917495897185257
 ```
 As other transformation functions, this customized mapping function `m_logteff_to_agecool` also accepts numpy array as input.
+
 
 ## Available models included in this module
 
