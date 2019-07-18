@@ -223,7 +223,7 @@ The function `load_model` returns a dictionary, which contains the atmosphere gr
 
 ### Cooling-track data points
 
-name | remarks
+key  | remarks
 -----|---------
 'mass_array':   | 1d-array. The mass of WD in unit of solar mass. I only read one value for a cooling track, not tracking the mass change.
 'logg':         | 1d-array. in cm/s^2
