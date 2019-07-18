@@ -88,7 +88,7 @@ plt.show()
 
 ![](example_3.png)
 
-Here I show an interesting visualization based on BaSTI cooling cooing tracks with and without phase separation.
+Here I show an interesting visualization based on the BaSTI cooing tracks with and without phase separation.
 ```python
 # load the BaSTI models with and without phase separation
 HR_grid = (-0.6, 1.25, 0.002, 10, 15, 0.01)
@@ -143,8 +143,7 @@ model = WD_models.load_model('f', 'a001', 'o', 'DA_thick')
 m_logteff_to_agecool = WD_models.interp_xy_z_func(x=model['mass_array'],
                                                   y=model['logteff'],
                                                   z=model['age_cool'],
-                                                  interp_type='linear',
-                                                  )
+                                                  interp_type='linear')
                                                   
 # the cooling age for (m_WD, Teff) = (1.1 Msun, 10000 K)
 age_cool = m_logteff_to_agecool(1.1, np.log10(10000))
