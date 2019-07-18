@@ -52,7 +52,7 @@ print(d_age_cool)
 
 ## Example 2: plotting contours on the H--R diagram
 
-![](example_2.png)
+![](figures/example_2.png)
 
 The contours can be plotted using the grid data in the output of `load_model` function. To make sure the coordinates matching, the argument `HR_grid` of the function `load_model` should be used, and the same values should also be used for the `extent` of contour plotting. 
 ```python
@@ -88,7 +88,7 @@ plt.show()
 
 ## Example 3: plotting cooling tracks on H--R diagram
 
-![](example_3.png)
+![](figures/example_3.png)
 
 For DA white dwarfs, there is a turing of color at low temperature. So, when interpolating the mapping HR --> WD parameters, I cut off the low-temperature part to avoid artifacts. This cut can be set with the argument `logteff_logg_grid`, which includes six elements for (xmin, xmax, dx, ymin, ymax, dy), and the default value for min_logteff is 3.5, i.e. Teff about 3200 K. 
 
@@ -116,7 +116,7 @@ Note that this H--R diagram is for SDSS passbands.
 
 ## Example 4: the effect of phase separation
 
-![](example_4.png) 
+![](figures/example_4.png) 
 
 Here I show an interesting visualization based on the BaSTI cooing tracks with and without phase separation.
 ```python
