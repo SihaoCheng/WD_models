@@ -31,51 +31,7 @@ print(age_cool)
 ```
 The outputs are in unit of Gyr. The *Function* `load_model` in the module reads a set of cooling tracks and returns a dictionary containing many useful functions for parameter transformation and grid data for ploting contours. The keys of this dictionary are listed in table ? below.
 
-With the argument `HR_bands`, one can change the passband for both the color index and absolute magnitude of the H--R diagram. It can be any combination from the following bands: G, bp, rp (Gaia), u, g, r, i, z (SDSS), U, B, V, R, I, J, H, K (Johnson). For example:
-```python
-model = WD_models.load_model('f', 'a001', 'o', 'DA_thick',
-                             HR_bands=('u-g', 'G'),
-                             )
-```
-Also, shorter names for the same cooling models are used here. (See "Available models included in this module" below.)
-
-## Example 2: conversions between any desired WD parameters
-
-If a desired transformation function is not provided in the output of `load_model`, (e.g., (mass, Teff) --> cooling age,) the user can generate the mapping with the function `interp_xy_z_func`, `interp_xy_z`, or `interp_HR_to_para` in this module, based on the cooling-track data points and atmosphere grid provided as the output of `load_model`. 
-
-For example, for the mapping (mass, logteff) --> cooling age:
-```python
-model = WD_models.load_model('f', 'a001', 'o', 'DA_thick')
-
-# interpolate the desired mapping
-m_logteff_to_agecool = WD_models.interp_xy_z_func(x=model['mass_array'],
-                                                  y=model['logteff'],
-                                                  z=model['age_cool'],
-                                                  interp_type='linear',
-                                                  )
-                                                  
-# the cooling age for (m_WD, Teff) = (1.1 Msun, 10000 K)
-age_cool = m_logteff_to_agecool(1.1, np.log10(10000))
-
-print(age_cool)
->> 2.1917495897185257
-```
-Again, this customized mapping function `m_logteff_to_agecool` accepts numpy array as input.
-
-## Example 3: comparing different models
-```python
-model_A = WD_models.load_model('', 'b', 'b', 'DA_thick')
-model_B = WD_models.load_model('', 'b', 'b', 'DB')
-
-d_age_cool = (model_A['HR_to_age_cool'](0, 13) - 
-              model_B['HR_to_age_cool'](0, 13))
-
-print(d_age_cool)
->> 0.269691616685
-```
-
-## Example 4: plotting contours on the H--R diagram
-
+## Example 2: plotting contours on the H--R diagram
 ```python
 HR_grid = (-0.6, 1.25, 0.002, 10, 15, 0.01)
 model  = WD_models.load_model('f', 'f', 'f', 'DA_thick', HR_grid=HR_grid) 
@@ -107,11 +63,59 @@ plt.xlabel('BP - RP')
 plt.ylabel('$\\rm M_G$')
 plt.show()
 ```
+![output](example_2.png)
+
+
+
+
+With the argument `HR_bands`, one can change the passband for both the color index and absolute magnitude of the H--R diagram. It can be any combination from the following bands: G, bp, rp (Gaia), u, g, r, i, z (SDSS), U, B, V, R, I, J, H, K (Johnson). For example:
+```python
+model = WD_models.load_model('f', 'a001', 'o', 'DA_thick',
+                             HR_bands=('u-g', 'G'),
+                             )
+```
+Also, shorter names for the same cooling models are used here. (See "Available models included in this module" below.)
+
+## Example 2: comparing different models
+```python
+model_A = WD_models.load_model('', 'b', 'b', 'DA_thick')
+model_B = WD_models.load_model('', 'b', 'b', 'DB')
+
+d_age_cool = model_A['HR_to_age_cool'](0, 13) - model_B['HR_to_age_cool'](0, 13)
+
+print(d_age_cool)
+>> 0.269691616685
+```
+
+## Example 3: conversions between any desired WD parameters
+
+If a desired transformation function is not provided in the output of `load_model`, (e.g., (mass, Teff) --> cooling age,) the user can generate the mapping with the function `interp_xy_z_func`, `interp_xy_z`, or `interp_HR_to_para` in this module, based on the cooling-track data points and atmosphere grid provided as the output of `load_model`. 
+
+For example, for the mapping (mass, logteff) --> cooling age:
+```python
+model = WD_models.load_model('f', 'a001', 'o', 'DA_thick')
+
+# interpolate the desired mapping
+m_logteff_to_agecool = WD_models.interp_xy_z_func(x=model['mass_array'],
+                                                  y=model['logteff'],
+                                                  z=model['age_cool'],
+                                                  interp_type='linear',
+                                                  )
+                                                  
+# the cooling age for (m_WD, Teff) = (1.1 Msun, 10000 K)
+age_cool = m_logteff_to_agecool(1.1, np.log10(10000))
+
+print(age_cool)
+>> 2.1917495897185257
+```
+Again, this customized mapping function `m_logteff_to_agecool` accepts numpy array as input.
+
+
 
 ## Example 5: 
 
 
-## Example 5: effects of phase separation
+## Example 6: effects of phase separation
 
 
 
