@@ -86,7 +86,7 @@ plt.show()
 
 ## Example 3: the effect of phase separation
 
-![](example_3.png)
+![](example_3.png) 
 
 Here I show an interesting visualization based on the BaSTI cooing tracks with and without phase separation.
 ```python
