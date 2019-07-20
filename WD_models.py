@@ -55,15 +55,14 @@ def interp_atm(spec_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.
     
     This function interpolates the mapping (logteff, logg) --> color index or
     bolometric correction (BC) of a passband.
-    The choices include: 
-    BC:             Gaia G, SDSS ugriz, and Johnson UBVRIJHK
-    color index:    Gaia BP-RP; any two passbands from SDSS and Johnson systems
     
     Args:
-        spec_type:          String. {'DA_thick', 'DA_thin', 'DB'}
-            See http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+        spec_type:          String. {'H', 'He'}
+            See the "Synthetic color" section on http://www.astro.umontreal.ca/~bergeron/CoolingModels/
         color:              String. {'G-Mbol', 'bp-rp', 'V-Mbol', 'u-g', 'B-z', etc.}
-            The target photometry of the mapping. 
+            The target color of the mapping. Any two bands between Gaia G, bp, rp,
+            SDSS ugriz, and Johnson UBVRI, 2MASS JHK, and bolometric magnitude Mbol.
+            For bolometric correction (BC), 'Mbol' must be after the minus sign '-'.
         logteff_logg_grid: (xmin, xmax, dx, ymin, ymax, dy). *Optional*
             corresponding to the grid of logTeff and logg.
         interp_type_atm:    String. {'linear', 'cubic'}. *Optional*
@@ -82,7 +81,7 @@ def interp_atm(spec_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.
     Mbol        = np.zeros(0) # Bolometric
     bp_Mag      = np.zeros(0) # Gaia
     rp_Mag      = np.zeros(0) # Gaia 
-    G_Mag       = np.zeros(0) # Gaia color
+    G_Mag       = np.zeros(0) # Gaia
     u_Mag       = np.zeros(0) # SDSS
     g_Mag       = np.zeros(0) # SDSS
     r_Mag       = np.zeros(0) # SDSS
@@ -93,46 +92,22 @@ def interp_atm(spec_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.
     V_Mag       = np.zeros(0) # Johnson
     R_Mag       = np.zeros(0) # Johnson
     I_Mag       = np.zeros(0) # Johnson
-    J_Mag       = np.zeros(0) # Johnson
-    H_Mag       = np.zeros(0) # Johnson
-    K_Mag       = np.zeros(0) # Johnson
-    
-    # read the table for each mass
-    for mass in ['0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','1.2']:
-        Atm_color = Table.read('models/Montreal_atm_grid/Table_Mass_' + mass +
-                               '_'+spec_type, format='ascii')
-        selected  = Atm_color['Teff'] > 10**logteff_logg_grid[0]
-        Atm_color = Atm_color[selected]
-        
-        # read columns
-        logteff = np.concatenate(( logteff, np.log10(Atm_color['Teff']) ))
-        logg    = np.concatenate(( logg, Atm_color['logg'] ))
-        Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
-        bp_Mag  = np.concatenate(( bp_Mag, Atm_color['G_BP/R'] ))
-        rp_Mag  = np.concatenate(( rp_Mag, Atm_color['G_RP/R'] ))
-        G_Mag   = np.concatenate(( G_Mag, Atm_color['G/R'] ))
-        u_Mag   = np.concatenate(( u_Mag, Atm_color['u'] ))
-        g_Mag   = np.concatenate(( g_Mag, Atm_color['g'] ))
-        r_Mag   = np.concatenate(( r_Mag, Atm_color['r'] ))
-        i_Mag   = np.concatenate(( i_Mag, Atm_color['i'] ))
-        z_Mag   = np.concatenate(( z_Mag, Atm_color['z'] ))
-        U_Mag   = np.concatenate(( U_Mag, Atm_color['U'] ))
-        B_Mag   = np.concatenate(( B_Mag, Atm_color['B'] ))
-        V_Mag   = np.concatenate(( V_Mag, Atm_color['V'] ))
-        R_Mag   = np.concatenate(( R_Mag, Atm_color['R'] ))
-        I_Mag   = np.concatenate(( I_Mag, Atm_color['I'] ))
-        J_Mag   = np.concatenate(( J_Mag, Atm_color['J'] ))
-        H_Mag   = np.concatenate(( H_Mag, Atm_color['H'] ))
-        K_Mag   = np.concatenate(( K_Mag, Atm_color['K'] ))
+    J_Mag       = np.zeros(0) # 2MASS
+    H_Mag       = np.zeros(0) # 2MASS
+    K_Mag       = np.zeros(0) # 2MASS
         
     # read the table for all logg
-    Atm_color = Table.read('models/Montreal_atm_grid/Table_'+spec_type,
+    if spec_type == 'H':
+        suffix = 'DA_thick'
+    if spec_type == 'He':
+        suffix = 'DB'
+    Atm_color = Table.read('models/Montreal_atm_grid/Table_'+suffix,
                            format='ascii')
     selected  = Atm_color['Teff'] > 10**logteff_logg_grid[0]
     Atm_color = Atm_color[selected]
     
     # read columns
-    logteff = np.concatenate(( logteff,np.log10(Atm_color['Teff']) ))
+    logteff = np.concatenate(( logteff, np.log10(Atm_color['Teff']) ))
     logg    = np.concatenate(( logg, Atm_color['logg'] ))
     Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
     bp_Mag  = np.concatenate(( bp_Mag, Atm_color['G_BP/R'] ))
@@ -151,6 +126,36 @@ def interp_atm(spec_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.
     J_Mag   = np.concatenate(( J_Mag, Atm_color['J'] ))
     H_Mag   = np.concatenate(( H_Mag, Atm_color['H'] ))
     K_Mag   = np.concatenate(( K_Mag, Atm_color['K'] ))
+    
+    # read the table for each mass
+    # I suppose the color information in this table is from the interpolation
+    # of the above table, so I do not need to read it.
+    #for mass in ['0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','1.2']:
+    #    Atm_color = Table.read('models/Montreal_atm_grid/Table_Mass_' + mass +
+    #                           '_'+spec_type, format='ascii')
+    #    selected  = Atm_color['Teff'] > 10**logteff_logg_grid[0]
+    #    Atm_color = Atm_color[selected]
+    #    
+    #    # read columns
+    #    logteff = np.concatenate(( logteff, np.log10(Atm_color['Teff']) ))
+    #    logg    = np.concatenate(( logg, Atm_color['logg'] ))
+    #    Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
+    #    bp_Mag  = np.concatenate(( bp_Mag, Atm_color['G_BP/R'] ))
+    #    rp_Mag  = np.concatenate(( rp_Mag, Atm_color['G_RP/R'] ))
+    #    G_Mag   = np.concatenate(( G_Mag, Atm_color['G/R'] ))
+    #    u_Mag   = np.concatenate(( u_Mag, Atm_color['u'] ))
+    #    g_Mag   = np.concatenate(( g_Mag, Atm_color['g'] ))
+    #    r_Mag   = np.concatenate(( r_Mag, Atm_color['r'] ))
+    #    i_Mag   = np.concatenate(( i_Mag, Atm_color['i'] ))
+    #    z_Mag   = np.concatenate(( z_Mag, Atm_color['z'] ))
+    #    U_Mag   = np.concatenate(( U_Mag, Atm_color['U'] ))
+    #    B_Mag   = np.concatenate(( B_Mag, Atm_color['B'] ))
+    #    V_Mag   = np.concatenate(( V_Mag, Atm_color['V'] ))
+    #    R_Mag   = np.concatenate(( R_Mag, Atm_color['R'] ))
+    #    I_Mag   = np.concatenate(( I_Mag, Atm_color['I'] ))
+    #    J_Mag   = np.concatenate(( J_Mag, Atm_color['J'] ))
+    #    H_Mag   = np.concatenate(( H_Mag, Atm_color['H'] ))
+    #    K_Mag   = np.concatenate(( K_Mag, Atm_color['K'] ))
     
     grid_x, grid_y = np.mgrid[logteff_logg_grid[0]:logteff_logg_grid[1]:logteff_logg_grid[2],
                               logteff_logg_grid[3]:logteff_logg_grid[4]:logteff_logg_grid[5]]
@@ -181,17 +186,21 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
     
     Args:
         low_mass_model:     String. 
-                            Specifying the cooling model used for low-mass 
-                            WDs (<~0.5Msun). Its value should be one of the
-                            following: 
+            Specifying the cooling model used for low-mass WDs (<~0.5Msun). 
+            Its value should be one of the following: 
             ''                              no low-mass model will be read
-            'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'Fontaine2001' or 'f'           the think-hydrogen CO WD model in 
+                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'Fontaine2001_thin' or 'ft'     the thin-hydrogen CO WD model in 
+                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
         normal_mass_model:  String. 
-                            Specifying the cooling model used for normal-mass
-                            WDs (about 0.5~1.0Msun). Its value should be one
-                            of the following:
+            Specifying the cooling model used for normal-mass WDs 
+            (about 0.5~1.0Msun). Its value should be one of the following:
             ''                              no normal-mass model will be read
-            'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'Fontaine2001' or 'f'           the think-hydrogen CO WD model in 
+                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'Fontaine2001_thin' or 'ft'     the thin-hydrogen CO WD model in 
+                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'Althaus2010_001' or 'a001'     Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
             'Althaus2010_0001' or 'a0001'   Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
             'Camisassa2017' or 'c'          only for DB, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html
@@ -199,20 +208,21 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
             'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
             'PG'                            only for DB
         high_mass_model:    String. 
-                            Specifying the cooling model used for high-mass
-                            WDs (>~1.0Msun). Should be one of the following: 
+            Specifying the cooling model used for high-mass WDs (>~1.0Msun). 
+            Its value should be one of the following: 
             ''                              no high-mass model will be read
-            'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'Fontaine2001' or 'f'           the think-hydrogen CO WD model in 
+                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'Fontaine2001_thin' or 'ft'     the thin-hydrogen CO WD model in 
+                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'ONe' or 'o'                    Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
             'MESA' or 'm'                   Lauffer et al. 2019
             'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
             'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-        spec_type:          String. 
-                            Specifying the atmosphere composition. Its value
-                            should be one of the following:
-            'DA_thick'                      thick hydrogen atmosphere
-            'DA_thin'                       thin hydrogen atmosphere
-            'DB'                            pure-helium atmosphere
+        spec_type:          String. {'H', 'He'}
+            Specifying the atmosphere composition.
+            'H'                 pure-hydrogen atmosphere
+            'He'                pure-helium atmosphere
         logg_func:          Function. *Optional*
             This is a function for (logteff, mass) --> logg. It is necessary 
             only for BaSTI models, because the BaSTI models do not directly 
@@ -229,11 +239,11 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
         mass_array: 1d-array. The mass of WD in unit of solar mass. I only read
                     one value for a cooling track, not tracking the mass change.
         logg:       1d-array. in cm/s^2
-        age:        1d-array. The total age of the WD in yr. Some are read
+        age:        1d-array. The total age of the WD in Gyr. Some are read
                     directly from the cooling tracks, but others are calculated
                     by assuming an initial--final mass relation (IFMR) of the WD
                     and adding the rough main-sequence age to the cooling age.
-        age_cool:   1d-array. The cooling age of the WD in yr.
+        age_cool:   1d-array. The cooling age of the WD in Gyr.
         logteff:    1d-array. The logarithm effective temperature of the WD in
                     Kelvin (K).
         Mbol:       1d-array. The absolute bolometric magnitude of the WD. Many
@@ -256,7 +266,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
     if 'BaSTI' in normal_mass_model:
         mass_seperation_1 = 0.501
     
-    if high_mass_model == 'Fontaine2001':
+    if high_mass_model == 'Fontaine2001' or high_mass_model == 'Fontaine2001_thin':
         mass_seperation_2 = 0.99
     if high_mass_model == 'ONe':
         mass_separation_2 = 1.09
@@ -267,12 +277,6 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
             mass_separation_2 = 0.99
     if high_mass_model == 'BaSTI' or high_mass_model == 'BaSTInosep':
         mass_separation_2 = 0.99
-    
-    # define atmosphere
-    if spec_type == 'DB':
-        spec_suffix = '0210'; spec_suffix2 = 'DB'; spec_suffix3 = 'He'
-    else:
-        spec_suffix = '0204'; spec_suffix2 = 'DA'; spec_suffix3 = 'H'
     
     # define the initial-final mass relation for calculating the total age for 
     # some models
@@ -290,55 +294,70 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
     mass_array  = np.zeros(0)
     Mbol        = np.zeros(0)
     
+    if spec_type == 'H':
+        spec_suffix2 = 'DA'
+    if spec_type == 'He':
+        spec_suffix2 = 'DB'
+    
     # read data from cooling models
     # Fontaine et al. 2001
     for mass in ['020','030','040','050','060','070','080','090','095','100',
                  '105','110','115','120','125','130']:
-        if ((low_mass_model == 'Fontaine2001' and
-             int(mass)/100 < mass_separation_1) or
-            (normal_mass_model == 'Fontaine2001' and
-             int(mass)/100 > mass_separation_1 and
-             int(mass)/100 < mass_separation_2) or
-            (high_mass_model == 'Fontaine2001' and
-             int(mass)/100 > mass_separation_2 )
-           ):
-            f       = open('models/Fontaine_AllSequences/CO_' + mass + 
-                           spec_suffix)
-            text    = f.read()
-            example = ('      1    57674.0025    8.36722799  7.160654E+08 '
-                        ' 4.000000E+05  4.042436E+33\n'
-                        '        7.959696E+00  2.425570E+01  7.231926E+00 '
-                        ' 0.0000000000  0.000000E+00\n'
-                        '        6.019629E+34 -4.010597E+00 -1.991404E+00 '
-                        '-3.055254E-01 -3.055254E-01'
-                      )
-            logg_temp       = []
-            age_temp        = []
-            age_cool_temp   = []
-            logteff_temp    = []
-            Mbol_temp       = []
-            l_line          = len(example)
-            for line in range(len(text)//l_line):
-                logteff_temp.append(  np.log10(float(text[line*l_line+9:
-                                                          line*l_line+21])) )
-                logg_temp.append(     float(text[line*l_line+22:
-                                                 line*l_line+35]) )
-                age_temp.append(      float(text[line*l_line+48:
-                                                 line*l_line+63]) +
-                                      (IFMR(int(mass)/100))**(t_index) * 1e10 )
-                age_cool_temp.append( float(text[line*l_line+48:
-                                                 line*l_line+63]) )
-                Mbol_temp.append(     4.75 - 
-                                      2.5 * np.log10(float(text[line*l_line+64:
-                                                                line*l_line+76]
-                                                          ) / 3.828e33) )
-            mass_array  = np.concatenate(( mass_array, np.ones(len(age_temp)) * int(mass)/100 ))
-            logg        = np.concatenate(( logg, logg_temp ))
-            age         = np.concatenate(( age, age_temp ))
-            age_cool    = np.concatenate(( age_cool, age_cool_temp ))
-            logteff     = np.concatenate(( logteff, logteff_temp ))
-            Mbol        = np.concatenate(( Mbol, Mbol_temp ))
-            f.close()
+        if int(mass)/100 < mass_separation_1 and spec_type == 'H':
+            if low_mass_model == 'Fontaine2001':
+                spec_suffix = '0204'
+            elif low_mass_model == 'Fontaine2001_thin':
+                spec_suffix = '0210'
+            else: continue
+        elif (int(mass)/100 > mass_separation_1 and 
+              int(mass)/100 < mass_separation_2 and spec_type == 'H'):
+            if normal_mass_model == 'Fontaine2001':
+                spec_suffix = '0204'
+            elif normal_mass_model == 'Fontaine2001_thin':
+                spec_suffix = '0210'
+            else: continue
+        elif int(mass)/100 > mass_separation_2 and spec_type == 'H':
+            if high_mass_model == 'Fontaine2001':
+                spec_suffix = '0204'
+            elif high_mass_model == 'Fontaine2001_thin':
+                spec_suffix = '0210'
+            else: continue
+        else: continue
+        f       = open('models/Fontaine_AllSequences/CO_' + mass + 
+                       spec_suffix)
+        text    = f.read()
+        example = ('      1    57674.0025    8.36722799  7.160654E+08 '
+                    ' 4.000000E+05  4.042436E+33\n'
+                    '        7.959696E+00  2.425570E+01  7.231926E+00 '
+                    ' 0.0000000000  0.000000E+00\n'
+                    '        6.019629E+34 -4.010597E+00 -1.991404E+00 '
+                    '-3.055254E-01 -3.055254E-01'
+                  )
+        logg_temp       = []
+        age_temp        = []
+        age_cool_temp   = []
+        logteff_temp    = []
+        Mbol_temp       = []
+        l_line          = len(example)
+        for line in range(len(text)//l_line):
+            logteff_temp.append(  np.log10(float(text[line*l_line+9:
+                                                      line*l_line+21])) )
+            logg_temp.append(     float(text[line*l_line+22:line*l_line+35]) )
+            age_temp.append(      float(text[line*l_line+48:line*l_line+63]) +
+                                  (IFMR(int(mass)/100))**(t_index) * 1e10 )
+            age_cool_temp.append( float(text[line*l_line+48:line*l_line+63]) )
+            Mbol_temp.append(     4.75 - 
+                                  2.5 * np.log10(float(text[line*l_line+64:
+                                                            line*l_line+76]
+                                                      ) / 3.828e33) )
+        mass_array  = np.concatenate(( mass_array, np.ones(len(age_temp)) * 
+                                                   int(mass)/100 ))
+        logg        = np.concatenate(( logg, logg_temp ))
+        age         = np.concatenate(( age, age_temp ))
+        age_cool    = np.concatenate(( age_cool, age_cool_temp ))
+        logteff     = np.concatenate(( logteff, logteff_temp ))
+        Mbol        = np.concatenate(( Mbol, Mbol_temp ))
+        f.close()
     
     # define a smoothing function for future extension. Now it just returns the
     # input x vector.
@@ -348,7 +367,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
         return x
     
     # CO, DA (Althaus et al. 2010)
-    if 'Althaus2010_' in normal_mass_model and 'DA' in spec_type:
+    if 'Althaus2010_' in normal_mass_model and spec_type == 'H':
         if '_001' in normal_mass_model:
             Althaus_masslist = ['0524','0570','0593','0609','0632','0659',
                                 '0705','0767','0837','0877','0934']
@@ -379,7 +398,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
             del Cool
     
     # CO, DB (Camisassa et al. 2017)
-    if normal_mass_model == 'Camisassa2017' and spec_type == 'DB':
+    if normal_mass_model == 'Camisassa2017' and spec_type == 'He':
         for mass in ['051','054','058','066','074','087','100']:
             if int(mass)/100 < mass_separation_2:
                 Cool = Table.read('models/Camisassa_2017_DB_CO/Z002/' + mass +
@@ -414,25 +433,21 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
     
     # BaSTI model
     for mass in ['054','055','061','068','077','087','100','110','120']:
-        normal_mass_use_BaSTI = (normal_mass_model == 'BaSTI' or 
-                                 normal_mass_model == 'BaSTI_nosep'
-                                )
-        high_mass_use_BaSTI = (high_mass_model == 'BaSTI' or 
-                               high_mass_model == 'BaSTI_nosep'
-                              )
-        sep = 'sep'
-        if normal_mass_use_BaSTI and int(mass)/100 < mass_separation_2:
-            if 'nosep' in normal_mass_model:
+        if int(mass)/100 < mass_separation_2:
+            if normal_mass_model == 'BaSTI':
+                sep = 'sep'
+            elif normal_mass_model == 'BaSTI_nosep':
                 sep = 'nosep'
-            Cool = Table.read('models/BaSTI/COOL' + mass + 'BaSTIfinale' + 
-                   spec_suffix2 + sep +'.sdss', format='ascii')
-        elif high_mass_use_BaSTI and int(mass)/100 > mass_separation_2:
-            if 'nosep' in high_mass_model:
+            else: continue
+        elif int(mass)/100 > mass_separation_2:
+            if high_mass_model == 'BaSTI':
+                sep = 'sep'
+            elif high_mass_model == 'BaSTI_nosep':
                 sep = 'nosep'
-            Cool = Table.read('models/BaSTI/COOL' + mass + 'BaSTIfinale' + 
-                   spec_suffix2 + sep +'.sdss', format='ascii')
-        else:
-            continue
+            else: continue
+        else: continue
+        Cool = Table.read('models/BaSTI/COOL' + mass + 'BaSTIfinale' + 
+               spec_suffix2 + sep +'.sdss', format='ascii')
         dn = 1
         if int(mass)/100 > 1.05:
             dn = 5
@@ -449,7 +464,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
         del Cool
     
     # PG cooling tracks (Althaus et al. 2009)
-    if normal_mass_model == 'PG' and spec_type == 'DB':
+    if normal_mass_model == 'PG' and spec_type == 'He':
         for mass in ['0514','0530','0542','0565','0584','0609','0664','0741',
                      '0869']:
             Cool = Table.read('models/tracksPG-DB/db-pg-' + mass + '.trk.t0.11',
@@ -497,7 +512,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
     
     # massive MESA model (Lauffer et al. 2019)
     if high_mass_model == 'MESA': 
-        if spec_suffix3 == 'He':
+        if spec_type == 'He':
 #             mesa_masslist = ['1.0124','1.019','1.0241','1.0358','1.0645','1.0877',
 #                              '1.1102','1.1254','1.1313','1.1322','1.1466','1.151',
 #                              '1.2163','1.22','1.2671','1.3075']
@@ -507,7 +522,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
             mesa_masslist = ['1.0124','1.0645',
                              '1.1102','1.151',
                              '1.2163','1.2671','1.3075']
-        else:
+        elif spec_type == 'H':
             mesa_masslist = ['1.0124','1.0645',
                              '1.1102','1.151',
                              '1.2163','1.2671','1.3075']
@@ -539,33 +554,33 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
            logteff[select], Mbol[select]
 
 
-def interp_HR_to_para(bp_rp, G, para,
+def interp_HR_to_para(color, Mag, WD_para,
                       HR_grid=(-0.6, 1.5, 0.002, 8, 18, 0.01),
                       interp_type='linear'):
     """
-    Interpolate the mapping of (BR-RP, G) --> para, based on the data points 
-    from many cooling tracks read from a model, and get the value of z on the
-    grid of H-R coordinates. We set select only G < 16 and G > 8 to avoid the 
-    turning of DA cooling track which leads to multi-value mapping.
+    Interpolate the mapping of HR coordinate --> WD_para, based on the data 
+    points from many cooling tracks read from a model, and get the value of a
+    WD parameter on a grid of HR coordinates. The argument 'HR_grid' sets the
+    range on the HR diagram for these interpolations.
     
     Args:
-        bp_rp:          1d-array. 
-                        The Gaia color BP-RP
-        G:              1d-array. 
-                        The absolute magnitude of Gaia G band
-        para:           1d-array. 
-                        The target parameter for mapping (BP-RP, G) --> para
+        color:          1d-array. 
+                        The color index
+        Mag:            1d-array. 
+                        The absolute magnitude
+        WD_para:        1d-array. 
+                        The target parameter for mapping HR --> WD_para
         HR_grid:        (xmin, xmax, dx, ymin, ymax, dy). *Optional*
                         The grid information of the H-R diagram coordinates 
-                        BP-RP and G
+                        color and Mag
         interp_type:    String. {'linear', 'cubic'}. *Optional*
                         Linear is better for this purpose.
                   
     Returns:
-        grid_z:         2d-array. 
+        grid_para:      2d-array. 
                         The values of z on the grid of HR diagram
-        HR_to_z:        Function. 
-                        The mapping of (BP-RP, G) --> z
+        HR_to_para:     Function. 
+                        The mapping of HR coordinate --> WD_para
     
     """
     # define the grid of H-R diagram
@@ -573,14 +588,16 @@ def interp_HR_to_para(bp_rp, G, para,
                               HR_grid[3]:HR_grid[4]:HR_grid[5]]
     
     # select only not-NaN data points
-    selected    = ~np.isnan(bp_rp + G + para) * (G > HR_grid[3]) * (G < HR_grid[4]) * \
-                  (bp_rp > HR_grid[0]) * (bp_rp < HR_grid[1])
+    selected    = ~np.isnan(color + Mag + WD_para) * (Mag > HR_grid[3]) * \
+                  (Mag < HR_grid[4]) * (color > HR_grid[0]) * (color < HR_grid[1])
     
     # get the value of z on a H-R diagram grid and the interpolated mapping
-    grid_para   = griddata(np.array((bp_rp[selected], G[selected])).T, 
-                           para[selected], (grid_x, grid_y), method=interp_type,
+    grid_para   = griddata(np.array((color[selected], Mag[selected])).T, 
+                           WD_para[selected], (grid_x, grid_y), 
+                           method=interp_type,
                            rescale=True)
-    HR_to_para  = interpolate_2d(bp_rp[selected], G[selected], para[selected],
+    HR_to_para  = interpolate_2d(color[selected], Mag[selected], 
+                                 WD_para[selected],
                                  interp_type)
     
     # return both the grid data and interpolated mapping
@@ -700,13 +717,19 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
                             (<~0.5Msun). Its value should be one of the
                             following: 
             ''                              no low-mass model will be read
-            'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'Fontaine2001' or 'f'           the think-hydrogen CO WD model in 
+                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'Fontaine2001_thin' or 'ft'     the thin-hydrogen CO WD model in 
+                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
         normal_mass_model:  String. 
                             Specifying the cooling model used for normal-mass
                             WDs (about 0.5~1.0Msun). Its value should be one of
                             the following:
             ''                              no normal-mass model will be read
-            'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'Fontaine2001' or 'f'           the think-hydrogen CO WD model in 
+                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'Fontaine2001_thin' or 'ft'     the thin-hydrogen CO WD model in 
+                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'Althaus2010_001' or 'a001'     Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
             'Althaus2010_0001' or 'a0001'   Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
             'Camisassa2017' or 'c'          only for DB, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html
@@ -717,7 +740,10 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
                             Specifying the cooling model used for high-mass WDs
                             (>~1.0Msun). Should be one of the following: 
             ''                              no high-mass model will be read
-            'Fontaine2001' or 'f'           http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'Fontaine2001' or 'f'           the think-hydrogen CO WD model in 
+                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+            'Fontaine2001_thin' or 'ft'     the thin-hydrogen CO WD model in 
+                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'ONe' or 'o'                    Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
             'MESA' or 'm'                   Lauffer et al. 2019
             'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
@@ -725,9 +751,8 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
         spec_type:          String. 
                             Specifying the atmosphere composition. Its value 
                             should be one of the following:
-            'DA_thick'                      thick hydrogen atmosphere
-            'DA_thin'                       thin hydrogen atmosphere
-            'DB'                            pure-helium atmosphere
+            'H'                             pure-hydrogen atmosphere
+            'He'                            pure-helium atmosphere
         HR_bands:          (String, String). *Optional*
             The passbands for the color and absolute magnitude on the H--R
             diagram. It can be any combination from the following bands:
@@ -766,7 +791,7 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
           category   | interpolated values on a grid | interpolated mapping
           var. type  |     2d-array                  |     Function
         ========================================================================
-           atm.      | 'grid_logteff_logg_to_BC'     | 'logteff_logg_to_BC'
+           atm.      | 'grid_logteff_logg_to_BC'     | 'logteff_logg_to_BC'   (bolometric correction)
                      | 'grid_logteff_logg_to_color'  | 'logteff_logg_to_color'
         ------------------------------------------------------------------------
          HR -->      | 'grid_HR_to_mass'             | 'HR_to_mass'
@@ -785,12 +810,12 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
                         read one value for a cooling track, not tracking the 
                         mass change.
         'logg':         1d-array. in cm/s^2
-        'age':          1d-array. The total age of the WD in yr. Some are read
+        'age':          1d-array. The total age of the WD in Gyr. Some are read
                         directly from the cooling tracks, but others are 
                         calculated by assuming an initial--final mass relation
                         (IFMR) of the WD and adding the rough main-sequence age
                         to the cooling age.
-        'age_cool':     1d-array. The cooling age of the WD in yr.
+        'age_cool':     1d-array. The cooling age of the WD in Gyr.
         'logteff':      1d-array. The logarithm effective temperature of the WD
                         in Kelvin (K).
         'Mbol':         1d-array. The absolute bolometric magnitude of the WD. 
@@ -809,6 +834,8 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
     # define some alias of model names
     if low_mass_model == 'f':
         low_mass_model = 'Fontaine2001'
+    if low_mass_model == 'ft':
+        low_mass_model = 'Fontaine2001_thin'
     
     if normal_mass_model == 'a001':
         normal_mass_model = 'Althaus2010_001'
@@ -816,6 +843,8 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
         normal_mass_model = 'Althaus2010_0001'
     if normal_mass_model == 'f':
         normal_mass_model = 'Fontaine2001'
+    if normal_mass_model == 'ft':
+        normal_mass_model = 'Fontaine2001_thin'
     if normal_mass_model == 'c':
         normal_mass_model = 'Camisassa2017'
     if normal_mass_model == 'b':
@@ -825,6 +854,8 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
     
     if high_mass_model == 'f':
         high_mass_model = 'Fontaine2001'
+    if high_mass_model == 'ft':
+        high_mass_model = 'Fontaine2001_thin'
     if high_mass_model == 'b':
         high_mass_model = 'BaSTI'
     if high_mass_model == 'bn':
@@ -833,6 +864,16 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
         high_mass_model = 'MESA'
     if high_mass_model == 'o':
         high_mass_model = 'ONe'
+    
+    model_names = ['', 'Fontaine2001', 'Fontaine2001_thin', 'Althaus2010_001', 
+                   'Althaus2010_0001', 'Camisassa2017', 'BaSTI', 'BaSTI_nosep',
+                   'MESA', 'ONe',]
+    if (low_mass_model not in model_names or 
+        normal_mass_model not in model_names or
+        high_mass_model not in model_names):
+        print('please check the model names.')
+    if spec_type not in ['H', 'He']:
+        print('please enter either \'H\' or \'He\' for spec_type.')
     
     # make atmosphere grid and mapping: logteff, logg --> bp-rp,  G-Mbol
     grid_logteff_logg_to_color, logteff_logg_to_color = interp_atm(
