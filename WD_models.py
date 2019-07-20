@@ -130,32 +130,32 @@ def interp_atm(spec_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.
     # read the table for each mass
     # I suppose the color information in this table is from the interpolation
     # of the above table, so I do not need to read it.
-    #for mass in ['0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','1.2']:
-    #    Atm_color = Table.read('models/Montreal_atm_grid/Table_Mass_' + mass +
-    #                           '_'+spec_type, format='ascii')
-    #    selected  = Atm_color['Teff'] > 10**logteff_logg_grid[0]
-    #    Atm_color = Atm_color[selected]
-    #    
-    #    # read columns
-    #    logteff = np.concatenate(( logteff, np.log10(Atm_color['Teff']) ))
-    #    logg    = np.concatenate(( logg, Atm_color['logg'] ))
-    #    Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
-    #    bp_Mag  = np.concatenate(( bp_Mag, Atm_color['G_BP/R'] ))
-    #    rp_Mag  = np.concatenate(( rp_Mag, Atm_color['G_RP/R'] ))
-    #    G_Mag   = np.concatenate(( G_Mag, Atm_color['G/R'] ))
-    #    u_Mag   = np.concatenate(( u_Mag, Atm_color['u'] ))
-    #    g_Mag   = np.concatenate(( g_Mag, Atm_color['g'] ))
-    #    r_Mag   = np.concatenate(( r_Mag, Atm_color['r'] ))
-    #    i_Mag   = np.concatenate(( i_Mag, Atm_color['i'] ))
-    #    z_Mag   = np.concatenate(( z_Mag, Atm_color['z'] ))
-    #    U_Mag   = np.concatenate(( U_Mag, Atm_color['U'] ))
-    #    B_Mag   = np.concatenate(( B_Mag, Atm_color['B'] ))
-    #    V_Mag   = np.concatenate(( V_Mag, Atm_color['V'] ))
-    #    R_Mag   = np.concatenate(( R_Mag, Atm_color['R'] ))
-    #    I_Mag   = np.concatenate(( I_Mag, Atm_color['I'] ))
-    #    J_Mag   = np.concatenate(( J_Mag, Atm_color['J'] ))
-    #    H_Mag   = np.concatenate(( H_Mag, Atm_color['H'] ))
-    #    K_Mag   = np.concatenate(( K_Mag, Atm_color['K'] ))
+    for mass in ['0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','1.2']:
+        Atm_color = Table.read('models/Montreal_atm_grid/Table_Mass_' + mass +
+                               '_'+suffix, format='ascii')
+        selected  = Atm_color['Teff'] > 10**logteff_logg_grid[0]
+        Atm_color = Atm_color[selected]
+        
+        # read columns
+        logteff = np.concatenate(( logteff, np.log10(Atm_color['Teff']) ))
+        logg    = np.concatenate(( logg, Atm_color['logg'] ))
+        Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
+        bp_Mag  = np.concatenate(( bp_Mag, Atm_color['G_BP/R'] ))
+        rp_Mag  = np.concatenate(( rp_Mag, Atm_color['G_RP/R'] ))
+        G_Mag   = np.concatenate(( G_Mag, Atm_color['G/R'] ))
+        u_Mag   = np.concatenate(( u_Mag, Atm_color['u'] ))
+        g_Mag   = np.concatenate(( g_Mag, Atm_color['g'] ))
+        r_Mag   = np.concatenate(( r_Mag, Atm_color['r'] ))
+        i_Mag   = np.concatenate(( i_Mag, Atm_color['i'] ))
+        z_Mag   = np.concatenate(( z_Mag, Atm_color['z'] ))
+        U_Mag   = np.concatenate(( U_Mag, Atm_color['U'] ))
+        B_Mag   = np.concatenate(( B_Mag, Atm_color['B'] ))
+        V_Mag   = np.concatenate(( V_Mag, Atm_color['V'] ))
+        R_Mag   = np.concatenate(( R_Mag, Atm_color['R'] ))
+        I_Mag   = np.concatenate(( I_Mag, Atm_color['I'] ))
+        J_Mag   = np.concatenate(( J_Mag, Atm_color['J'] ))
+        H_Mag   = np.concatenate(( H_Mag, Atm_color['H'] ))
+        K_Mag   = np.concatenate(( K_Mag, Atm_color['K'] ))
     
     grid_x, grid_y = np.mgrid[logteff_logg_grid[0]:logteff_logg_grid[1]:logteff_logg_grid[2],
                               logteff_logg_grid[3]:logteff_logg_grid[4]:logteff_logg_grid[5]]
@@ -359,6 +359,27 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
         Mbol        = np.concatenate(( Mbol, Mbol_temp ))
         f.close()
     
+    # Montreal He-atmosphere model
+    for mass in ['0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','1.2']:
+        if ((float(mass) < mass_separation_1 and
+             low_mass_model == 'Fontaine2001') or
+            (float(mass) > mass_separation_1 and
+             float(mass) < mass_separation_2 and
+             normal_mass_model == 'Fontaine2001') or
+            (float(mass) > mass_separation_2 and
+             high_mass_model == 'Fontaine2001')
+           ) and spec_type == 'He':
+            Cool = Table.read('models/Montreal_atm_grid/Table_Mass_' + mass +
+                                    '_'+spec_suffix2, format='ascii')
+            Cool = Cool[::1]
+            mass_array  = np.concatenate(( mass_array, np.ones(len(Cool))*float(mass) ))
+            logg        = np.concatenate(( logg, Cool['logg'] ))
+            age         = np.concatenate(( age, Cool['Age'] +
+                                                (IFMR(float(mass)))**(t_index)*1e10 ))
+            age_cool    = np.concatenate(( age_cool, Cool['Age'] ))
+            logteff     = np.concatenate(( logteff, np.log10(Cool['Teff']) ))
+            Mbol        = np.concatenate(( Mbol, Cool['Mbol'] ))
+    
     # define a smoothing function for future extension. Now it just returns the
     # input x vector.
     def smooth(x,window_len=5,window='hanning'):
@@ -410,9 +431,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
                 #Cool.sort('Log(edad/Myr)')
                 mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
                 logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
-                age         = np.concatenate(( age, (10**Cool['Log(edad/Myr)'] -
-                                                     10**Cool['Log(edad/Myr)'][0]) * 1e6 +
-                                                    (IFMR(int(mass)/100))**(t_index) * 1e10 ))
+                age         = np.concatenate(( age, 10**Cool['Log(edad/Myr)'] ))
                 age_cool    = np.concatenate(( age_cool, (10**Cool['Log(edad/Myr)'] -
                                                           10**Cool['Log(edad/Myr)'][0]) * 1e6 ))
                 logteff     = np.concatenate(( logteff, Cool['LOG(TEFF)'] ))
@@ -456,9 +475,9 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
         Cool['Log(grav)'] = logg_func(Cool['log(Teff)'], np.ones(len(Cool)) * int(mass)/100)
         mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
         logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
-        age         = np.concatenate(( age, 10**Cool['log(t)'] - 10**Cool['log(t)'][0] +
+        age         = np.concatenate(( age, 10**Cool['log(t)'] +
                                             (IFMR(int(mass)/100))**(t_index) * 1e10 ))
-        age_cool    = np.concatenate(( age_cool, 10**Cool['log(t)'] - 10**Cool['log(t)'][0]  ))
+        age_cool    = np.concatenate(( age_cool, 10**Cool['log(t)'] ))
         logteff     = np.concatenate(( logteff, Cool['log(Teff)'] ))
         Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['log(L/Lo)'] ))
         del Cool
@@ -488,9 +507,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
             #Cool.sort('Log(edad/Myr)')
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
             logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
-            age         = np.concatenate(( age, (10**Cool['Log(edad/Myr)'] -
-                                                 10**Cool['Log(edad/Myr)'][0]) * 1e6 +
-                                                (IFMR(int(mass)/100))**(t_index) * 1e10 ))
+            age         = np.concatenate(( age, 10**Cool['Log(edad/Myr)'] ))
             age_cool    = np.concatenate(( age_cool, (10**Cool['Log(edad/Myr)'] -
                                                       10**Cool['Log(edad/Myr)'][0]) * 1e6 ))
             logteff     = np.concatenate(( logteff, Cool['LOG(TEFF)'] ))
@@ -522,12 +539,12 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
             mesa_masslist = ['1.0124','1.0645',
                              '1.1102','1.151',
                              '1.2163','1.2671','1.3075']
-        elif spec_type == 'H':
+        if spec_type == 'H':
             mesa_masslist = ['1.0124','1.0645',
                              '1.1102','1.151',
                              '1.2163','1.2671','1.3075']
         for mass in mesa_masslist:
-            Cool = Table.read('models/MESA_model/' + spec_suffix3 + '_atm-M' +
+            Cool = Table.read('models/MESA_model/' + spec_type + '_atm-M' +
                               mass + '.dat',
                               format='csv', header_start=1, data_start=2)
             dn = 70
