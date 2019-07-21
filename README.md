@@ -19,7 +19,7 @@ import WD_models
 ## Example 1: converting H--R diagram coordinate into WD parameters
 ```python
 model = WD_models.load_model(low_mass_model='Fontaine2001',
-                             middle_mass_model='Althaus2010_001',
+                             middle_mass_model='Renedo2010_001',
                              high_mass_model='ONe',
                              spec_type='H')
 bp_rp = np.array([0.25, 0.25])
@@ -34,7 +34,7 @@ The outputs are in unit of Gyr. The function `load_model` in the module reads a 
 
 With the argument `HR_bands`, one can change the passband for both the color index and absolute magnitude of the H--R diagram. It can be any combination from the following bands: G, bp, rp (Gaia); u, g, r, i, z (SDSS); U, B, V, R, I (Johnson); J, H, K (2MASS). For example:
 ```python
-model = WD_models.load_model('f', 'a001', 'o', 'H',
+model = WD_models.load_model('f', 'r001', 'o', 'H',
                              HR_bands=('u-g', 'G'))
 ```
 Note that shorter names of the same cooling models (see section "Available models included in this module" below for details) are used here.
@@ -102,7 +102,7 @@ If a desired transformation function is not provided in the output of `load_mode
 
 For example, for the mapping (mass, logteff) --> cooling age:
 ```python
-model = WD_models.load_model('f', 'a001', 'o', 'H')
+model = WD_models.load_model('f', 'r001', 'o', 'H')
 
 # generate the desired mapping
 m_logteff_to_agecool = WD_models.interp_xy_z_func(x=model['mass_array'],
@@ -138,8 +138,8 @@ model names | short names | remarks & reference
 ''         |                   |no normal-mass model will be read
 'Fontaine2001' | 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
 'Fontaine2001_thin' | 'ft'     |the thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-'Althaus2010_001' | 'a001'     |Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
-'Althaus2010_0001' | 'a0001'   |Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
+'Renedo2010_001' | 'r001'     |Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
+'Renedo2010_0001' | 'r0001'   |Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
 'Camisassa2017' | 'c'          |only for DB, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html
 'BaSTI' | 'b'                  |with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
 'BaSTI_nosep' | 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
@@ -153,7 +153,7 @@ model names | short names | remarks & reference
 'Fontaine2001' | 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
 'Fontaine2001_thin' | 'ft'     |the thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
 'ONe' | 'o'                    |Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
-'MESA' | 'm'                   |Lauffer et al. 2019
+'MESA' | 'm'                   |Lauffer et al. 2018
 'BaSTI' | 'b'                  |with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
 'BaSTI_nosep' | 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
 
@@ -208,3 +208,20 @@ key  | remarks
 For the calculation of total ages, I adopt the IFMR from Cummings et al. 2018 for WDs above 0.55 Msun. For lower masses, which is less useful, I just interpolated between zero and the first data point of Cummings et al. 2018.
 
 ![](figures/IFMR.png)
+
+
+## References
+Bergeron et al. (2011ApJ...737...28B)
+Camisassa et al. (2017ApJ...839...11C)
+Camisassa et al. (2019A&A...625A..87C)
+Cummings et al. (2018ApJ...866...21C)
+Fontaine et al. (2001PASP..113..409F)
+Holberg & Bergeron (2006AJ....132.1221H)
+Kowalski & Saumon (2006ApJ...651L.137K)
+Lauffer et al. (2018MNRAS.480.1547L)
+Renedo et al. (2010ApJ...717..183R)
+Salaris et al. (2010ApJ...716.1241S)
+Tremblay et al. (2011ApJ...730..128T)
+
+http://www.astro.umontreal.ca/~bergeron/CoolingModels
+http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks.html
