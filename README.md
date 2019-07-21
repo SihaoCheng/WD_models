@@ -1,14 +1,12 @@
 # WD_models
-I provide a python module for transformation between broad-band photometry and many white dwarf (WD) physical parameters (mass, cooling age, Teff, etc), based on an interpolation of atmosphere grid and cooling tracks from various existing WD models (see below). In particular, this module makes it easy to reading WD parameters according to its coordinate on the *Gaia* H--R diagram. 
+The number of white dwarfs (WD) with precise luminosity and color measurements has been increased drastically by *Gaia* DR2. Accordingly, the need for a tool to easily transform WD photometry to physical parameters (and vice versa) emerges. Here, I provide a python module for such transformations, based on interpolation of existing WD atmosphere grid and cooling models. This module is written for python 3 and depends on the following packages: `astropy, matplotlib, numpy, scipy`. Its most useful functions include:
 
-This module is written for python 3 and will use functions from the following packages: `astropy, matplotlib, numpy, scipy`. It is designed mainly for the following purposes:
+1. converting the coordinates of *Gaia* (and other passbands) H--R diagram into WD parameters;
+2. plotting contours of WD parameters on the *Gaia* (and other passbands) H--R diagram.
 
-1. converting the coordinates of *Gaia* (and other) H--R diagram into WD parameters;
-2. plotting contours of WD parameters on the *Gaia* (and other) H--R diagram.
+It also provides tools to transform any desired WD parameters and compare the results of different WD models. In addition, the user may custimize many parameters, such as the choice of cooling models and setting details of plotting.
 
-It also provides tools to transform any desired WD parameters. 
-
-Below, I introduce its basic usage and give some examples. Some detailed information of the cooling tracks models and are also shown. For questions or suggestions, please do not hesitate to contact me: s.cheng@jhu.edu
+Below, I introduce its basic usage and give some examples. Useful information of cooling models and references are attached. I hope this module will attract more researchers to the WD field and connect observers, theorists, and astronomers from outside the WD field more tightly. For questions or suggestions or comments, please do not hesitate to contact me: s.cheng@jhu.edu
 
 
 ## Import
