@@ -63,6 +63,7 @@ extent = (HR_grid[0], HR_grid[1], HR_grid[3], HR_grid[4])
 plt.contour(model['grid_HR_to_mass'].T, extent=extent)
 plt.contour(model['grid_HR_to_age_cool'].T, extent=extent)
 ```
+Codes for plotting the exact figure (and figures below) are provided in the jupyter notebook `/WD_models_examples.ipynb`.
 
 
 ## Example 3: the effect of phase separation
