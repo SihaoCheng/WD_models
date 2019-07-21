@@ -208,7 +208,7 @@ key  | remarks
 
 For the calculation of total ages, I adopt the IFMR from Cummings et al. 2018 for WDs above 0.55 Msun. For lower masses, which is less useful, I just interpolated between zero and the first data point of Cummings et al. 2018.
 
-![](figures/IFMR.png)
+![](figures/IFMR_age.png)
 
 
 ## References
