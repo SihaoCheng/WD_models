@@ -670,7 +670,7 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
     
     This function reads a set of cooling tracks assigned by the user and returns
     many useful grid-values for plotting the contour of WD parameters on the
-    Gaia H--R diagram and functions for mapping between Gaia photometry and 
+    Gaia H--R diagram and functions for mapping between photometry and 
     WD parameters.
     
     For other mappings not included in the output, the user can generate the
