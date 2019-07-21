@@ -166,37 +166,13 @@ spectral type | remarks
 'H'           | pure-H atmosphere
 'He'          | pure-He atmosphere
 
-## The main function `load_model`
+## The output of function `load_model`
 
-This function reads a set of cooling tracks assigned by the user, and it returns several sets of grid data for plotting the contour of WD parameters on the H--R diagram and functions for mapping between photometry and WD parameters. It also returns the data points read from the cooling tracks, so that the user may customize other transformations between these parameters and broadband photometry.
+The function `load_model` returns a dictionary, which contains several sets of grid data for plotting the contour of WD parameters on the H--R diagram and functions for mapping between photometry and WD parameters. It also returns all the data points read from the cooling tracks, so that the user may customize other transformations between these parameters and broadband photometry.
 
-### Args:
+The keys of this dictionary are:
 
-low_mass_model:     String. Specifying the cooling model used for low-mass WDs (< about 0.5Msun).
-
-middle_mass_model:  String. Specifying the cooling model used for middle-mass WDs (about 0.5-1.0Msun).
-    
-high_mass_model:    String. Specifying the cooling model used for high-mass WDs (> about 1.0Msun).
-
-spec_type:          String. {'H', 'He'} Specifying the atmosphere composition.
-
-HR_bands:           (String, String). *Optional* The passbands for the color and absolute magnitude on the H--R diagram. It can be any combination from the following bands: G, bp, rp (Gaia); u, g, r, i, z (SDSS); U, B, V, R, I (Johnson); J, H, K (2MASS). Color should be in the format of: 'bp-rp', 'G-bp', 'U-B', 'u-g', 'G-i', etc. Absolute magnitude should be in the format of: 'G', 'bp', 'U', 'u', etc. 
-
-HR_grid:           (xmin, xmax, dx, ymin, ymax, dy). *Optional* The grid information of the H-R diagram coordinates BP-RP and G.
-
-logteff_logg_grid: (xmin, xmax, dx, ymin, ymax, dy). *Optional* The grid information of the logteff--logg coordinates for the table interpolation of the atmosphere synthetic colors. Since the DA cooling track have a turning-back of color index below around 3500 K, the user should set the first element >= 3.5.
-
-interp_type_atm:    String. {'linear', 'cubic'} Linear is better for interpolating WD cooling tracks.
-
-interp_type:        String. {'linear', 'cubic'} Linear is better for interpolating WD cooling tracks.
-
-for_comparison:     Bool. *Optional* If true, cooling tracks with very similar masses from different models will be used, which might lead to strange result of interpolation. E.g., the Fontaine2001 model has m_WD = [..., 0.95, 1.00, ...], and the MESA model has m_WD = [1.0124, 1.019, ...]. If true, the Fontaine2001 1.00Msun cooling track will be used; if false, it will not be used because it is too close to the MESA 1.0124Msun track.
-    
-### Returns:
-
-A Dictionary. The keys of this dictionary are:
-
-#### Interpolation results
+### Interpolation results
 
     ========================================================================
       category   | interpolated values on a grid | interpolated mapping
@@ -217,7 +193,7 @@ A Dictionary. The keys of this dictionary are:
                  |                               | 'm_agecool_to_Mag'
     ======================================================================== 
 
-#### Cooling-track data points
+### Cooling-track data points
 
 key  | remarks
 -----|---------
