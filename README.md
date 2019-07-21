@@ -6,7 +6,9 @@ This module is written for python 3 and will use functions from the following pa
 1. converting the coordinates of *Gaia* (and other) H--R diagram into WD parameters;
 2. plotting contours of WD parameters on the *Gaia* (and other) H--R diagram.
 
-The tools provided with the module also make it easy to transform between any desired WD parameters. Below, I introduce the basic usage and give some examples. Some detailed information of the cooling tracks models and are also shown. For questions or suggestions, please do not hesitate to contact me: s.cheng@jhu.edu
+It also provides tools to transform any desired WD parameters. 
+
+Below, I introduce its basic usage and give some examples. Some detailed information of the cooling tracks models and are also shown. For questions or suggestions, please do not hesitate to contact me: s.cheng@jhu.edu
 
 
 ## Import
