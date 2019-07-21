@@ -1,12 +1,12 @@
 # WD_models
-The number of white dwarfs (WD) with precise luminosity and color measurements has been increased drastically by *Gaia* DR2. Accordingly, the need for a tool to easily transform WD photometry to physical parameters (and vice versa) emerges. Here, I provide a python module for such transformations, based on interpolation of existing WD atmosphere grid and cooling models. This module is written for python 3 and depends on the following packages: `astropy, matplotlib, numpy, scipy`. Its most useful functions include:
+The number of white dwarfs (WD) with precise luminosity and color measurements has been increased drastically by *Gaia* DR2. Accordingly, the need for a tool to easily transform WD photometry to physical parameters (and vice versa) emerges. Here, I provide a python module for such transformations, based on interpolation of existing WD atmosphere grid and cooling models. This module is written for python 3 and depends on the following packages: `astropy, matplotlib, numpy, scipy`. The most useful functions include:
 
 1. converting the coordinates of *Gaia* (and other passbands) H--R diagram into WD parameters;
 2. plotting contours of WD parameters on the *Gaia* (and other passbands) H--R diagram.
 
 It also provides tools to transform any desired WD parameters and compare the results of different WD models. In addition, the user may custimize many parameters, such as the choice of cooling models and setting details of plotting.
 
-Below, I introduce the basic usage of this module, give some examples. A list of available cooling models is attached. I also present the doctrine of the main function `load_model` in this module. I hope this module will attract more researchers to the WD field and connect observers, theorists, and astronomers from outside the WD field more tightly. For questions or suggestions or comments, please do not hesitate to contact me: s.cheng@jhu.edu
+Below, I introduce the basic usage of this module, give some examples. A list of available cooling models is attached. I also present a detailed introduction to the output of the main function `load_model`. I hope that with a convenience way provided to transform WD parameters, more researchers will be attracted to the WD field, and the connection between observers, theorists, and astronomers from outside the WD field will be tighter. For questions or suggestions or comments, please do not hesitate to contact me: s.cheng@jhu.edu
 
 
 ## Import
