@@ -453,23 +453,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
         logteff     = np.concatenate(( logteff, Cool['log(Teff)'] ))
         Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['log(L/Lo)'] ))
         del Cool
-    
-    # PG cooling tracks (Renedo et al. 2009)
-    if middle_mass_model == 'PG' and spec_type == 'He':
-        for mass in ['0514','0530','0542','0565','0584','0609','0664','0741',
-                     '0869']:
-            Cool = Table.read('models/tracksPG-DB/db-pg-' + mass + '.trk.t0.11',
-                              format='ascii', comment='#')
-            Cool = Cool[Cool['age[Myr]'] > 0][::1] # (Cool['Log(Teff)'] > logteff_min) * (Cool['Log(Teff)'] < logteff_max)
-            mass_array  = np.concatenate(( mass_array, np.ones(len(Cool))*int(mass)/1000 ))
-            logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
-            age         = np.concatenate(( age, Cool['age[Myr]'] * 1e6 +
-                                                (IFMR(int(mass)/1000))**(t_index) * 1e10 ))
-            age_cool    = np.concatenate(( age_cool, Cool['age[Myr]'] * 1e6 ))
-            logteff     = np.concatenate(( logteff, Cool['Log(Teff)'] ))
-            Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['Log(L)'] ))
-            del Cool
-    
+
     # Ultra-massive ONe model (Camisassa et al. 2019)
     if high_mass_model == 'ONe':
         for mass in ['110','116','122','129']:
@@ -502,19 +486,19 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
     # massive MESA model (Lauffer et al. 2019)
     if high_mass_model == 'MESA': 
         if spec_type == 'He':
-#             mesa_masslist = ['1.0124','1.019','1.0241','1.0358','1.0645','1.0877',
-#                              '1.1102','1.1254','1.1313','1.1322','1.1466','1.151',
-#                              '1.2163','1.22','1.2671','1.3075']
-#                             ['1.0124','1.019','1.0241','1.0358','1.0645','1.0877',
-#                              '1.1102','1.125','1.1309','1.1322','1.1466','1.151',
-#                              '1.2163','1.22','1.2671','1.3075']
-            mesa_masslist = ['1.0124','1.0645',
-                             '1.1102','1.151',
-                             '1.2163','1.2671','1.3075']
+            mesa_masslist = ['1.0124','1.019','1.0241','1.0358','1.0645','1.0877',
+                             '1.1102','1.1254','1.1313','1.1322','1.1466','1.151',
+                             '1.2163','1.22','1.2671','1.3075']
+#                              ['1.0124','1.0645',
+#                              '1.1102','1.151',
+#                              '1.2163','1.2671','1.3075']
         if spec_type == 'H':
-            mesa_masslist = ['1.0124','1.0645',
-                             '1.1102','1.151',
-                             '1.2163','1.2671','1.3075']
+            mesa_masslist = ['1.0124','1.019','1.0241','1.0358','1.0645','1.0877',
+                             '1.1102','1.125','1.1309','1.1322','1.1466','1.151',
+                             '1.2163','1.22','1.2671','1.3075']
+#                              ['1.0124','1.0645',
+#                              '1.1102','1.151',
+#                              '1.2163','1.2671','1.3075']
         for mass in mesa_masslist:
             Cool = Table.read('models/MESA_model/' + spec_type + '_atm-M' +
                               mass + '.dat',
@@ -524,6 +508,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
                 dn = 120
             if float(mass) < 1.05 or spec_type == 'He':
                 dn = 10
+            dn = len(Cool)//40
             Cool = Cool[::dn] # [(Cool['# log Teff [K]'] > logteff_min) * (Cool['# log Teff [K]'] < logteff_max)]
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * float(mass) ))
             logg        = np.concatenate(( logg, Cool['log g [cm/s^2]'] ))
@@ -724,7 +709,6 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
             'Camisassa2017' or 'c'          only for DB, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html
             'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
             'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-            'PG'                            only for DB
         high_mass_model:    String. 
                             Specifying the cooling model used for high-mass WDs
                             (>~1.0Msun). Should be one of the following: 
@@ -856,7 +840,7 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
     
     model_names = ['', 'Fontaine2001', 'Fontaine2001_thin', 'Renedo2010_001', 
                    'Renedo2010_0001', 'Camisassa2017', 'BaSTI', 'BaSTI_nosep',
-                   'PG', 'MESA', 'ONe',]
+                   'MESA', 'ONe',]
     if (low_mass_model not in model_names or 
         middle_mass_model not in model_names or
         high_mass_model not in model_names):
