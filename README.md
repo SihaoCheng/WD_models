@@ -6,7 +6,7 @@ The number of white dwarfs (WD) with precise luminosity and color measurements h
 
 It also provides tools to transform any desired WD parameters and compare the results of different WD models. In addition, the user may custimize many parameters, such as the choice of cooling models and setting details of plotting.
 
-Below, I introduce its basic usage and give some examples. Useful information of cooling models and references are attached. I hope this module will attract more researchers to the WD field and connect observers, theorists, and astronomers from outside the WD field more tightly. For questions or suggestions or comments, please do not hesitate to contact me: s.cheng@jhu.edu
+Below, I introduce the basic usage of this module, give some examples. A list of available cooling models is attached. I also present the doctrine of the main function `load_model` in this module. I hope this module will attract more researchers to the WD field and connect observers, theorists, and astronomers from outside the WD field more tightly. For questions or suggestions or comments, please do not hesitate to contact me: s.cheng@jhu.edu
 
 
 ## Import
@@ -166,7 +166,54 @@ spectral type | remarks
 'H'           | pure-H atmosphere
 'He'          | pure-He atmosphere
 
-## Output of the function `load_model`
+## The main function `load_model`
+
+This function reads a set of cooling tracks assigned by the user, and it returns several sets of grid data for plotting the contour of WD parameters on the H--R diagram and functions for mapping between photometry and WD parameters. It also returns the data points read from the cooling tracks, so that the user may customize other transformations between these parameters and broadband photometry.
+
+Args:
+    low_mass_model:     String. 
+                        Specifying the cooling model used for low-mass WDs (< about 0.5Msun).
+    middle_mass_model:  String.
+                        Specifying the cooling model used for middle-mass WDs (about 0.5-1.0Msun).
+    high_mass_model:    String. 
+                        Specifying the cooling model used for high-mass WDs (> about 1.0Msun).
+    spec_type:          String. {'H', 'He'}
+                        Specifying the atmosphere composition.
+    HR_bands:           (String, String). *Optional*
+        The passbands for the color and absolute magnitude on the H--R diagram. It can be any combination from the following bands:
+            G, bp, rp (Gaia); u, g, r, i, z (SDSS); U, B, V, R, I (Johnson); J, H, K (2MASS).
+        Color should be in the format of:
+            'bp-rp', 'G-bp', 'U-B', 'u-g', 'G-i', etc. 
+        Absolute magnitude should be in the format of:
+            'G', 'bp', 'U', 'u', etc. 
+    HR_grid:           (xmin, xmax, dx, ymin, ymax, dy). *Optional*
+        The grid information of the H-R diagram coordinates BP-RP and G.
+    logteff_logg_grid: (xmin, xmax, dx, ymin, ymax, dy). *Optional*
+        The grid information of the logteff--logg coordinates for 
+        the table interpolation of the atmosphere synthetic colors. Since
+        the DA cooling track have a turning-back of color index below around
+        3500 K, the user should set logteff_logg_grid[0] >= 3.5.
+    interp_type_atm:    String. {'linear', 'cubic'}
+    interp_type:        String. {'linear', 'cubic'}
+        Linear is better for interpolating WD cooling tracks.
+    for_comparison:     Bool. *Optional*
+        If true, cooling tracks with very similar masses from different 
+        models will be used, which might lead to strange result of
+        interpolation. 
+        E.g., the Fontaine2001 model has m_WD = [..., 0.95, 1.00, ...], and
+        the MESA model has m_WD = [1.0124, 1.019, ...]. If true, the 
+        Fontaine2001 1.00Msun cooling track will be used; if false, it will
+        not be used because it is too close to the MESA 1.0124Msun track.
+    
+Returns:
+    A Dictionary.
+    It contains the atmosphere grids and mapping, cooling-track data points,
+    and parameter mappings based on the cooling tracks. 
+    The keys of this dictionary are:
+        interpolation results:
+
+
+
 
 The function `load_model` returns a dictionary, which contains the atmosphere grids and mapping, parameter mappings, and stacked cooling-track data points. The keys of this dictionary are:
 
