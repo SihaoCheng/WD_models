@@ -28,7 +28,7 @@ G = np.array([13,14])
 age_cool = model['HR_to_age_cool'](bp_rp, G)
 
 print(age_cool)
->> [ 1.27785237  2.70106702]
+>> [ 1.28440266  2.70046388]
 ```
 The outputs are in unit of Gyr. The function `load_model` in the module reads a set of cooling tracks and returns a dictionary containing many useful functions for parameter transformation and grid data for ploting contours. The keys of this dictionary are listed in the section "output of the function `load_model`" below.
 
@@ -212,16 +212,27 @@ For the calculation of total ages, I adopt the IFMR from Cummings et al. 2018 fo
 
 ## References
 Bergeron et al. (2011ApJ...737...28B)
+
 Camisassa et al. (2017ApJ...839...11C)
+
 Camisassa et al. (2019A&A...625A..87C)
+
 Cummings et al. (2018ApJ...866...21C)
+
 Fontaine et al. (2001PASP..113..409F)
+
 Holberg & Bergeron (2006AJ....132.1221H)
+
 Kowalski & Saumon (2006ApJ...651L.137K)
+
 Lauffer et al. (2018MNRAS.480.1547L)
+
 Renedo et al. (2010ApJ...717..183R)
+
 Salaris et al. (2010ApJ...716.1241S)
+
 Tremblay et al. (2011ApJ...730..128T)
 
 http://www.astro.umontreal.ca/~bergeron/CoolingModels
+
 http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks.html
