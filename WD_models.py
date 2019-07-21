@@ -187,38 +187,11 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
     Args:
         low_mass_model:     String. 
             Specifying the cooling model used for low-mass WDs (<~0.5Msun). 
-            Its value should be one of the following: 
-            ''                              no low-mass model will be read
-            'Fontaine2001' or 'f'           the think-hydrogen CO WD model in 
-                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Fontaine2001_thin' or 'ft'     the thin-hydrogen CO WD model in 
-                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
         middle_mass_model:  String. 
-            Specifying the cooling model used for normal-mass WDs 
-            (about 0.5~1.0Msun). Its value should be one of the following:
-            ''                              no normal-mass model will be read
-            'Fontaine2001' or 'f'           the think-hydrogen CO WD model in 
-                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Fontaine2001_thin' or 'ft'     the thin-hydrogen CO WD model in 
-                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Althaus2010_001' or 'a001'     Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
-            'Althaus2010_0001' or 'a0001'   Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
-            'Camisassa2017' or 'c'          only for DB, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html
-            'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-            'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-            'PG'                            only for DB
+            Specifying the cooling model used for middle-mass WDs (about 
+            0.5~1.0Msun)
         high_mass_model:    String. 
-            Specifying the cooling model used for high-mass WDs (>~1.0Msun). 
-            Its value should be one of the following: 
-            ''                              no high-mass model will be read
-            'Fontaine2001' or 'f'           the think-hydrogen CO WD model in 
-                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Fontaine2001_thin' or 'ft'     the thin-hydrogen CO WD model in 
-                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'ONe' or 'o'                    Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
-            'MESA' or 'm'                   Lauffer et al. 2019
-            'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-            'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+            Specifying the cooling model used for high-mass WDs (>~1.0Msun).
         spec_type:          String. {'H', 'He'}
             Specifying the atmosphere composition.
             'H'                 pure-hydrogen atmosphere
@@ -280,9 +253,8 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
     
     # define the initial-final mass relation for calculating the total age for 
     # some models
-    IFMR        = interp1d((0.19, 0.3, 0.4, 0.50, 0.55, 0.65, 0.75, 0.85, 1.0,
-                            1.25, 1.35),
-                           (0.3, 0.5, 0.7, 0.95, 1, 2, 3, 3.5, 5, 8, 9),
+    IFMR        = interp1d((0.19, 0.4, 0.552, 0.72, 0.87, 1.25, 1.4),
+                           (0.23, 0.5, 0.87, 2.8, 3.65, 8.2, 10),
                            fill_value = 0, bounds_error=False)
     t_index     = -3
     
@@ -734,18 +706,18 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
                             (<~0.5Msun). Its value should be one of the
                             following: 
             ''                              no low-mass model will be read
-            'Fontaine2001' or 'f'           the think-hydrogen CO WD model in 
+            'Fontaine2001' or 'f'           the thick-H- or He-atmosphere CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Fontaine2001_thin' or 'ft'     the thin-hydrogen CO WD model in 
+            'Fontaine2001_thin' or 'ft'     the thin-H CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
         middle_mass_model:  String. 
-                            Specifying the cooling model used for normal-mass
+                            Specifying the cooling model used for middle-mass
                             WDs (about 0.5~1.0Msun). Its value should be one of
                             the following:
-            ''                              no normal-mass model will be read
-            'Fontaine2001' or 'f'           the think-hydrogen CO WD model in 
+            ''                              no middle-mass model will be read
+            'Fontaine2001' or 'f'           the thick-H- or He-atmosphere CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Fontaine2001_thin' or 'ft'     the thin-hydrogen CO WD model in 
+            'Fontaine2001_thin' or 'ft'     the thin-H CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'Althaus2010_001' or 'a001'     Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
             'Althaus2010_0001' or 'a0001'   Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
@@ -757,9 +729,9 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
                             Specifying the cooling model used for high-mass WDs
                             (>~1.0Msun). Should be one of the following: 
             ''                              no high-mass model will be read
-            'Fontaine2001' or 'f'           the think-hydrogen CO WD model in 
+            'Fontaine2001' or 'f'           the thick-H- or He-atmosphere CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Fontaine2001_thin' or 'ft'     the thin-hydrogen CO WD model in 
+            'Fontaine2001_thin' or 'ft'     the thin-H CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'ONe' or 'o'                    Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
             'MESA' or 'm'                   Lauffer et al. 2019
@@ -773,8 +745,8 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
         HR_bands:          (String, String). *Optional*
             The passbands for the color and absolute magnitude on the H--R
             diagram. It can be any combination from the following bands:
-                G, bp, rp (Gaia), u, g, r, i, z (SDSS), U, B, V, R, I, J,
-                H, K (Johnson).
+                G, bp, rp (Gaia); u, g, r, i, z (SDSS); U, B, V, R, I (Johnson);
+                J, H, K (2MASS).
             Color should be in the format of:
                 'bp-rp', 'G-bp', 'U-B', 'u-g', 'G-i', etc. 
             Absolute magnitude should be in the format of:
@@ -884,7 +856,7 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
     
     model_names = ['', 'Fontaine2001', 'Fontaine2001_thin', 'Althaus2010_001', 
                    'Althaus2010_0001', 'Camisassa2017', 'BaSTI', 'BaSTI_nosep',
-                   'MESA', 'ONe',]
+                   'PG', 'MESA', 'ONe',]
     if (low_mass_model not in model_names or 
         middle_mass_model not in model_names or
         high_mass_model not in model_names):
