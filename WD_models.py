@@ -228,7 +228,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
     # determine which cooling tracks in a model to read
     mass_separation_1 = 0.45
     mass_separation_2 = 0.99
-    if ('Althaus2010_' in middle_mass_model or 
+    if ('Renedo2010_' in middle_mass_model or 
         middle_mass_model == 'Camisassa2017' or 
         middle_mass_model == 'PG'
        ):
@@ -359,18 +359,18 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
         y=np.convolve(w/w.sum(),x,mode='same')
         return x
     
-    # CO, DA (Althaus et al. 2010)
-    if 'Althaus2010_' in middle_mass_model and spec_type == 'H':
+    # CO, DA (Renedo et al. 2010)
+    if 'Renedo2010_' in middle_mass_model and spec_type == 'H':
         if '_001' in middle_mass_model:
-            Althaus_masslist = ['0524','0570','0593','0609','0632','0659',
+            Renedo_masslist = ['0524','0570','0593','0609','0632','0659',
                                 '0705','0767','0837','0877','0934']
             metallicity = '001'
         if '_0001' in middle_mass_model:
-            Althaus_masslist = ['0505','0553','0593','0627','0660','0692',
+            Renedo_masslist = ['0505','0553','0593','0627','0660','0692',
                                 '0863']
             metallicity = '0001'
-        for mass in Althaus_masslist:
-            Cool = Table.read('models/Althaus_2010_DA_CO/wdtracks_z' + 
+        for mass in Renedo_masslist:
+            Cool = Table.read('models/Renedo_2010_DA_CO/wdtracks_z' + 
                               metallicity + '/wd' + mass + '_z' + metallicity +
                               '.trk', format='ascii') 
             Cool = Cool[::5] #[(Cool['log(TEFF)'] > logteff_min) * (Cool['log(TEFF)'] < logteff_max)]
@@ -454,7 +454,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
         Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['log(L/Lo)'] ))
         del Cool
     
-    # PG cooling tracks (Althaus et al. 2009)
+    # PG cooling tracks (Renedo et al. 2009)
     if middle_mass_model == 'PG' and spec_type == 'He':
         for mass in ['0514','0530','0542','0565','0584','0609','0664','0741',
                      '0869']:
@@ -719,8 +719,8 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'Fontaine2001_thin' or 'ft'     the thin-H CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Althaus2010_001' or 'a001'     Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
-            'Althaus2010_0001' or 'a0001'   Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
+            'Renedo2010_001' or 'r001'     Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
+            'Renedo2010_0001' or 'r0001'   Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
             'Camisassa2017' or 'c'          only for DB, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html
             'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
             'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
@@ -826,10 +826,10 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
     if low_mass_model == 'ft':
         low_mass_model = 'Fontaine2001_thin'
     
-    if middle_mass_model == 'a001':
-        middle_mass_model = 'Althaus2010_001'
-    if middle_mass_model == 'a0001':
-        middle_mass_model = 'Althaus2010_0001'
+    if middle_mass_model == 'r001':
+        middle_mass_model = 'Renedo2010_001'
+    if middle_mass_model == 'r0001':
+        middle_mass_model = 'Renedo2010_0001'
     if middle_mass_model == 'f':
         middle_mass_model = 'Fontaine2001'
     if middle_mass_model == 'ft':
@@ -854,8 +854,8 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
     if high_mass_model == 'o':
         high_mass_model = 'ONe'
     
-    model_names = ['', 'Fontaine2001', 'Fontaine2001_thin', 'Althaus2010_001', 
-                   'Althaus2010_0001', 'Camisassa2017', 'BaSTI', 'BaSTI_nosep',
+    model_names = ['', 'Fontaine2001', 'Fontaine2001_thin', 'Renedo2010_001', 
+                   'Renedo2010_0001', 'Camisassa2017', 'BaSTI', 'BaSTI_nosep',
                    'PG', 'MESA', 'ONe',]
     if (low_mass_model not in model_names or 
         middle_mass_model not in model_names or
@@ -944,3 +944,4 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
             'grid_HR_to_cool_rate^-1':grid_HR_to_rate_inv, 'HR_to_cool_rate^-1':HR_to_rate_inv,
             'm_agecool_to_color':m_agecool_to_color, 
             'm_agecool_to_Mag':m_agecool_to_Mag}
+
