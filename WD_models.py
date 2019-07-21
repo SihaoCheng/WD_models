@@ -626,12 +626,12 @@ def interp_xy_z_func(x, y, z, interp_type='linear'):
     
     Interpolate the mapping (x, y) --> z, based on a series of x, y, and z
     values. This function is a generalized version of HR_to_para, allowing any
-    x and y values, but does not calculate the grid values as HR_to_para and
-    interp_xy_z do.
+    x and y values, but does not calculate the grid values as interp_HR_to_para
+    and interp_xy_z do.
     
     Args:
-        x:              1d-array. The Gaia color BP-RP
-        y:              1d-array. The absolute magnitude of Gaia G band
+        x:              1d-array. The x in the mapping (x, y) --> z
+        y:              1d-array. The y in the mapping (x, y) --> z
         z:              1d-array. The target parameter for mapping (x, y) --> z
         interp_type:    String. {'linear', 'cubic'}. *Optional*
                         Linear is usually better for interpolating cooling 
@@ -670,8 +670,7 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
     
     This function reads a set of cooling tracks assigned by the user and returns
     many useful grid-values for plotting the contour of WD parameters on the
-    Gaia H--R diagram and functions for mapping between photometry and 
-    WD parameters.
+    H--R diagram and functions for mapping between photometry and WD parameters.
     
     For other mappings not included in the output, the user can generate the
     interpolated grid values and mapping function based on the cooling-track 
