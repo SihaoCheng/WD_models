@@ -550,7 +550,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
             dn = 70
             if float(mass) > 1.2:
                 dn = 120
-            if float(mass) < 1.05:
+            if float(mass) < 1.05 or spec_type == 'He':
                 dn = 10
             Cool = Cool[::dn] # [(Cool['# log Teff [K]'] > logteff_min) * (Cool['# log Teff [K]'] < logteff_max)]
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * float(mass) ))
