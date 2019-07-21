@@ -734,7 +734,7 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
             'Fontaine2001_thin' or 'ft'     the thin-H CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'ONe' or 'o'                    Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
-            'MESA' or 'm'                   Lauffer et al. 2019
+            'MESA' or 'm'                   Lauffer et al. 2018
             'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
             'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
         spec_type:          String. 
