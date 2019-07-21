@@ -125,37 +125,37 @@ I include several classical and recent cooling models published in the literatur
 
 ### Low-mass models (less than about 0.5 Msun)
 
-model names | remarks & reference
-------------|----------------------
-''                              |no low-mass model will be read
-'Fontaine2001' or 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-'Fontaine2001_thin' or 'ft'     |the thin-hydrogen CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+model names | short names | remarks & reference
+------------|-------------|----------------------
+''           |                 |no low-mass model will be read
+'Fontaine2001' | 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+'Fontaine2001_thin' | 'ft'     |the thin-hydrogen CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
 
 ### Normal-mass models (about 0.5 to 1.0 Msun)
 
-model names | remarks & reference
-------------|----------------------
-''                              |no normal-mass model will be read
-'Fontaine2001' or 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-'Fontaine2001_thin' or 'ft'     |the thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-'Althaus2010_001' or 'a001'     |Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
-'Althaus2010_0001' or 'a0001'   |Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
-'Camisassa2017' or 'c'          |only for DB, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html
-'BaSTI' or 'b'                  |with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-'BaSTI_nosep' or 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-'PG'                            |only for DB
+model names | short names | remarks & reference
+------------|-------------|----------------------
+''         |                   |no normal-mass model will be read
+'Fontaine2001' | 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+'Fontaine2001_thin' | 'ft'     |the thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+'Althaus2010_001' | 'a001'     |Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
+'Althaus2010_0001' | 'a0001'   |Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
+'Camisassa2017' | 'c'          |only for DB, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html
+'BaSTI' | 'b'                  |with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+'BaSTI_nosep' | 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+'PG'          |                |only for DB
 
 ### High-mass models (higher than 1.0 Msun)
 
-model names | remarks & reference
-------------|----------------------
-''                              |no high-mass model will be read
-'Fontaine2001' or 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-'Fontaine2001_thin' or 'ft'     |the thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-'ONe' or 'o'                    |Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
-'MESA' or 'm'                   |Lauffer et al. 2019
-'BaSTI' or 'b'                  |with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-'BaSTI_nosep' or 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+model names | short names | remarks & reference
+------------|-------------|----------------------
+''         |                   |no high-mass model will be read
+'Fontaine2001' | 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+'Fontaine2001_thin' | 'ft'     |the thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+'ONe' | 'o'                    |Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
+'MESA' | 'm'                   |Lauffer et al. 2019
+'BaSTI' | 'b'                  |with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+'BaSTI_nosep' | 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
 
 ### Spectral type and atmosphere sythetic colors
 
@@ -205,4 +205,6 @@ key  | remarks
 'Mag':          | 1d-array. The chosen absolute magnitude, converted from the atmosphere interpolation.
 'color':        | 1d-array. The chosen color index, converted from the atmosphere interpolation.
 
-![](figure/IFMR.png)
+For the calculation of total ages, I adopt the IFMR from Cummings et al. 2018 for WDs above 0.55 Msun. For lower masses, which is less useful, I just interpolated between zero and the first data point of Cummings et al. 2018.
+
+![](figures/IFMR.png)
