@@ -20,7 +20,7 @@ functions. There are also descriptions and examples on my Github:
 For questions or suggestions, please do not hesitate to contact me: 
     s.cheng@jhu.edu
 
-18 Jul 2019
+21 Jul 2019
 """
 
 
@@ -562,8 +562,10 @@ def interp_HR_to_para(color, Mag, WD_para,
                               HR_grid[3]:HR_grid[4]:HR_grid[5]]
     
     # select only not-NaN data points
-    selected    = ~np.isnan(color + Mag + WD_para) * (Mag > HR_grid[3]) * \
-                  (Mag < HR_grid[4]) * (color > HR_grid[0]) * (color < HR_grid[1])
+    with np.errstate(divide='ignore', invalid='ignore'):
+        selected = ~np.isnan(color + Mag + WD_para) * \
+                   (Mag > HR_grid[3]) * (Mag < HR_grid[4]) * \
+                   (color > HR_grid[0]) * (color < HR_grid[1])
     
     # get the value of z on a H-R diagram grid and the interpolated mapping
     grid_para   = griddata(np.array((color[selected], Mag[selected])).T, 
