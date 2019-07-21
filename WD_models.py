@@ -176,7 +176,7 @@ def interp_atm(spec_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.
     return interp(logteff, logg, z, interp_type_atm)
 
 
-def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
+def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
                         spec_type, logg_func=None, for_comparison=False):
     """ Read a set of cooling tracks
     
@@ -193,7 +193,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'Fontaine2001_thin' or 'ft'     the thin-hydrogen CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-        normal_mass_model:  String. 
+        middle_mass_model:  String. 
             Specifying the cooling model used for normal-mass WDs 
             (about 0.5~1.0Msun). Its value should be one of the following:
             ''                              no normal-mass model will be read
@@ -255,15 +255,15 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
     # determine which cooling tracks in a model to read
     mass_separation_1 = 0.45
     mass_separation_2 = 0.99
-    if ('Althaus2010_' in normal_mass_model or 
-        normal_mass_model == 'Camisassa2017' or 
-        normal_mass_model == 'PG'
+    if ('Althaus2010_' in middle_mass_model or 
+        middle_mass_model == 'Camisassa2017' or 
+        middle_mass_model == 'PG'
        ):
         if for_comparison == True:
             mass_seperation_1 = 0.501
         else:
             mass_seperation_1 = 0.45
-    if 'BaSTI' in normal_mass_model:
+    if 'BaSTI' in middle_mass_model:
         mass_seperation_1 = 0.501
     
     if high_mass_model == 'Fontaine2001' or high_mass_model == 'Fontaine2001_thin':
@@ -311,9 +311,9 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
             else: continue
         elif (int(mass)/100 > mass_separation_1 and 
               int(mass)/100 < mass_separation_2 and spec_type == 'H'):
-            if normal_mass_model == 'Fontaine2001':
+            if middle_mass_model == 'Fontaine2001':
                 spec_suffix = '0204'
-            elif normal_mass_model == 'Fontaine2001_thin':
+            elif middle_mass_model == 'Fontaine2001_thin':
                 spec_suffix = '0210'
             else: continue
         elif int(mass)/100 > mass_separation_2 and spec_type == 'H':
@@ -365,7 +365,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
              low_mass_model == 'Fontaine2001') or
             (float(mass) > mass_separation_1 and
              float(mass) < mass_separation_2 and
-             normal_mass_model == 'Fontaine2001') or
+             middle_mass_model == 'Fontaine2001') or
             (float(mass) > mass_separation_2 and
              high_mass_model == 'Fontaine2001')
            ) and spec_type == 'He':
@@ -388,12 +388,12 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
         return x
     
     # CO, DA (Althaus et al. 2010)
-    if 'Althaus2010_' in normal_mass_model and spec_type == 'H':
-        if '_001' in normal_mass_model:
+    if 'Althaus2010_' in middle_mass_model and spec_type == 'H':
+        if '_001' in middle_mass_model:
             Althaus_masslist = ['0524','0570','0593','0609','0632','0659',
                                 '0705','0767','0837','0877','0934']
             metallicity = '001'
-        if '_0001' in normal_mass_model:
+        if '_0001' in middle_mass_model:
             Althaus_masslist = ['0505','0553','0593','0627','0660','0692',
                                 '0863']
             metallicity = '0001'
@@ -401,7 +401,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
             Cool = Table.read('models/Althaus_2010_DA_CO/wdtracks_z' + 
                               metallicity + '/wd' + mass + '_z' + metallicity +
                               '.trk', format='ascii') 
-            Cool = Cool[::1] #[(Cool['log(TEFF)'] > logteff_min) * (Cool['log(TEFF)'] < logteff_max)]
+            Cool = Cool[::5] #[(Cool['log(TEFF)'] > logteff_min) * (Cool['log(TEFF)'] < logteff_max)]
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool))*int(mass)/1000 ))
             logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
             age         = np.concatenate(( age, Cool['age/Myr'] * 1e6 +
@@ -419,7 +419,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
             del Cool
     
     # CO, DB (Camisassa et al. 2017)
-    if normal_mass_model == 'Camisassa2017' and spec_type == 'He':
+    if middle_mass_model == 'Camisassa2017' and spec_type == 'He':
         for mass in ['051','054','058','066','074','087','100']:
             if int(mass)/100 < mass_separation_2:
                 Cool = Table.read('models/Camisassa_2017_DB_CO/Z002/' + mass +
@@ -453,9 +453,9 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
     # BaSTI model
     for mass in ['054','055','061','068','077','087','100','110','120']:
         if int(mass)/100 < mass_separation_2:
-            if normal_mass_model == 'BaSTI':
+            if middle_mass_model == 'BaSTI':
                 sep = 'sep'
-            elif normal_mass_model == 'BaSTI_nosep':
+            elif middle_mass_model == 'BaSTI_nosep':
                 sep = 'nosep'
             else: continue
         elif int(mass)/100 > mass_separation_2:
@@ -483,7 +483,7 @@ def read_cooling_tracks(low_mass_model, normal_mass_model, high_mass_model,
         del Cool
     
     # PG cooling tracks (Althaus et al. 2009)
-    if normal_mass_model == 'PG' and spec_type == 'He':
+    if middle_mass_model == 'PG' and spec_type == 'He':
         for mass in ['0514','0530','0542','0565','0584','0609','0664','0741',
                      '0869']:
             Cool = Table.read('models/tracksPG-DB/db-pg-' + mass + '.trk.t0.11',
@@ -701,7 +701,7 @@ def interp_xy_z_func(x, y, z, interp_type='linear'):
 #-------------------------------------------------------------------------------   
 
 
-def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
+def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
                HR_bands=('bp-rp', 'G'),
                HR_grid=(-0.6, 1.5, 0.002, 8, 18, 0.01),
                logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01),
@@ -738,7 +738,7 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'Fontaine2001_thin' or 'ft'     the thin-hydrogen CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-        normal_mass_model:  String. 
+        middle_mass_model:  String. 
                             Specifying the cooling model used for normal-mass
                             WDs (about 0.5~1.0Msun). Its value should be one of
                             the following:
@@ -854,20 +854,20 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
     if low_mass_model == 'ft':
         low_mass_model = 'Fontaine2001_thin'
     
-    if normal_mass_model == 'a001':
-        normal_mass_model = 'Althaus2010_001'
-    if normal_mass_model == 'a0001':
-        normal_mass_model = 'Althaus2010_0001'
-    if normal_mass_model == 'f':
-        normal_mass_model = 'Fontaine2001'
-    if normal_mass_model == 'ft':
-        normal_mass_model = 'Fontaine2001_thin'
-    if normal_mass_model == 'c':
-        normal_mass_model = 'Camisassa2017'
-    if normal_mass_model == 'b':
-        normal_mass_model = 'BaSTI'
-    if normal_mass_model == 'bn':
-        normal_mass_model = 'BaSTI_nosep'
+    if middle_mass_model == 'a001':
+        middle_mass_model = 'Althaus2010_001'
+    if middle_mass_model == 'a0001':
+        middle_mass_model = 'Althaus2010_0001'
+    if middle_mass_model == 'f':
+        middle_mass_model = 'Fontaine2001'
+    if middle_mass_model == 'ft':
+        middle_mass_model = 'Fontaine2001_thin'
+    if middle_mass_model == 'c':
+        middle_mass_model = 'Camisassa2017'
+    if middle_mass_model == 'b':
+        middle_mass_model = 'BaSTI'
+    if middle_mass_model == 'bn':
+        middle_mass_model = 'BaSTI_nosep'
     
     if high_mass_model == 'f':
         high_mass_model = 'Fontaine2001'
@@ -886,7 +886,7 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
                    'Althaus2010_0001', 'Camisassa2017', 'BaSTI', 'BaSTI_nosep',
                    'MESA', 'ONe',]
     if (low_mass_model not in model_names or 
-        normal_mass_model not in model_names or
+        middle_mass_model not in model_names or
         high_mass_model not in model_names):
         print('please check the model names.')
     if spec_type not in ['H', 'He']:
@@ -904,7 +904,7 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
 
 
     # get for logg_func BaSTI models
-    if 'BaSTI' in normal_mass_model or 'BaSTI' in high_mass_model:
+    if 'BaSTI' in middle_mass_model or 'BaSTI' in high_mass_model:
         mass_array_Fontaine2001, logg_Fontaine2001, _, _, logteff_Fontaine2001, _\
                     = read_cooling_tracks('Fontaine2001',
                                           'Fontaine2001',
@@ -919,7 +919,7 @@ def load_model(low_mass_model, normal_mass_model, high_mass_model, spec_type,
     # Open Evolutionary Tracks
     mass_array, logg, age, age_cool, logteff, Mbol \
                     = read_cooling_tracks(low_mass_model,
-                                          normal_mass_model,
+                                          middle_mass_model,
                                           high_mass_model,
                                           spec_type, logg_func, for_comparison)
 
