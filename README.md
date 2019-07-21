@@ -129,34 +129,33 @@ I include several classical and recent cooling models published in the literatur
 model names | short names | remarks & reference
 ------------|-------------|----------------------
 ''           |                 |no low-mass model will be read
-'Fontaine2001' | 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+'Fontaine2001' | 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/. A somewhat "classical" model.
 'Fontaine2001_thin' | 'ft'     |the thin-hydrogen CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
 
-### Normal-mass models (about 0.5 to 1.0 Msun)
+### Middle-mass models (about 0.5 to 1.0 Msun)
 
 model names | short names | remarks & reference
 ------------|-------------|----------------------
-''         |                   |no normal-mass model will be read
-'Fontaine2001' | 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+''         |                   |no middle-mass model will be read
+'Fontaine2001' | 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/. A somewhat "classical" model.
 'Fontaine2001_thin' | 'ft'     |the thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-'Renedo2010_001' | 'r001'     |Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
-'Renedo2010_0001' | 'r0001'   |Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
+'Renedo2010_001' | 'r001'      |Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
+'Renedo2010_0001' | 'r0001'    |Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
 'Camisassa2017' | 'c'          |only for DB, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html
-'BaSTI' | 'b'                  |with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-'BaSTI_nosep' | 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-'PG'          |                |only for DB
+'BaSTI' | 'b'                  |with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it. This model predicts very slow cooling rate after crystallization, compared with other models.
+'BaSTI_nosep' | 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it. This model predicts very slow cooling rate after crystallization, compared with other models.
 
 ### High-mass models (higher than 1.0 Msun)
 
 model names | short names | remarks & reference
 ------------|-------------|----------------------
 ''         |                   |no high-mass model will be read
-'Fontaine2001' | 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+'Fontaine2001' | 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/. A somewhat "classical" model.
 'Fontaine2001_thin' | 'ft'     |the thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-'ONe' | 'o'                    |Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
-'MESA' | 'm'                   |Lauffer et al. 2018
-'BaSTI' | 'b'                  |with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-'BaSTI_nosep' | 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
+'ONe' | 'o'                    |Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html. A very recent model for O/Ne-core WDs, including phase separation. High-mass WDs from single-star evolution are supposed to hold O/Ne cores.
+'MESA' | 'm'                   |Lauffer et al. 2018. Evolving intermediate-mass stars into high-mass WDs with MESA.
+'BaSTI' | 'b'                  |with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it. This model predicts very slow cooling rate after crystallization, compared with other models.
+'BaSTI_nosep' | 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it. This model predicts very slow cooling rate after crystallization, compared with other models.
 
 ### Spectral type and atmosphere sythetic colors
 
