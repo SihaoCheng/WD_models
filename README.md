@@ -163,7 +163,7 @@ We interpolate the table of sythetic colors from http://www.astro.umontreal.ca/~
 
 spectral type | remarks
 --------------|----------------------
-'H'           | pure-H atmosphere
+'H'           | pure-H atmosphere 
 'He'          | pure-He atmosphere
 
 ## The output of function `load_model`
