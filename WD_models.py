@@ -49,7 +49,7 @@ def interpolate_2d(x, y, z, method):
     #return interp2d(x, y, z, kind=method)
   
 
-def interp_atm(spec_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01), 
+def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01), 
                interp_type_atm='linear'):
     """interpolate the mapping (logteff, logg) --> photometry
     
@@ -57,7 +57,7 @@ def interp_atm(spec_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.
     bolometric correction (BC) of a passband.
     
     Args:
-        spec_type:          String. {'H', 'He'}
+        atm_type:           String. {'H', 'He'}
             See the "Synthetic color" section on http://www.astro.umontreal.ca/~bergeron/CoolingModels/
         color:              String. {'G-Mbol', 'bp-rp', 'V-Mbol', 'u-g', 'B-z', etc.}
             The target color of the mapping. Any two bands between Gaia G, bp, rp,
@@ -97,9 +97,9 @@ def interp_atm(spec_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.
     K_Mag       = np.zeros(0) # 2MASS
         
     # read the table for all logg
-    if spec_type == 'H':
+    if atm_type == 'H':
         suffix = 'DA_thick'
-    if spec_type == 'He':
+    if atm_type == 'He':
         suffix = 'DB'
     Atm_color = Table.read('models/Montreal_atm_grid/Table_'+suffix,
                            format='ascii')
@@ -177,7 +177,7 @@ def interp_atm(spec_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.
 
 
 def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
-                        spec_type, logg_func=None, for_comparison=False):
+                        atm_type, logg_func=None, for_comparison=False):
     """ Read a set of cooling tracks
     
     This function reads the cooling models and stack together the data points
@@ -192,7 +192,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
             0.5~1.0Msun)
         high_mass_model:    String. 
             Specifying the cooling model used for high-mass WDs (>~1.0Msun).
-        spec_type:          String. {'H', 'He'}
+        atm_type:           String. {'H', 'He'}
             Specifying the atmosphere composition.
             'H'                 pure-hydrogen atmosphere
             'He'                pure-helium atmosphere
@@ -266,29 +266,29 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
     mass_array  = np.zeros(0)
     Mbol        = np.zeros(0)
     
-    if spec_type == 'H':
+    if atm_type == 'H':
         spec_suffix2 = 'DA'
-    if spec_type == 'He':
+    if atm_type == 'He':
         spec_suffix2 = 'DB'
     
     # read data from cooling models
     # Fontaine et al. 2001
     for mass in ['020','030','040','050','060','070','080','090','095','100',
                  '105','110','115','120','125','130']:
-        if int(mass)/100 < mass_separation_1 and spec_type == 'H':
+        if int(mass)/100 < mass_separation_1 and atm_type == 'H':
             if low_mass_model == 'Fontaine2001':
                 spec_suffix = '0204'
             elif low_mass_model == 'Fontaine2001_thin':
                 spec_suffix = '0210'
             else: continue
         elif (int(mass)/100 > mass_separation_1 and 
-              int(mass)/100 < mass_separation_2 and spec_type == 'H'):
+              int(mass)/100 < mass_separation_2 and atm_type == 'H'):
             if middle_mass_model == 'Fontaine2001':
                 spec_suffix = '0204'
             elif middle_mass_model == 'Fontaine2001_thin':
                 spec_suffix = '0210'
             else: continue
-        elif int(mass)/100 > mass_separation_2 and spec_type == 'H':
+        elif int(mass)/100 > mass_separation_2 and atm_type == 'H':
             if high_mass_model == 'Fontaine2001':
                 spec_suffix = '0204'
             elif high_mass_model == 'Fontaine2001_thin':
@@ -340,7 +340,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
              middle_mass_model == 'Fontaine2001') or
             (float(mass) > mass_separation_2 and
              high_mass_model == 'Fontaine2001')
-           ) and spec_type == 'He':
+           ) and atm_type == 'He':
             Cool = Table.read('models/Montreal_atm_grid/Table_Mass_' + mass +
                                     '_'+spec_suffix2, format='ascii')
             Cool = Cool[::1]
@@ -360,7 +360,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
         return x
     
     # CO, DA (Renedo et al. 2010)
-    if 'Renedo2010_' in middle_mass_model and spec_type == 'H':
+    if 'Renedo2010_' in middle_mass_model and atm_type == 'H':
         if '_001' in middle_mass_model:
             Renedo_masslist = ['0524','0570','0593','0609','0632','0659',
                                 '0705','0767','0837','0877','0934']
@@ -391,7 +391,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
             del Cool
     
     # CO, DB (Camisassa et al. 2017)
-    if middle_mass_model == 'Camisassa2017' and spec_type == 'He':
+    if middle_mass_model == 'Camisassa2017' and atm_type == 'He':
         for mass in ['051','054','058','066','074','087','100']:
             if int(mass)/100 < mass_separation_2:
                 Cool = Table.read('models/Camisassa_2017_DB_CO/Z002/' + mass +
@@ -485,14 +485,14 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
     
     # massive MESA model (Lauffer et al. 2019)
     if high_mass_model == 'MESA': 
-        if spec_type == 'He':
+        if atm_type == 'He':
             mesa_masslist = ['1.0124','1.019','1.0241','1.0358','1.0645','1.0877',
                              '1.1102','1.1254','1.1313','1.1322','1.1466','1.151',
                              '1.2163','1.22','1.2671','1.3075']
 #                              ['1.0124','1.0645',
 #                              '1.1102','1.151',
 #                              '1.2163','1.2671','1.3075']
-        if spec_type == 'H':
+        if atm_type == 'H':
             mesa_masslist = ['1.0124','1.019','1.0241','1.0358','1.0645','1.0877',
                              '1.1102','1.125','1.1309','1.1322','1.1466','1.151',
                              '1.2163','1.22','1.2671','1.3075']
@@ -500,13 +500,13 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
 #                              '1.1102','1.151',
 #                              '1.2163','1.2671','1.3075']
         for mass in mesa_masslist:
-            Cool = Table.read('models/MESA_model/' + spec_type + '_atm-M' +
+            Cool = Table.read('models/MESA_model/' + atm_type + '_atm-M' +
                               mass + '.dat',
                               format='csv', header_start=1, data_start=2)
             dn = 70
             if float(mass) > 1.2:
                 dn = 120
-            if float(mass) < 1.05 or spec_type == 'He':
+            if float(mass) < 1.05 or atm_type == 'He':
                 dn = 10
             dn = len(Cool)//40
             Cool = Cool[::dn] # [(Cool['# log Teff [K]'] > logteff_min) * (Cool['# log Teff [K]'] < logteff_max)]
@@ -660,7 +660,7 @@ def interp_xy_z_func(x, y, z, interp_type='linear'):
 #-------------------------------------------------------------------------------   
 
 
-def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
+def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
                HR_bands=('bp-rp', 'G'),
                HR_grid=(-0.6, 1.5, 0.002, 8, 18, 0.01),
                logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01),
@@ -722,7 +722,7 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
             'MESA' or 'm'                   Lauffer et al. 2018
             'BaSTI' or 'b'                  with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
             'BaSTI_nosep' or 'bn'           no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it
-        spec_type:          String. 
+        atm_type:           String. 
                             Specifying the atmosphere composition. Its value 
                             should be one of the following:
             'H'                             pure-hydrogen atmosphere
@@ -846,16 +846,16 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
         middle_mass_model not in model_names or
         high_mass_model not in model_names):
         print('please check the model names.')
-    if spec_type not in ['H', 'He']:
-        print('please enter either \'H\' or \'He\' for spec_type.')
+    if atm_type not in ['H', 'He']:
+        print('please enter either \'H\' or \'He\' for atm_type.')
     
     # make atmosphere grid and mapping: logteff, logg --> bp-rp,  G-Mbol
     grid_logteff_logg_to_color, logteff_logg_to_color = interp_atm(
-        spec_type, HR_bands[0], 
+        atm_type, HR_bands[0], 
         logteff_logg_grid=logteff_logg_grid,
         interp_type_atm=interp_type_atm)
     grid_logteff_logg_to_BC, logteff_logg_to_BC = interp_atm(
-        spec_type, HR_bands[1] + '-Mbol', 
+        atm_type, HR_bands[1] + '-Mbol', 
         logteff_logg_grid=logteff_logg_grid,
         interp_type_atm=interp_type_atm)
 
@@ -866,7 +866,7 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
                     = read_cooling_tracks('Fontaine2001',
                                           'Fontaine2001',
                                           'Fontaine2001',
-                                          spec_type)
+                                          atm_type)
         logg_func   = interp_xy_z_func(x=logteff_Fontaine2001,
                                        y=mass_array_Fontaine2001,
                                        z=logg_Fontaine2001)
@@ -878,7 +878,7 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, spec_type,
                     = read_cooling_tracks(low_mass_model,
                                           middle_mass_model,
                                           high_mass_model,
-                                          spec_type, logg_func, for_comparison)
+                                          atm_type, logg_func, for_comparison)
 
     # Get Colour/Magnitude for Evolution Tracks
     Mag         = logteff_logg_to_BC(logteff, logg) + Mbol
