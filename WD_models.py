@@ -403,7 +403,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
                 #Cool.sort('Log(edad/Myr)')
                 mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
                 logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
-                age         = np.concatenate(( age, 10**Cool['Log(edad/Myr)'] ))
+                age         = np.concatenate(( age, 10**Cool['Log(edad/Myr)'] * 1e6 ))
                 age_cool    = np.concatenate(( age_cool, (10**Cool['Log(edad/Myr)'] -
                                                           10**Cool['Log(edad/Myr)'][0]) * 1e6 ))
                 logteff     = np.concatenate(( logteff, Cool['LOG(TEFF)'] ))
@@ -463,7 +463,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
             #Cool.sort('Log(edad/Myr)')
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
             logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
-            age         = np.concatenate(( age, 10**Cool['Log(edad/Myr)'] ))
+            age         = np.concatenate(( age, 10**Cool['Log(edad/Myr)'] * 1e6 ))
             age_cool    = np.concatenate(( age_cool, (10**Cool['Log(edad/Myr)'] -
                                                       10**Cool['Log(edad/Myr)'][0]) * 1e6 ))
             logteff     = np.concatenate(( logteff, Cool['LOG(TEFF)'] ))
