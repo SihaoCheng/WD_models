@@ -21,7 +21,7 @@ import WD_models
 model = WD_models.load_model(low_mass_model='Fontaine2001',
                              middle_mass_model='Renedo2010_001',
                              high_mass_model='ONe',
-                             spec_type='H')
+                             atm_type='H')
 bp_rp = np.array([0.25, 0.25])
 G = np.array([13,14])
 
