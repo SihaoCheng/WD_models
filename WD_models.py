@@ -253,8 +253,8 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
     
     # define the initial-final mass relation for calculating the total age for 
     # some models
-    IFMR        = interp1d((0.19, 0.4, 0.552, 0.72, 0.87, 1.25, 1.4),
-                           (0.23, 0.5, 0.87, 2.8, 3.65, 8.2, 10),
+    IFMR        = interp1d((0.19, 0.4, 0.50, 0.72, 0.87, 1.25, 1.4),
+                           (0.23, 0.5, 0.95, 2.8, 3.65, 8.2, 10),
                            fill_value = 0, bounds_error=False)
     t_index     = -3
     
