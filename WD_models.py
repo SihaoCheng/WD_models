@@ -257,6 +257,9 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
                            (0.23, 0.5, 0.95, 2.8, 3.65, 8.2, 10),
                            fill_value = 0, bounds_error=False)
     t_index     = -3
+    def MS_age(m_WD):
+        return ( 10**9.38 * IFMR(m_WD)**-2.16 ) * (IFMR(m_WD) >= 2.3) + \
+                ( 10**10 * IFMR(m_WD)**-3.5 ) * (IFMR(m_WD) < 2.3)
     
     # initialize data points of cooling tracks
     logg        = np.zeros(0)
@@ -316,7 +319,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
                                                       line*l_line+21])) )
             logg_temp.append(     float(text[line*l_line+22:line*l_line+35]) )
             age_temp.append(      float(text[line*l_line+48:line*l_line+63]) +
-                                  (IFMR(int(mass)/100))**(t_index) * 1e10 )
+                                  MS_age(int(mass)/100) )
             age_cool_temp.append( float(text[line*l_line+48:line*l_line+63]) )
             Mbol_temp.append(     4.75 - 
                                   2.5 * np.log10(float(text[line*l_line+64:
@@ -347,7 +350,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool))*float(mass) ))
             logg        = np.concatenate(( logg, Cool['logg'] ))
             age         = np.concatenate(( age, Cool['Age'] +
-                                                (IFMR(float(mass)))**(t_index)*1e10 ))
+                                                MS_age(float(mass)) ))
             age_cool    = np.concatenate(( age_cool, Cool['Age'] ))
             logteff     = np.concatenate(( logteff, np.log10(Cool['Teff']) ))
             Mbol        = np.concatenate(( Mbol, Cool['Mbol'] ))
@@ -377,7 +380,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool))*int(mass)/1000 ))
             logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
             age         = np.concatenate(( age, Cool['age/Myr'] * 1e6 +
-                                                (IFMR(int(mass)/1000))**(t_index)*1e10 ))
+                                                MS_age(int(mass)/1000) ))
             age_cool    = np.concatenate(( age_cool, Cool['age/Myr'] * 1e6 ))
             logteff     = np.concatenate(( logteff, Cool['log(TEFF)'] ))
             Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['log(L)'] ))
@@ -448,7 +451,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
         mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
         logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
         age         = np.concatenate(( age, 10**Cool['log(t)'] +
-                                            (IFMR(int(mass)/100))**(t_index) * 1e10 ))
+                                            MS_age(int(mass)/100) ))
         age_cool    = np.concatenate(( age_cool, 10**Cool['log(t)'] ))
         logteff     = np.concatenate(( logteff, Cool['log(Teff)'] ))
         Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['log(L/Lo)'] ))
@@ -464,8 +467,8 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
             logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
             age         = np.concatenate(( age, (10**Cool['Log(edad/Myr)'] -
-                                                 10**Cool['Log(edad/Myr)'][0] + 
-                                                 (IFMR(int(mass)/100))**(-3.5) * 1e4) * 1e6 ))
+                                                 10**Cool['Log(edad/Myr)'][0]) * 1e6 + \
+                                                 MS_age(int(mass)/100) ))
             age_cool    = np.concatenate(( age_cool, (10**Cool['Log(edad/Myr)'] -
                                                       10**Cool['Log(edad/Myr)'][0]) * 1e6 ))
             logteff     = np.concatenate(( logteff, Cool['LOG(TEFF)'] ))
