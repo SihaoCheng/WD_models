@@ -39,6 +39,14 @@ from scipy.interpolate import griddata, interp1d
 #
 #-------------------------------------------------------------------------------
 
+# define the initial-final mass relation for calculating the total age for 
+# some models
+IFMR        = interp1d((0.19, 0.4, 0.50, 0.72, 0.87, 1.25, 1.4),
+                       (0.23, 0.5, 0.95, 2.8, 3.65, 8.2, 10),
+                       fill_value = 0, bounds_error=False)
+def MS_age(m_WD):
+    return ( 10**9.38 * IFMR(m_WD)**-2.16 ) * (IFMR(m_WD) >= 2.3) + \
+            ( 10**10 * IFMR(m_WD)**-3.5 ) * (IFMR(m_WD) < 2.3)
 
 def interpolate_2d(x, y, z, method):
     if method == 'linear':
@@ -250,16 +258,6 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
             mass_separation_2 = 0.99
     if high_mass_model == 'BaSTI' or high_mass_model == 'BaSTInosep':
         mass_separation_2 = 0.99
-    
-    # define the initial-final mass relation for calculating the total age for 
-    # some models
-    IFMR        = interp1d((0.19, 0.4, 0.50, 0.72, 0.87, 1.25, 1.4),
-                           (0.23, 0.5, 0.95, 2.8, 3.65, 8.2, 10),
-                           fill_value = 0, bounds_error=False)
-    t_index     = -3
-    def MS_age(m_WD):
-        return ( 10**9.38 * IFMR(m_WD)**-2.16 ) * (IFMR(m_WD) >= 2.3) + \
-                ( 10**10 * IFMR(m_WD)**-3.5 ) * (IFMR(m_WD) < 2.3)
     
     # initialize data points of cooling tracks
     logg        = np.zeros(0)
@@ -934,4 +932,5 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
             'grid_HR_to_cool_rate^-1':grid_HR_to_rate_inv, 'HR_to_cool_rate^-1':HR_to_rate_inv,
             'm_agecool_to_color':m_agecool_to_color, 
             'm_agecool_to_Mag':m_agecool_to_Mag}
+
 
