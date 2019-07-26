@@ -45,8 +45,10 @@ IFMR        = interp1d((0.19, 0.4, 0.50, 0.72, 0.87, 1.25, 1.4),
                        (0.23, 0.5, 0.95, 2.8, 3.65, 8.2, 10),
                        fill_value = 0, bounds_error=False)
 def MS_age(m_WD):
-    return ( 10**9.38 * IFMR(m_WD)**-2.16 ) * (IFMR(m_WD) >= 2.3) + \
+    with np.errstate(divide='ignore', invalid='ignore'):
+        result = ( 10**9.38 * IFMR(m_WD)**-2.16 ) * (IFMR(m_WD) >= 2.3) + \
             ( 10**10 * IFMR(m_WD)**-3.5 ) * (IFMR(m_WD) < 2.3)
+    return result
 
 def interpolate_2d(x, y, z, method):
     if method == 'linear':
