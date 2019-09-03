@@ -243,14 +243,14 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
         middle_mass_model == 'PG'
        ):
         if for_comparison == True:
-            mass_seperation_1 = 0.501
+            mass_separation_1 = 0.501
         else:
-            mass_seperation_1 = 0.45
+            mass_separation_1 = 0.45
     if 'BaSTI' in middle_mass_model:
-        mass_seperation_1 = 0.501
+        mass_separation_1 = 0.501
     
     if high_mass_model == 'Fontaine2001' or high_mass_model == 'Fontaine2001_thin':
-        mass_seperation_2 = 0.99
+        mass_separation_2 = 0.99
     if high_mass_model == 'ONe':
         mass_separation_2 = 1.09
     if high_mass_model == 'MESA':
