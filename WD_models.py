@@ -21,6 +21,9 @@ For questions or suggestions, please do not hesitate to contact me:
     s.cheng@jhu.edu
 
 21 Jul 2019
+
+We updated the pre-WD lifetime estimate on Oct 6, 2019.
+
 """
 
 
@@ -46,15 +49,18 @@ IFMR        = interp1d((0.19, 0.4, 0.50, 0.72, 0.87, 1.25, 1.4),
                        fill_value = 0, bounds_error=False)
 def MS_age(m_WD):
     with np.errstate(divide='ignore', invalid='ignore'):
-#         result = ( 10**9.38 * IFMR(m_WD)**-2.16 ) * (IFMR(m_WD) >= 2.3) + \
-#             ( 10**10 * IFMR(m_WD)**-3.5 ) * (IFMR(m_WD) < 2.3)
+#        result = ( 10**9.38 * IFMR(m_WD)**-2.16 ) * (IFMR(m_WD) >= 2.3) + \
+#            ( 10**10 * IFMR(m_WD)**-3.5 ) * (IFMR(m_WD) < 2.3)
 # we update this pre-WD lifetime estimate on Oct 6, 2019.
         mi = IFMR(m_WD)
-        life0 = (mi <= 2.11) * np.exp(
-            1.337807E1 - 6.292517E0 * mi + 4.451837E0 * mi**2 - 1.773315E0 * mi**3 + 2.944963E-1 * mi**4 ) \
-            + (mi > 2.11) * np.exp(
-            1.075941E1 - 1.043523E0 * mi  + 1.366088E-1 * mi**2 - 7.110290E-3 * mi**3)
+        if mi <= 2.11:
+            life0 = 10**(13.37807 - 6.292517 * mi + 4.451837 * mi**2
+                    - 1.773315 * mi**3 + 0.2944963 * mi**4)
+        else: 
+            life0 = 10**(10.75941 - 1.043523 * mi + 0.1366088 * mi**2
+                    - 7.110290e-3 * mi**3)
     return life0
+MS_age = np.vectorize(MS_age)
 
 def interpolate_2d(x, y, z, method):
     if method == 'linear':
@@ -63,7 +69,7 @@ def interpolate_2d(x, y, z, method):
         interpolator = CloughTocher2DInterpolator
     return interpolator((x,y), z, rescale=True)
     #return interp2d(x, y, z, kind=method)
-  
+
 
 def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01), 
                interp_type_atm='linear'):
@@ -493,6 +499,17 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
             L_PS        = Cool['Sep.Fase[erg/s]'] / 3.828e33
             #/M^dot, Masa_HFC, Masa_HeFC 
             del Cool
+#        for mass in ['135','138']:
+#            Cool = Table.read('models/t' + mass + '.trk', format='ascii') 
+#            Cool = Cool[::1] # (Cool['LOG(TEFF)'] > logteff_min) * (Cool['LOG(TEFF)'] < logteff_max)
+#            #Cool.sort('Log(edad/Myr)')
+#            mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
+#            logg        = np.concatenate(( logg, np.ones(len(Cool)) * 9.4999 ))
+#            age         = np.concatenate(( age, Cool['col7']* 1e6 + MS_age(int(mass)/100) ))
+#            age_cool    = np.concatenate(( age_cool, Cool['col7'] * 1e6 ))
+#            logteff     = np.concatenate(( logteff, Cool['col2'] ))
+#            Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['col1'] ))
+#            del Cool
     
     # massive MESA model (Lauffer et al. 2019)
     if high_mass_model == 'MESA': 
