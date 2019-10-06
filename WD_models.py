@@ -52,7 +52,7 @@ def MS_age(m_WD):
         mi = IFMR(m_WD)
         life0 = (mi <= 2.11) * np.exp(
             1.337807E1 - 6.292517E0 * mi + 4.451837E0 * mi**2 - 1.773315E0 * mi**3 + 2.944963E-1 * mi**4 ) \
-            + (mi >= 2.3) * np.exp(
+            + (mi > 2.11) * np.exp(
             1.075941E1 - 1.043523E0 * mi  + 1.366088E-1 * mi**2 - 7.110290E-3 * mi**3)
     return life0
 
