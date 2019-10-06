@@ -46,9 +46,15 @@ IFMR        = interp1d((0.19, 0.4, 0.50, 0.72, 0.87, 1.25, 1.4),
                        fill_value = 0, bounds_error=False)
 def MS_age(m_WD):
     with np.errstate(divide='ignore', invalid='ignore'):
-        result = ( 10**9.38 * IFMR(m_WD)**-2.16 ) * (IFMR(m_WD) >= 2.3) + \
-            ( 10**10 * IFMR(m_WD)**-3.5 ) * (IFMR(m_WD) < 2.3)
-    return result
+#         result = ( 10**9.38 * IFMR(m_WD)**-2.16 ) * (IFMR(m_WD) >= 2.3) + \
+#             ( 10**10 * IFMR(m_WD)**-3.5 ) * (IFMR(m_WD) < 2.3)
+# we update this pre-WD lifetime estimate on Oct 6, 2019.
+        mi = IFMR(m_WD)
+        life0 = (mi <= 2.11) * np.exp(
+            1.337807E1 - 6.292517E0 * mi + 4.451837E0 * mi**2 - 1.773315E0 * mi**3 + 2.944963E-1 * mi**4 ) \
+            + (mi >= 2.3) * np.exp(
+            1.075941E1 - 1.043523E0 * mi  + 1.366088E-1 * mi**2 - 7.110290E-3 * mi**3)
+    return life0
 
 def interpolate_2d(x, y, z, method):
     if method == 'linear':
