@@ -209,7 +209,7 @@ key  | remarks
 'Mag':          | 1d-array. The chosen absolute magnitude, converted from the atmosphere interpolation.
 'color':        | 1d-array. The chosen color index, converted from the atmosphere interpolation.
 
-For the calculation of total ages, I adopt the IFMR from Cummings et al. 2018 for WDs above 0.55 Msun. For lower masses, which is less useful, I just interpolated between zero and the first data point of Cummings et al. 2018.
+For the calculation of total ages, I adopt the IFMR from Cummings et al. 2018 for WDs above 0.55 Msun. For lower masses, which is less useful, I just interpolated between zero and the first data point of Cummings et al. 2018. The pre-WD age is determined based on the MIST (Choi et al. 2016) result for non-rotation, solar metallicity stars. The details can be found in the definition of the `MS_age` function.
 
 ![](figures/IFMR_age.png)
 
@@ -221,13 +221,13 @@ Camisassa et al. (2017ApJ...839...11C)
 
 Camisassa et al. (2019A&A...625A..87C)
 
+Choi et al. (2016ApJ...823..102C)
+
 Cummings et al. (2018ApJ...866...21C)
 
 Fontaine et al. (2001PASP..113..409F)
 
 Holberg & Bergeron (2006AJ....132.1221H)
-
-Iben & Tutukov (1987ApJ...313..727I)
 
 Kowalski & Saumon (2006ApJ...651L.137K)
 
