@@ -67,6 +67,13 @@ plt.contour(model['grid_HR_to_age_cool'].T, extent=extent)
 ```
 Codes for plotting the exact figure (and figures below) are provided in the jupyter notebook `/WD_models_examples.ipynb`.
 
+A comment: The total age is a very steep function of white dwarf mass and not suitable for interpolation. So, for plotting the contour or other use of the total age, the following way is recommend:
+```
+plt.contour(
+    model['grid_HR_to_age_cool'].T + WD_models.MS_age(model['grid_HR_to_mass'].T)*1e-9,
+    extent=extent)
+```
+
 
 ## Example 3: the effect of phase separation
 
