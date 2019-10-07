@@ -216,7 +216,7 @@ key  | remarks
 'Mag':          | 1d-array. The chosen absolute magnitude, converted from the atmosphere interpolation.
 'color':        | 1d-array. The chosen color index, converted from the atmosphere interpolation.
 
-For the calculation of total ages, I adopt the IFMR from Cummings et al. 2018 for WDs above 0.55 Msun. For lower masses, which is less useful, I just interpolated between zero and the first data point of Cummings et al. 2018. The pre-WD age is determined based on the MIST (Choi et al. 2016) result for non-rotation, solar metallicity stars. The details can be found in the definition of the `MS_age` function (this function convert white dwarf mass to pre-WD age).
+For the calculation of total ages, I adopt the IFMR from Cummings et al. 2018 for WDs above 0.55 Msun. For lower masses, which is less useful, I just interpolated between zero and the first data point of Cummings et al. 2018. The pre-WD age is determined based on the MIST (Choi et al. 2016) result for non-rotation, solar metallicity stars. The details can be found in the definition of the `MS_age` function (which converts white dwarf mass to pre-WD age).
 
 ![](figures/IFMR_age.png)
 
