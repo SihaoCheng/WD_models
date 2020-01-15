@@ -1,4 +1,6 @@
 # WD_models
+(Updated on Jan 15, 2020)
+
 The number of white dwarfs (WD) with precise luminosity and color measurements has been increased drastically by *Gaia* DR2. Accordingly, the need for a tool to easily transform WD photometry to physical parameters (and vice versa) emerges. Here, I provide a python module for such transformations, based on interpolation of existing WD atmosphere grid and cooling models. This module is written for python 3 and depends on the following packages: `astropy, matplotlib, numpy, scipy`. The most useful functions include:
 
 1. converting the coordinates of *Gaia* (and other passbands) H--R diagram into WD parameters;
@@ -12,32 +14,53 @@ Below, I introduce the basic usage of this module, give some examples. A list of
 
 
 ## Import
-Please download the script `WD_models.py` and folder `models/` to the same directory, and simply import the module in python 3:
+Please download the package `WD_models` to one of the system paths of your python, and then simply import it in python 3:
 ```python
 import WD_models
+```
+To check the system paths,
+```python
+import sys
+print(sys.path)
 ```
 
 
 ## Example 1: converting H--R diagram coordinate into WD parameters
 ```python
 model = WD_models.load_model(low_mass_model='Fontaine2001',
-                             middle_mass_model='Renedo2010_001',
+                             middle_mass_model='Fontaine2001',
                              high_mass_model='ONe',
                              atm_type='H')
 bp_rp = np.array([0.25, 0.25])
 G = np.array([13,14])
-
 age_cool = model['HR_to_age_cool'](bp_rp, G)
 
-print(age_cool)
->> [ 1.28440266  2.70046388]
+print('bp_rp: ', bp_rp, '\nM_G: ', G)
+print('cooling ages:', age_cool, 'Gyr')
+>> bp_rp:	[ 0.25  0.25] 
+>> M_G:	[13 14]
+>> cooling ages: [ 1.26162464  2.83953083] Gyr
 ```
 The outputs are in unit of Gyr. The function `load_model` in the module reads a set of cooling tracks and returns a dictionary containing many useful functions for parameter transformation and grid data for ploting contours. The keys of this dictionary are listed in the section "output of the function `load_model`" below.
 
-With the argument `HR_bands`, one can change the passband for both the color index and absolute magnitude of the H--R diagram. It can be any combination from the following bands: G, bp, rp (Gaia); u, g, r, i, z (SDSS); U, B, V, R, I (Johnson); J, H, K (2MASS). For example:
+With the argument `HR_bands`, one can change the passband for both the color index and absolute magnitude of the H--R diagram. It can be any combination from the following bands: 
+
+filter system | filters | filter names in this package
+--------------|---------|------------------------------
+Gaia          | G, bp, rp         | G, bp, rp
+SDSS          | Su, Sg, Sr, Si, Sz| Su, Sg, Sr, Si, Sz
+PanSTARRS     | Pg, Pr, Pi, Pz, Py| Pg, Pr, Pi, Pz, Py
+Johnson       | U, B, V, R, I     | U, B, V, R, I
+2MASS         | J, H, Ks          | J, H, Ks
+Mauna Kea Observatory (MKO)| Y, J, H, K | MY, MJ, MH, MK
+WISE          | W1, W2, W3, W4    | W1, W2, W3, W4
+Spitzer       | 3.6, 4.5, 5.8, 8.0| S36, S45, S58, S80
+GALEX         | FUV, NUV          | FUV, NUV
+
+For example:
 ```python
-model = WD_models.load_model('f', 'r001', 'o', 'H',
-                             HR_bands=('u-g', 'G'))
+model = WD_models.load_model('f', 'f', 'o', 'H',
+                             HR_bands=('Su-Sg', 'G'),)
 ```
 Note that shorter names of the same cooling models (see section "Available models included in this module" below for details) are used here.
 
@@ -48,8 +71,10 @@ model_B = WD_models.load_model('', 'f', 'f', 'He')
 
 d_age_cool = (model_A['HR_to_age_cool'](0, 13) - model_B['HR_to_age_cool'](0, 13))
 
-print(d_age_cool)
->> 0.110596332926
+print('bp-rp = 0,  M_G = 13')
+print('difference of cooling ages between DA and DB models: ', d_age_cool, 'Gyr')
+>> bp-rp = 0,  M_G = 13
+>> difference of cooling ages between DA and DB models:  0.108108710416 Gyr
 ```
 
 
@@ -112,19 +137,21 @@ If a desired transformation function is not provided in the output of `load_mode
 
 For example, for the mapping (mass, logteff) --> cooling age:
 ```python
-model = WD_models.load_model('f', 'r001', 'o', 'H')
+model = WD_models.load_model('f', 'f', 'o', 'H')
 
-# generate the desired mapping
+# interpolate the desired mapping
 m_logteff_to_agecool = WD_models.interp_xy_z_func(x=model['mass_array'],
                                                   y=model['logteff'],
                                                   z=model['age_cool'],
                                                   interp_type='linear')
-
+                                                  
 # calculate the cooling age for (m_WD, Teff) = (1.1 Msun, 10000 K)
 age_cool = m_logteff_to_agecool(1.1, np.log10(10000))
 
-print(age_cool)
->> 2.1917495897185257
+print('mass: 1.1 Msun,  Teff: 10000 K')
+print('cooling age: ', age_cool, 'Gyr')
+>> mass: 1.1 Msun,  Teff: 10000 K
+>> cooling age:  2.1917495897185257 Gyr
 ```
 As other transformation functions, this customized mapping function `m_logteff_to_agecool` also accepts numpy array as input.
 
