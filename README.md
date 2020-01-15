@@ -1,5 +1,5 @@
 # WD_models
-(Updated on Jan 15, 2020)
+(Updated on Jan 15, 2020, for details of updates please check [update.md](update.md))
 
 The number of white dwarfs (WD) with precise luminosity and color measurements has been increased drastically by *Gaia* DR2. Accordingly, the need for a tool to easily transform WD photometry to physical parameters (and vice versa) emerges. Here, I provide a python module for such transformations, based on interpolation of existing WD atmosphere grid and cooling models. This module is written for python 3 and depends on the following packages: `astropy, matplotlib, numpy, scipy`. The most useful functions include:
 
@@ -13,7 +13,7 @@ If you use this tool, don't forget to cite this website and the corresponding pa
 Below, I introduce the basic usage of this module, give some examples. A list of available cooling models is attached. I also present a detailed introduction to the output of the main function `load_model`. I hope that with a convenience way provided to transform WD parameters, more researchers will be attracted to the WD field, and the connection between observers, theorists, and astronomers from outside the WD field will be tighter. For questions or suggestions or comments, please do not hesitate to contact me: s.cheng@jhu.edu
 
 
-## Import
+## Install
 Please download the package `WD_models` to one of the system paths of your python, and then simply import it in python 3:
 ```python
 import WD_models
@@ -48,8 +48,8 @@ With the argument `HR_bands`, one can change the passband for both the color ind
 filter system | filters | filter names in this package
 --------------|---------|------------------------------
 Gaia          | G, bp, rp         | G, bp, rp
-SDSS          | Su, Sg, Sr, Si, Sz| Su, Sg, Sr, Si, Sz
-PanSTARRS     | Pg, Pr, Pi, Pz, Py| Pg, Pr, Pi, Pz, Py
+SDSS          | u, g, r, i, z     | Su, Sg, Sr, Si, Sz
+PanSTARRS     | g, r, i, z, y     | Pg, Pr, Pi, Pz, Py
 Johnson       | U, B, V, R, I     | U, B, V, R, I
 2MASS         | J, H, Ks          | J, H, Ks
 Mauna Kea Observatory (MKO)| Y, J, H, K | MY, MJ, MH, MK
@@ -249,29 +249,31 @@ For the calculation of total ages, I adopt the IFMR from Cummings et al. 2018 fo
 
 
 ## References
-Bergeron et al. (2011ApJ...737...28B)
+Bergeron et al. ([2011ApJ...737...28B](https://ui.adsabs.harvard.edu/abs/2011ApJ...737...28B/abstract))
 
-Camisassa et al. (2017ApJ...839...11C)
+Blouin et al. ([2018ApJ...863..184B](https://ui.adsabs.harvard.edu/abs/2018ApJ...863..184B/abstract))
 
-Camisassa et al. (2019A&A...625A..87C)
+Camisassa et al. ([2017ApJ...839...11C](https://ui.adsabs.harvard.edu/abs/2017ApJ...839...11C/abstract))
 
-Choi et al. (2016ApJ...823..102C)
+Camisassa et al. ([2019A&A...625A..87C](https://ui.adsabs.harvard.edu/abs/2019A&A...625A..87C/abstract))
 
-Cummings et al. (2018ApJ...866...21C)
+Choi et al. ([2016ApJ...823..102C](https://ui.adsabs.harvard.edu/abs/2016ApJ...823..102C/abstract))
 
-Fontaine et al. (2001PASP..113..409F)
+Cummings et al. ([2018ApJ...866...21C](https://ui.adsabs.harvard.edu/abs/2018ApJ...866...21C/abstract))
 
-Holberg & Bergeron (2006AJ....132.1221H)
+Fontaine et al. ([2001PASP..113..409F](https://ui.adsabs.harvard.edu/abs/2001PASP..113..409F/abstract))
 
-Kowalski & Saumon (2006ApJ...651L.137K)
+Holberg & Bergeron ([2006AJ....132.1221H](https://ui.adsabs.harvard.edu/abs/2006AJ....132.1221H/abstract))
 
-Lauffer et al. (2018MNRAS.480.1547L)
+Kowalski & Saumon ([2006ApJ...651L.137K](https://ui.adsabs.harvard.edu/abs/2006ApJ...651L.137K/abstract))
 
-Renedo et al. (2010ApJ...717..183R)
+Lauffer et al. ([2018MNRAS.480.1547L](https://ui.adsabs.harvard.edu/abs/2018MNRAS.480.1547L/abstract))
 
-Salaris et al. (2010ApJ...716.1241S)
+Renedo et al. ([2010ApJ...717..183R](https://ui.adsabs.harvard.edu/abs/2010ApJ...717..183R/abstract))
 
-Tremblay et al. (2011ApJ...730..128T)
+Salaris et al. ([2010ApJ...716.1241S](https://ui.adsabs.harvard.edu/abs/2010ApJ...716.1241S/abstract))
+
+Tremblay et al. ([2011ApJ...730..128T](https://ui.adsabs.harvard.edu/abs/2011ApJ...730..128T/abstract))
 
 http://basti.oa-teramo.inaf.it
 
