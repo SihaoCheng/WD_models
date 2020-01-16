@@ -10,7 +10,7 @@ It also provides tools to transform any desired WD parameters and compare the re
 
 If you use this tool, don't forget to cite this website and the corresponding papers of synthetic colors and cooling models (see the reference at the bottom of this page). If you have more cooling models and/or synthetic colors, I am more than happy to add them to this module!
 
-Below, I introduce the basic usage of this module, give some examples. A list of available cooling models is attached. I also present a detailed introduction to the output of the main function `load_model`. I hope that with a convenience way provided to transform WD parameters, more researchers will be attracted to the WD field, and the connection between observers, theorists, and astronomers from outside the WD field will be tighter. For questions or suggestions or comments, please do not hesitate to contact me: s.cheng@jhu.edu
+Below, I introduce the basic usage of this module, give some examples. A list of available cooling models is attached. I also present a detailed introduction to the output of the main function `load_model`. I hope that with a convenient way provided to transform WD parameters, more researchers will be attracted to the WD field, and the connection between observers, theorists, and astronomers from outside the WD field will be tighter. For questions or suggestions or comments, please do not hesitate to contact me: s.cheng@jhu.edu
 
 
 ## Install
