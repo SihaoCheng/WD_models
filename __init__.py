@@ -48,10 +48,10 @@ unconfortable with this extrapolation, he/she can import the old version:
 
 """
 
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 
 from astropy.table import Table, vstack
 from scipy.interpolate import CloughTocher2DInterpolator, LinearNDInterpolator
