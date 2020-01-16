@@ -1,5 +1,5 @@
 # WD_models
-(Updated on Jan 15, 2020, for details of updates please check [update.md](update.md))
+(Updated on Jan 15, 2020, for details of updates please check update.md)
 
 The number of white dwarfs (WD) with precise luminosity and color measurements has been increased drastically by *Gaia* DR2. Accordingly, the need for a tool to easily transform WD photometry to physical parameters (and vice versa) emerges. Here, I provide a python module for such transformations, based on interpolation of existing WD atmosphere grid and cooling models. This module is written for python 3 and depends on the following packages: `astropy, matplotlib, numpy, scipy`. The most useful functions include:
 
