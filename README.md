@@ -235,7 +235,7 @@ key  | remarks
 -----|---------
 'mass_array':   | 1d-array. The mass of WD in unit of solar mass. I only read one value for a cooling track, not tracking the mass change.
 'logg':         | 1d-array. in cm/s^2
-'age':          | 1d-array. The total age of the WD in yr. For the following models, these total ages are read directly from the cooling tracks: 'Camisassa2017', 'ONe', 'MESA'; for all other models, the total ages are calculated by assuming an initial--final mass relation (IFMR) of the WD and adding the rough main-sequence age (equation 18 and 18a in Iben & Tutukov, 1987) to the cooling age.
+'age':          | 1d-array. The total age of the WD in yr. For the following models, these total ages are read directly from the cooling tracks: 'Camisassa2017', 'ONe', 'MESA'; for all other models, the total ages are calculated by assuming an initial--final mass relation (IFMR) of the WD and adding the estimated main-sequence age (based on MIST (Choi et al. 2016) results) to the cooling age.
 'age_cool':     | 1d-array. The cooling age of the WD in yr.
 'logteff':      | 1d-array. The logarithm effective temperature of the WD in Kelvin (K).
 'Mbol':         | 1d-array. The absolute bolometric magnitude of the WD. Many are converted from the log(L/Lsun) or log(L), where I adopt: Mbol_sun = 4.75, Lsun = 3.828e33 erg/s.
