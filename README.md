@@ -64,7 +64,7 @@ model = WD_models.load_model('f', 'f', 'o', 'H',
 ```
 Note that shorter names of the same cooling models (see section "Available models included in this module" below for details) are used here.
 
-Loading two sets of models allows comparison between cooling models. For example:
+Loading two sets of models allows comparisons between cooling models. For example:
 ```python
 model_A = WD_models.load_model('', 'f', 'f', 'H')
 model_B = WD_models.load_model('', 'f', 'f', 'He')
