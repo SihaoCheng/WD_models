@@ -22,18 +22,42 @@ For questions or suggestions, please do not hesitate to contact me:
 
 21 Jul 2019
 
-We updated the pre-WD lifetime estimate on Oct 6, 2019.
+
+Updates:
+
+Oct 6, 2019:
+We updated the pre-WD lifetime estimate.
+
+Nov 1, 2019:
+I updated the synthetic color table with much more pass bands (PanSTARRS, 
+WISE, Spitzer, GALEX, etc.) and better atmosphere model (Blouin et al. 2018).
+These updates directly come from the recent (Aug 2019) updates of the Montreal 
+atmosphere models: http://www.astro.umontreal.ca/~bergeron/CoolingModels/.
+Note that the filter names are slightly different from the old version, see 
+the README document or the documentation in this script.
+
+Jan 15, 2020:
+I standardized the structure of this module and the installation process. 
+The README.md document was also updated. 
+In addition, since the Aug 2019 update of the Montreal atmosphere models
+lacks information to log(g)~9.5, which makes inconvenience for analysing WDs
+from Gaia, in my code, I duplicate the table for log(g)=9.0 as a reasonable 
+guess for the photometric behaviour around log(g)=9.5. If the user is 
+unconfortable with this extrapolation, he/she can import the old version:
+`from WD_models import WD_models_old`. 
 
 """
 
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from astropy.table import Table
+from astropy.table import Table, vstack
 from scipy.interpolate import CloughTocher2DInterpolator, LinearNDInterpolator
 from scipy.interpolate import griddata, interp1d
 
+dirpath = os.path.dirname(__file__)
 
 #-------------------------------------------------------------------------------
 #
@@ -82,9 +106,19 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
         atm_type:           String. {'H', 'He'}
             See the "Synthetic color" section on http://www.astro.umontreal.ca/~bergeron/CoolingModels/
         color:              String. {'G-Mbol', 'bp-rp', 'V-Mbol', 'u-g', 'B-z', etc.}
-            The target color of the mapping. Any two bands between Gaia G, bp, rp,
-            SDSS ugriz, and Johnson UBVRI, 2MASS JHK, and bolometric magnitude Mbol.
-            For bolometric correction (BC), 'Mbol' must be after the minus sign '-'.
+            The target color of the mapping. Any two bands between 
+            Gaia: G, bp, rp
+            SDSS: Su, Sg, Sr, Si, Sz
+            PanSTARRS: Pg, Pr, Pi, Pz, Py
+            Johnson: U, B, V, R, I
+            2MASS: J, H, Ks
+            Mauna Kea Observatory (MKO): MY, MJ, MH, MK
+            WISE: W1, W2, W3, W4
+            Spitzer: S36, S45, S58, S80
+            GALEX: FUV, NUV
+            and the bolometric magnitude: Mbol.
+            For bolometric correction (BC), 'Mbol' must be the passband after
+            the minus sign '-'.
         logteff_logg_grid: (xmin, xmax, dx, ymin, ymax, dy). *Optional*
             corresponding to the grid of logTeff and logg.
         interp_type_atm:    String. {'linear', 'cubic'}. *Optional*
@@ -104,11 +138,16 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
     bp_Mag      = np.zeros(0) # Gaia
     rp_Mag      = np.zeros(0) # Gaia 
     G_Mag       = np.zeros(0) # Gaia
-    u_Mag       = np.zeros(0) # SDSS
-    g_Mag       = np.zeros(0) # SDSS
-    r_Mag       = np.zeros(0) # SDSS
-    i_Mag       = np.zeros(0) # SDSS
-    z_Mag       = np.zeros(0) # SDSS
+    Su_Mag      = np.zeros(0) # SDSS
+    Sg_Mag      = np.zeros(0) # SDSS
+    Sr_Mag      = np.zeros(0) # SDSS
+    Si_Mag      = np.zeros(0) # SDSS
+    Sz_Mag      = np.zeros(0) # SDSS
+    Pg_Mag      = np.zeros(0) # PanSTARRS
+    Pr_Mag      = np.zeros(0) # PanSTARRS
+    Pi_Mag      = np.zeros(0) # PanSTARRS
+    Pz_Mag      = np.zeros(0) # PanSTARRS
+    Py_Mag      = np.zeros(0) # PanSTARRS
     U_Mag       = np.zeros(0) # Johnson
     B_Mag       = np.zeros(0) # Johnson
     V_Mag       = np.zeros(0) # Johnson
@@ -116,30 +155,61 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
     I_Mag       = np.zeros(0) # Johnson
     J_Mag       = np.zeros(0) # 2MASS
     H_Mag       = np.zeros(0) # 2MASS
-    K_Mag       = np.zeros(0) # 2MASS
-        
+    Ks_Mag      = np.zeros(0) # 2MASS
+    MY_Mag      = np.zeros(0) # Mauna Kea Observatory (MKO)
+    MJ_Mag      = np.zeros(0) # Mauna Kea Observatory (MKO)
+    MH_Mag      = np.zeros(0) # Mauna Kea Observatory (MKO)
+    MK_Mag      = np.zeros(0) # Mauna Kea Observatory (MKO)
+    W1_Mag      = np.zeros(0) # WISE
+    W2_Mag      = np.zeros(0) # WISE
+    W3_Mag      = np.zeros(0) # WISE
+    W4_Mag      = np.zeros(0) # WISE
+    S36_Mag     = np.zeros(0) # Spitzer IRAC
+    S45_Mag     = np.zeros(0) # Spitzer IRAC
+    S58_Mag     = np.zeros(0) # Spitzer IRAC
+    S80_Mag     = np.zeros(0) # Spitzer IRAC
+    FUV_Mag     = np.zeros(0) # GALEX
+    NUV_Mag     = np.zeros(0) # GALEX 
+    
     # read the table for all logg
     if atm_type == 'H':
-        suffix = 'DA_thick'
+        suffix = 'DA'
     if atm_type == 'He':
         suffix = 'DB'
-    Atm_color = Table.read('models/Montreal_atm_grid/Table_'+suffix,
+    Atm_color = Table.read(dirpath+'/Montreal_atm_grid_2019/Table_'+suffix,
                            format='ascii')
     selected  = Atm_color['Teff'] > 10**logteff_logg_grid[0]
     Atm_color = Atm_color[selected]
+
+    table_95 = Atm_color[-51:].copy()
+    table_95['logg'] = 9.5
+    table_95['M/Mo'] = 1.366
+    for column in ['Mbol','U','B','V','R','I','J','H','Ks','MY','MJ','MH','MK','W1','W2','W3','W4',
+         'S3.6','S4.5','S5.8','S8.0','Su','Sg','Sr','Si','Sz','Pg','Pr','Pi','Pz','Py',
+         'G','G_BP','G_RP','FUV','NUV']:
+        table_95[column] += 1.108
+    Atm_color = vstack(( Atm_color, table_95 ))
     
-    # read columns
+    selected  = Atm_color['Teff'] > 10**logteff_logg_grid[0]
+    Atm_color = Atm_color[selected]
+    
+    # read columns from the Table_DA and Table_DB files
     logteff = np.concatenate(( logteff, np.log10(Atm_color['Teff']) ))
     logg    = np.concatenate(( logg, Atm_color['logg'] ))
     Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
-    bp_Mag  = np.concatenate(( bp_Mag, Atm_color['G_BP/R'] ))
-    rp_Mag  = np.concatenate(( rp_Mag, Atm_color['G_RP/R'] ))
-    G_Mag   = np.concatenate(( G_Mag, Atm_color['G/R'] ))
-    u_Mag   = np.concatenate(( u_Mag, Atm_color['u'] ))
-    g_Mag   = np.concatenate(( g_Mag, Atm_color['g'] ))
-    r_Mag   = np.concatenate(( r_Mag, Atm_color['r'] ))
-    i_Mag   = np.concatenate(( i_Mag, Atm_color['i'] ))
-    z_Mag   = np.concatenate(( z_Mag, Atm_color['z'] ))
+    bp_Mag  = np.concatenate(( bp_Mag, Atm_color['G_BP'] ))
+    rp_Mag  = np.concatenate(( rp_Mag, Atm_color['G_RP'] ))
+    G_Mag   = np.concatenate(( G_Mag, Atm_color['G'] ))
+    Su_Mag  = np.concatenate(( Su_Mag, Atm_color['Su'] ))
+    Sg_Mag  = np.concatenate(( Sg_Mag, Atm_color['Sg'] ))
+    Sr_Mag  = np.concatenate(( Sr_Mag, Atm_color['Sr'] ))
+    Si_Mag  = np.concatenate(( Si_Mag, Atm_color['Si'] ))
+    Sz_Mag  = np.concatenate(( Sz_Mag, Atm_color['Sz'] ))
+    Pg_Mag  = np.concatenate(( Pg_Mag, Atm_color['Pg'] ))
+    Pr_Mag  = np.concatenate(( Pr_Mag, Atm_color['Pr'] ))
+    Pi_Mag  = np.concatenate(( Pi_Mag, Atm_color['Pi'] ))
+    Pz_Mag  = np.concatenate(( Pz_Mag, Atm_color['Pz'] ))
+    Py_Mag  = np.concatenate(( Py_Mag, Atm_color['Py'] ))
     U_Mag   = np.concatenate(( U_Mag, Atm_color['U'] ))
     B_Mag   = np.concatenate(( B_Mag, Atm_color['B'] ))
     V_Mag   = np.concatenate(( V_Mag, Atm_color['V'] ))
@@ -147,14 +217,28 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
     I_Mag   = np.concatenate(( I_Mag, Atm_color['I'] ))
     J_Mag   = np.concatenate(( J_Mag, Atm_color['J'] ))
     H_Mag   = np.concatenate(( H_Mag, Atm_color['H'] ))
-    K_Mag   = np.concatenate(( K_Mag, Atm_color['K'] ))
+    Ks_Mag  = np.concatenate(( Ks_Mag, Atm_color['Ks'] ))
+    MY_Mag  = np.concatenate(( MY_Mag, Atm_color['MY'] ))
+    MJ_Mag  = np.concatenate(( MJ_Mag, Atm_color['MJ'] ))
+    MH_Mag  = np.concatenate(( MH_Mag, Atm_color['MH'] ))
+    MK_Mag  = np.concatenate(( MK_Mag, Atm_color['MK'] ))
+    W1_Mag  = np.concatenate(( W1_Mag, Atm_color['W1'] ))
+    W2_Mag  = np.concatenate(( W2_Mag, Atm_color['W2'] ))
+    W3_Mag  = np.concatenate(( W3_Mag, Atm_color['W3'] ))
+    W4_Mag  = np.concatenate(( W4_Mag, Atm_color['W4'] ))
+    S36_Mag = np.concatenate(( S36_Mag, Atm_color['S3.6'] ))
+    S45_Mag = np.concatenate(( S45_Mag, Atm_color['S4.5'] ))
+    S58_Mag = np.concatenate(( S58_Mag, Atm_color['S5.8'] ))
+    S80_Mag = np.concatenate(( S80_Mag, Atm_color['S8.0'] ))
+    FUV_Mag = np.concatenate(( FUV_Mag, Atm_color['FUV'] ))
+    NUV_Mag = np.concatenate(( NUV_Mag, Atm_color['NUV'] ))
     
     # read the table for each mass
     # I suppose the color information in this table is from the interpolation
     # of the above table, so I do not need to read it.
     for mass in ['0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','1.2']:
-        Atm_color = Table.read('models/Montreal_atm_grid/Table_Mass_' + mass +
-                               '_'+suffix, format='ascii')
+        Atm_color = Table.read(dirpath+'/Montreal_atm_grid_2019/Table_Mass_' +
+                               mass + '_'+suffix, format='ascii')
         selected  = Atm_color['Teff'] > 10**logteff_logg_grid[0]
         Atm_color = Atm_color[selected]
         
@@ -162,14 +246,19 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
         logteff = np.concatenate(( logteff, np.log10(Atm_color['Teff']) ))
         logg    = np.concatenate(( logg, Atm_color['logg'] ))
         Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
-        bp_Mag  = np.concatenate(( bp_Mag, Atm_color['G_BP/R'] ))
-        rp_Mag  = np.concatenate(( rp_Mag, Atm_color['G_RP/R'] ))
-        G_Mag   = np.concatenate(( G_Mag, Atm_color['G/R'] ))
-        u_Mag   = np.concatenate(( u_Mag, Atm_color['u'] ))
-        g_Mag   = np.concatenate(( g_Mag, Atm_color['g'] ))
-        r_Mag   = np.concatenate(( r_Mag, Atm_color['r'] ))
-        i_Mag   = np.concatenate(( i_Mag, Atm_color['i'] ))
-        z_Mag   = np.concatenate(( z_Mag, Atm_color['z'] ))
+        bp_Mag  = np.concatenate(( bp_Mag, Atm_color['G_BP'] ))
+        rp_Mag  = np.concatenate(( rp_Mag, Atm_color['G_RP'] ))
+        G_Mag   = np.concatenate(( G_Mag, Atm_color['G'] ))
+        Su_Mag  = np.concatenate(( Su_Mag, Atm_color['Su'] ))
+        Sg_Mag  = np.concatenate(( Sg_Mag, Atm_color['Sg'] ))
+        Sr_Mag  = np.concatenate(( Sr_Mag, Atm_color['Sr'] ))
+        Si_Mag  = np.concatenate(( Si_Mag, Atm_color['Si'] ))
+        Sz_Mag  = np.concatenate(( Sz_Mag, Atm_color['Sz'] ))
+        Pg_Mag  = np.concatenate(( Pg_Mag, Atm_color['Pg'] ))
+        Pr_Mag  = np.concatenate(( Pr_Mag, Atm_color['Pr'] ))
+        Pi_Mag  = np.concatenate(( Pi_Mag, Atm_color['Pi'] ))
+        Pz_Mag  = np.concatenate(( Pz_Mag, Atm_color['Pz'] ))
+        Py_Mag  = np.concatenate(( Py_Mag, Atm_color['Py'] ))
         U_Mag   = np.concatenate(( U_Mag, Atm_color['U'] ))
         B_Mag   = np.concatenate(( B_Mag, Atm_color['B'] ))
         V_Mag   = np.concatenate(( V_Mag, Atm_color['V'] ))
@@ -177,7 +266,21 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
         I_Mag   = np.concatenate(( I_Mag, Atm_color['I'] ))
         J_Mag   = np.concatenate(( J_Mag, Atm_color['J'] ))
         H_Mag   = np.concatenate(( H_Mag, Atm_color['H'] ))
-        K_Mag   = np.concatenate(( K_Mag, Atm_color['K'] ))
+        Ks_Mag  = np.concatenate(( Ks_Mag, Atm_color['Ks'] ))
+        MY_Mag  = np.concatenate(( MY_Mag, Atm_color['MY'] ))
+        MJ_Mag  = np.concatenate(( MJ_Mag, Atm_color['MJ'] ))
+        MH_Mag  = np.concatenate(( MH_Mag, Atm_color['MH'] ))
+        MK_Mag  = np.concatenate(( MK_Mag, Atm_color['MK'] ))
+        W1_Mag  = np.concatenate(( W1_Mag, Atm_color['W1'] ))
+        W2_Mag  = np.concatenate(( W2_Mag, Atm_color['W2'] ))
+        W3_Mag  = np.concatenate(( W3_Mag, Atm_color['W3'] ))
+        W4_Mag  = np.concatenate(( W4_Mag, Atm_color['W4'] ))
+        S36_Mag = np.concatenate(( S36_Mag, Atm_color['S3.6'] ))
+        S45_Mag = np.concatenate(( S45_Mag, Atm_color['S4.5'] ))
+        S58_Mag = np.concatenate(( S58_Mag, Atm_color['S5.8'] ))
+        S80_Mag = np.concatenate(( S80_Mag, Atm_color['S8.0'] ))
+        FUV_Mag = np.concatenate(( FUV_Mag, Atm_color['FUV'] ))
+        NUV_Mag = np.concatenate(( NUV_Mag, Atm_color['NUV'] ))
     
     grid_x, grid_y = np.mgrid[logteff_logg_grid[0]:logteff_logg_grid[1]:logteff_logg_grid[2],
                               logteff_logg_grid[3]:logteff_logg_grid[4]:logteff_logg_grid[5]]
@@ -310,8 +413,8 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
                 spec_suffix = '0210'
             else: continue
         else: continue
-        f       = open('models/Fontaine_AllSequences/CO_' + mass + 
-                       spec_suffix)
+        f       = open(dirpath+'/cooling_models/Fontaine_AllSequences/CO_'
+                        + mass + spec_suffix)
         text    = f.read()
         example = ('      1    57674.0025    8.36722799  7.160654E+08 '
                     ' 4.000000E+05  4.042436E+33\n'
@@ -356,7 +459,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
             (float(mass) > mass_separation_2 and
              high_mass_model == 'Fontaine2001')
            ) and atm_type == 'He':
-            Cool = Table.read('models/Montreal_atm_grid/Table_Mass_' + mass +
+            Cool = Table.read(dirpath+'/Montreal_atm_grid_2019/Table_Mass_' + mass +
                                     '_'+spec_suffix2, format='ascii')
             Cool = Cool[::1]
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool))*float(mass) ))
@@ -385,7 +488,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
                                 '0863']
             metallicity = '0001'
         for mass in Renedo_masslist:
-            Cool = Table.read('models/Renedo_2010_DA_CO/wdtracks_z' + 
+            Cool = Table.read(dirpath+'/cooling_models/Renedo_2010_DA_CO/wdtracks_z' + 
                               metallicity + '/wd' + mass + '_z' + metallicity +
                               '.trk', format='ascii') 
             Cool = Cool[::5] #[(Cool['log(TEFF)'] > logteff_min) * (Cool['log(TEFF)'] < logteff_max)]
@@ -409,7 +512,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
     if middle_mass_model == 'Camisassa2017' and atm_type == 'He':
         for mass in ['051','054','058','066','074','087','100']:
             if int(mass)/100 < mass_separation_2:
-                Cool = Table.read('models/Camisassa_2017_DB_CO/Z002/' + mass +
+                Cool = Table.read(dirpath+'/cooling_models/Camisassa_2017_DB_CO/Z002/' + mass +
                                   'DB.trk', format='ascii') 
                 dn = 1
                 if int(mass)/100 > 0.95:
@@ -452,7 +555,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
                 sep = 'nosep'
             else: continue
         else: continue
-        Cool = Table.read('models/BaSTI/COOL' + mass + 'BaSTIfinale' + 
+        Cool = Table.read(dirpath+'/cooling_models/BaSTI/COOL' + mass + 'BaSTIfinale' + 
                spec_suffix2 + sep +'.sdss', format='ascii')
         dn = 1
         if int(mass)/100 > 1.05:
@@ -472,7 +575,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
     # Ultra-massive ONe model (Camisassa et al. 2019)
     if high_mass_model == 'ONe':
         for mass in ['110','116','122','129']:
-            Cool = Table.read('models/ONeWDs/' + mass + '_' + spec_suffix2 +
+            Cool = Table.read(dirpath+'/cooling_models/ONeWDs/' + mass + '_' + spec_suffix2 +
                               '.trk', format='ascii') 
             Cool = Cool[::10] # (Cool['LOG(TEFF)'] > logteff_min) * (Cool['LOG(TEFF)'] < logteff_max)
             #Cool.sort('Log(edad/Myr)')
@@ -528,7 +631,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
 #                              '1.1102','1.151',
 #                              '1.2163','1.2671','1.3075']
         for mass in mesa_masslist:
-            Cool = Table.read('models/MESA_model/' + atm_type + '_atm-M' +
+            Cool = Table.read(dirpath+'/cooling_models/MESA_model/' + atm_type + '_atm-M' +
                               mass + '.dat',
                               format='csv', header_start=1, data_start=2)
             dn = 70
@@ -958,4 +1061,68 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
             'm_agecool_to_color':m_agecool_to_color, 
             'm_agecool_to_Mag':m_agecool_to_Mag}
 
+
+def read_crystallization_fraction(
+    HR_bands=('bp-rp', 'G'),
+    HR_grid=(-0.6, 1.5, 0.002, 8, 18, 0.01),
+    logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01),
+    interp_type_atm='linear', interp_type='linear',
+    for_comparison=False):
+    
+    atm_type = 'H'
+    # make atmosphere grid and mapping: logteff, logg --> bp-rp,  G-Mbol
+    grid_logteff_logg_to_color, logteff_logg_to_color = interp_atm(
+        atm_type, HR_bands[0], 
+        logteff_logg_grid=logteff_logg_grid,
+        interp_type_atm=interp_type_atm)
+    grid_logteff_logg_to_BC, logteff_logg_to_BC = interp_atm(
+        atm_type, HR_bands[1] + '-Mbol', 
+        logteff_logg_grid=logteff_logg_grid,
+        interp_type_atm=interp_type_atm)
+
+    logg        = np.zeros(0)
+    logteff     = np.zeros(0)
+    Mbol        = np.zeros(0)
+    X           = np.zeros(0)
+    for mass in ['020','030','040','050','060','070','080','090','095','100',
+                 '105','110','115','120','125','130']:
+        #f       = open('models/Fontaine_AllSequences/CO_' + mass + '0204')
+        f       = open(dirpath+'/cooling_models/Fontaine_AllSequences/C_' + mass + '0204')
+        text    = f.read()
+        example = ('      1    57674.0025    8.36722799  7.160654E+08 '
+                    ' 4.000000E+05  4.042436E+33\n'
+                    '        7.959696E+00  2.425570E+01  7.231926E+00 '
+                    ' 0.0000000000  0.000000E+00\n'
+                    '        6.019629E+34 -4.010597E+00 -1.991404E+00 '
+                    '-3.055254E-01 -3.055254E-01'
+                  )
+        logg_temp       = []
+        logteff_temp    = []
+        Mbol_temp       = []
+        X_temp          = []
+        l_line          = len(example)
+        #for line in range(len(text)//l_line):
+        for line in range(len(text)//l_line):
+            logteff_temp.append(  np.log10(float(text[line*l_line+9:
+                                                      line*l_line+21])) )
+            logg_temp.append(     float(text[line*l_line+22:line*l_line+35]) )
+            Mbol_temp.append(     4.75 - 
+                                  2.5 * np.log10(float(text[line*l_line+64:
+                                                            line*l_line+76]
+                                                      ) / 3.828e33) )
+            X_temp.append( float(text[line*l_line+79+48:line*l_line+79+60]) )
+        logg        = np.concatenate(( logg, logg_temp ))
+        logteff     = np.concatenate(( logteff, logteff_temp ))
+        Mbol        = np.concatenate(( Mbol, Mbol_temp ))
+        X           = np.concatenate(( X, X_temp ))
+        f.close()
+            
+    # Get Colour/Magnitude for Evolution Tracks
+    Mag         = logteff_logg_to_BC(logteff, logg) + Mbol
+    color       = logteff_logg_to_color(logteff, logg)
+    
+    # Get Parameters on HR Diagram
+    grid_HR_to_X, HR_to_X         = interp_HR_to_para(color, Mag, X, 
+                                                            HR_grid, interp_type)
+    return {'grid_HR_to_X':grid_HR_to_X, 'HR_to_X':HR_to_X}
 
