@@ -11,6 +11,7 @@ from scipy.interpolate import griddata, interp1d
 
 import dynesty
 from dynesty import plotting as dyplot
+from dynesty import utils as dyfunc
 
 dirpath = os.path.dirname(__file__)
 
@@ -184,8 +185,10 @@ class FitSED:
     
     def __init__(self, atm_type, bands = ['G', 'bp', 'rp']):
         self.interpolator = interp_atm(atm_type, bands)
-        self.teff_range = [3165, 125890]
-        self.logg_range = [6.5, 9.6]
+        self.teff_range = [4000, 100_000]
+        self.logg_range = [6.5, 9.5]
+        self.bands = bands
+        self.atm_type = atm_type
         
     def model_sed(self, teff, logg):
         logteff = np.log10(teff)
@@ -198,7 +201,8 @@ class FitSED:
         x[1] = u[1] * (self.logg_range[1] - self.logg_range[0]) + self.logg_range[0]
         return x
     
-    def fit_sed(self, sed, e_sed, make_plot = True, nlive = 100):
+    def fit_sed(self, sed, e_sed, nlive = 250,
+                plot_fit = True, plot_trace = False, plot_corner = False):
         
         def loglike(theta):
             teff, logg = theta
@@ -214,16 +218,39 @@ class FitSED:
                                         nlive = nlive)
         dsampler.run_nested()
         
-        if make_plot:
+        result = dsampler.results
+
+        samples, weights = result.samples, np.exp(result.logwt - result.logz[-1])
+        mean, cov = dyfunc.mean_and_cov(samples, weights)
+
+        
+        if plot_trace:
 
             f = dyplot.traceplot(dsampler.results, show_titles = True, 
                              trace_cmap = 'viridis')
             plt.tight_layout()
-            plt.show()
-            
+        if plot_corner:
+        
             f = dyplot.cornerplot(dsampler.results, show_titles = True)
             
-        return dsampler.results
+        if plot_fit:
+            model = self.model_sed(*mean)
+            
+            ivar = 1 / e_sed**2
+            redchi = np.sum((sed - model)**2 * ivar) / (len(sed) - 2)
+            
+            plt.figure(figsize = (8,5))
+            plt.errorbar(self.bands, sed, yerr = e_sed, linestyle = 'none', capsize = 5, color = 'k')
+            plt.scatter(self.bands, model, color = 'k')
+            plt.text(0.15, 0.3, '$T_{\mathrm{eff}}$ = %i ± %i' %(mean[0], np.sqrt(cov[0,0])), transform = plt.gca().transAxes)
+            plt.text(0.15, 0.25, '$\log{g}$ = %.2f ± %.2f' %(mean[1], np.sqrt(cov[1,1])), transform = plt.gca().transAxes)
+            plt.text(0.15, 0.2, 'atm = %s' %(self.atm_type), transform = plt.gca().transAxes)
+            plt.text(0.15, 0.15, '$\chi_r^2$ = %.2f' %(redchi), transform = plt.gca().transAxes)
+            plt.xlabel('Passband', fontsize = 16)
+            plt.ylabel('$M_{x}$', fontsize = 16)
+            plt.gca().invert_yaxis()
+            
+        return [mean[0], np.sqrt(cov[0,0]), mean[1], np.sqrt(cov[1,1])]
 
 if __name__ == '__main__':
     
@@ -231,12 +258,12 @@ if __name__ == '__main__':
     fitsed = FitSED('H', bands = ['Su', 'Sg', 'Sr', 'Si', 'Sz'])
     
     obs = fitsed.model_sed(15000, 8)
-    obs += 0 * np.random.normal(size = len(obs))
+    obs += 0.01 * np.random.normal(size = len(obs))
     e_obs = 0.01
     
     # plt.plot(obs, 'k.')
     
     # print(fitsed.prior_transform(np.array([np.linspace(0, 1, 100), np.linspace(0, 1, 100)])))
     
-    fitsed.fit_sed(obs, e_obs, nlive = 1000)
+    fitsed.fit_sed(obs, e_obs, nlive = 250)
     
