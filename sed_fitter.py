@@ -202,7 +202,7 @@ class FitSED:
         return x
     
     def fit_sed(self, sed, e_sed, nlive = 250,
-                plot_fit = True, plot_trace = False, plot_corner = False):
+                plot_fit = True, plot_trace = False, plot_corner = False, progress = False):
         
         def loglike(theta):
             teff, logg = theta
@@ -216,12 +216,17 @@ class FitSED:
         
         dsampler = dynesty.NestedSampler(loglike, self.prior_transform, ndim=2,
                                         nlive = nlive)
-        dsampler.run_nested()
+        dsampler.run_nested(print_progress = progress)
         
         result = dsampler.results
 
         samples, weights = result.samples, np.exp(result.logwt - result.logz[-1])
         mean, cov = dyfunc.mean_and_cov(samples, weights)
+
+        model = self.model_sed(*mean)
+            
+        ivar = 1 / e_sed**2
+        redchi = np.sum((sed - model)**2 * ivar) / (len(sed) - 2)
 
         
         if plot_trace:
@@ -234,10 +239,6 @@ class FitSED:
             f = dyplot.cornerplot(dsampler.results, show_titles = True)
             
         if plot_fit:
-            model = self.model_sed(*mean)
-            
-            ivar = 1 / e_sed**2
-            redchi = np.sum((sed - model)**2 * ivar) / (len(sed) - 2)
             
             plt.figure(figsize = (8,5))
             plt.errorbar(self.bands, sed, yerr = e_sed, linestyle = 'none', capsize = 5, color = 'k')
@@ -250,7 +251,7 @@ class FitSED:
             plt.ylabel('$M_{x}$', fontsize = 16)
             plt.gca().invert_yaxis()
             
-        return [mean[0], np.sqrt(cov[0,0]), mean[1], np.sqrt(cov[1,1])]
+        return [mean[0], np.sqrt(cov[0,0]), mean[1], np.sqrt(cov[1,1])], redchi
 
 if __name__ == '__main__':
     

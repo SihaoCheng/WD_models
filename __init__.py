@@ -56,6 +56,7 @@ import numpy as np
 from astropy.table import Table, vstack
 from scipy.interpolate import CloughTocher2DInterpolator, LinearNDInterpolator
 from scipy.interpolate import griddata, interp1d
+from .sed_fitter import *
 
 dirpath = os.path.dirname(__file__)
 
