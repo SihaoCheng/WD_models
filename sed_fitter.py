@@ -1,5 +1,3 @@
-from __init__ import *
-
 import os
 
 import matplotlib.pyplot as plt
@@ -183,51 +181,141 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
 
 class FitSED:
     
-    def __init__(self, atm_type, bands = ['G', 'bp', 'rp']):
+    def __init__(self, atm_type = 'H', bands = ['G', 'bp', 'rp'], to_flux = True):
         self.interpolator = interp_atm(atm_type, bands)
         self.teff_range = [4000, 100_000]
         self.logg_range = [6.5, 9.5]
         self.bands = bands
         self.atm_type = atm_type
+        self.to_flux = to_flux
+        self.zp_dict = dict(
+            J = 31.47e-11,
+            H = 11.38e-11,
+            Ks = 3.961e-11,
+            Su = 859.5e-11,
+            Sg = 466.9e-11,
+            Sr = 278e-11,
+            Si = 185.2e-11,
+            Sz = 131.5e-11,
+            W1 = 8.1787e-12,
+            W2 = 2.415e-12,
+            W3 = 6.5151e-14,
+            W4 = 5.0901e-15,
+            FUV = 6.95e-9,
+            NUV = 2.22e-8,
+            )
+        
+        print('initialized with atm_type = %s and bands = %s' % (atm_type, bands))
+        
+    def mag_to_flux(self, sed):
+        flux_sed = [];
+        for idx,band in enumerate(self.bands):
+            flux_sed.append(self.zp_dict[band] * 10 ** (-0.4 * sed[idx]))
+                
+        return np.log10(np.asarray(flux_sed))
         
     def model_sed(self, teff, logg):
         logteff = np.log10(teff)
         
-        return self.interpolator(logteff, logg)
-    
-    def prior_transform(self, u):
-        x = np.array(u)
-        x[0] = u[0] * (self.teff_range[1] - self.teff_range[0]) + self.teff_range[0]
-        x[1] = u[1] * (self.logg_range[1] - self.logg_range[0]) + self.logg_range[0]
-        return x
-    
-    def fit_sed(self, sed, e_sed, nlive = 250,
-                plot_fit = True, plot_trace = False, plot_corner = False, progress = False):
+        model =  self.interpolator(logteff, logg)
         
-        def loglike(theta):
-            teff, logg = theta
-            model = self.model_sed(teff, logg)
-            ivar = 1 / e_sed**2
-            logchi =  -0.5 * np.sum((sed - model)**2 * ivar)
-            if np.isnan(logchi):
-                return -np.Inf
-            else:
-                return logchi
+        if self.to_flux:
+            model = self.mag_to_flux(model)
+            
+        return model
+    
+    
+    def model_binary_sed(self, teff1, logg1, teff2, logg2):
+        logteff1 = np.log10(teff1)
+        logteff2 = np.log10(teff2)
         
-        dsampler = dynesty.NestedSampler(loglike, self.prior_transform, ndim=2,
+        model1 = self.interpolator(logteff1, logg1)
+        model2 = self.interpolator(logteff2, logg2)
+        
+        model = -2.5 * np.log10(10**(-model1/2.5) + 10**(-model2/2.5))
+        
+        if self.to_flux:
+            model = self.mag_to_flux(model)
+        
+        return model
+                
+    
+    
+    def fit(self, sed, e_sed, nlive = 250, parallax = None, distance = None, binary = False,
+                plot_fit = True, plot_trace = False, plot_corner = False, progress = False,
+                textx = 0.15, textsize = 12):
+        
+        if parallax is not None:
+            sed = sed + 5 * (np.log10(parallax / 1000) + 1)
+            
+        elif distance is not None:
+            sed = sed - 5 * np.log10(distance) + 5
+            
+        if self.to_flux:
+            sed = self.mag_to_flux(sed)
+            
+        if not binary:
+            ndim = 2
+        
+            def loglike(theta):
+                teff, logg = theta
+                model = self.model_sed(teff, logg)
+                ivar = 1 / e_sed**2
+                logchi =  -0.5 * np.sum((sed - model)**2 * ivar)
+                if np.isnan(logchi):
+                    return -np.Inf
+                else:
+                    return logchi
+                
+            def prior_transform(u):
+                x = np.array(u)
+                x[0] = u[0] * (self.teff_range[1] - self.teff_range[0]) + self.teff_range[0]
+                x[1] = u[1] * (self.logg_range[1] - self.logg_range[0]) + self.logg_range[0]
+                return x
+            
+        elif binary:
+            ndim = 4
+            
+            def loglike(theta):
+                teff1, logg1, teff2, logg2 = theta
+                
+                model = self.model_binary_sed(teff1, logg1, teff2, logg2)
+                
+                
+                ivar = 1 / e_sed**2
+                logchi =  -0.5 * np.sum((sed - model)**2 * ivar)
+                if np.isnan(logchi):
+                    return -np.Inf
+                elif teff1 > teff2:
+                    return -np.Inf
+                else:
+                    return logchi
+                
+            def prior_transform(u):
+                x = np.array(u)
+                x[0] = u[0] * (self.teff_range[1] - self.teff_range[0]) + self.teff_range[0]
+                x[1] = u[1] * (self.logg_range[1] - self.logg_range[0]) + self.logg_range[0]
+                x[2] = u[2] * (self.teff_range[1] - self.teff_range[0]) + self.teff_range[0]
+                x[3] = u[3] * (self.logg_range[1] - self.logg_range[0]) + self.logg_range[0]
+                return x
+        
+        dsampler = dynesty.NestedSampler(loglike, prior_transform, ndim=ndim,
                                         nlive = nlive)
         dsampler.run_nested(print_progress = progress)
         
         result = dsampler.results
 
         samples, weights = result.samples, np.exp(result.logwt - result.logz[-1])
-        mean, cov = dyfunc.mean_and_cov(samples, weights)
-
-        model = self.model_sed(*mean)
-            
-        ivar = 1 / e_sed**2
-        redchi = np.sum((sed - model)**2 * ivar) / (len(sed) - 2)
-
+        chis = -2 * np.array([loglike(sample) for sample in result.samples])
+        bestfit = np.argmin(chis)
+        _, cov = dyfunc.mean_and_cov(samples, weights)
+        
+        resampled = dyfunc.resample_equal(result.samples, weights = weights)
+        mean = np.median(resampled, axis = 0)
+        
+        mean = result.samples[bestfit]
+        
+        print(result.samples[bestfit])
         
         if plot_trace:
 
@@ -235,36 +323,79 @@ class FitSED:
                              trace_cmap = 'viridis')
             plt.tight_layout()
         if plot_corner:
+            
+            if binary:
+                f = dyplot.cornerplot(dsampler.results, show_titles = True,
+                                  labels = ['$T_{\mathrm{eff,1}}$', '$\log{g}_1$',
+                                            '$T_{\mathrm{eff,2}}$', '$\log{g}_2$'])
+            if not binary:
+                f = dyplot.cornerplot(dsampler.results, show_titles = True,
+                                  labels = ['$T_{\mathrm{eff}}$', '$\log{g}$'])
+                
+            plt.tight_layout()
+            
+        if not binary:
+
+            model = self.model_sed(*mean)
+            ivar = 1 / e_sed**2
+            redchi = np.sum((sed - model)**2 * ivar) / (len(sed) - ndim)
+            
+            if plot_fit:
+                
+                plt.figure(figsize = (10,5))
+                plt.errorbar(self.bands, 10**sed, yerr = 10**sed * np.log(10) * e_sed, linestyle = 'none', capsize = 5, color = 'k')
+                plt.scatter(self.bands, 10**model, color = 'k')
+                plt.text(textx, 0.35, '$T_{\mathrm{eff}}$ = %i ± %i' %(mean[0], np.sqrt(cov[0,0])), transform = plt.gca().transAxes, fontsize = textsize)
+                plt.text(textx, 0.25, '$\log{g}$ = %.2f ± %.2f' %(mean[1], np.sqrt(cov[1,1])), transform = plt.gca().transAxes, fontsize = textsize)
+                plt.text(textx, 0.15, 'atm = %s' %(self.atm_type), transform = plt.gca().transAxes, fontsize = textsize)
+                plt.text(textx, 0.05, '$\chi_r^2$ = %.2f' %(redchi), transform = plt.gca().transAxes, fontsize = textsize)
+                plt.xlabel('Band', fontsize = 16)
+                plt.ylabel('$f_\lambda\ [erg\ cm^{-2}\ s^{-1}\ \mathrm{\AA}^{-1}]$', fontsize = 16)
+                plt.yscale('log')
+                
+            return [mean[0], np.sqrt(cov[0,0]), mean[1], np.sqrt(cov[1,1])], redchi
         
-            f = dyplot.cornerplot(dsampler.results, show_titles = True)
+        elif binary:
             
-        if plot_fit:
+            model = self.model_binary_sed(mean[0], mean[1], mean[2], mean[3])
             
-            plt.figure(figsize = (8,5))
-            plt.errorbar(self.bands, sed, yerr = e_sed, linestyle = 'none', capsize = 5, color = 'k')
-            plt.scatter(self.bands, model, color = 'k')
-            plt.text(0.15, 0.3, '$T_{\mathrm{eff}}$ = %i ± %i' %(mean[0], np.sqrt(cov[0,0])), transform = plt.gca().transAxes)
-            plt.text(0.15, 0.25, '$\log{g}$ = %.2f ± %.2f' %(mean[1], np.sqrt(cov[1,1])), transform = plt.gca().transAxes)
-            plt.text(0.15, 0.2, 'atm = %s' %(self.atm_type), transform = plt.gca().transAxes)
-            plt.text(0.15, 0.15, '$\chi_r^2$ = %.2f' %(redchi), transform = plt.gca().transAxes)
-            plt.xlabel('Passband', fontsize = 16)
-            plt.ylabel('$M_{x}$', fontsize = 16)
-            plt.gca().invert_yaxis()
+            ivar = 1 / e_sed**2
+            redchi = np.sum((sed - model)**2 * ivar) / (len(sed) - ndim)
             
-        return [mean[0], np.sqrt(cov[0,0]), mean[1], np.sqrt(cov[1,1])], redchi
+            
+            if plot_fit:
+                
+                plt.figure(figsize = (10,5))
+                plt.errorbar(self.bands, 10**sed, yerr = 10**sed * np.log(10) * e_sed, linestyle = 'none', capsize = 5, color = 'k')
+                plt.scatter(self.bands, 10**model, color = 'k')
+                plt.text(textx, 0.45, '$T_{\mathrm{eff,1}}$ = %i ± %i' %(mean[0], np.sqrt(cov[0,0])), transform = plt.gca().transAxes, fontsize = textsize)
+                plt.text(textx, 0.35, '$\log{g}_1$ = %.2f ± %.2f' %(mean[1], np.sqrt(cov[1,1])), transform = plt.gca().transAxes, fontsize = textsize)
+                plt.text(textx, 0.25, '$T_{\mathrm{eff,2}}$ = %i ± %i' %(mean[2], np.sqrt(cov[2,2])), transform = plt.gca().transAxes, fontsize = textsize)
+                plt.text(textx, 0.15, '$\log{g}_2$ = %.2f ± %.2f' %(mean[3], np.sqrt(cov[3,3])), transform = plt.gca().transAxes, fontsize = textsize)
+                #plt.text(0.15, 0.2, 'atm = %s' %(self.atm_type), transform = plt.gca().transAxes, fontsize = 12)
+                plt.text(textx, 0.05, '$\chi_r^2$ = %.2f' %(redchi), transform = plt.gca().transAxes, fontsize = textsize)
+                plt.xlabel('Band', fontsize = 16)
+                plt.ylabel('$f_\lambda\ [erg\ cm^{-2}\ s^{-1}\ \mathrm{\AA}^{-1}]$', fontsize = 16)
+                plt.yscale('log')
+                
+            return [mean[0], np.sqrt(cov[0,0]), mean[1], np.sqrt(cov[1,1]),
+                    mean[2], np.sqrt(cov[2,2]), mean[3], np.sqrt(cov[3,3])], redchi
 
 if __name__ == '__main__':
     
     
-    fitsed = FitSED('H', bands = ['Su', 'Sg', 'Sr', 'Si', 'Sz'])
+    fitsed = FitSED('H', bands = ['FUV', 'NUV', 'Su', 'Sg', 'Sr', 'Si', 'Sz', 'J', 'H', 'Ks', 'W1', 'W2'], to_flux = False)
     
-    obs = fitsed.model_sed(15000, 8)
-    obs += 0.01 * np.random.normal(size = len(obs))
-    e_obs = 0.01
+    obs = fitsed.model_binary_sed(8000, 7.75, 15000, 8)
     
-    # plt.plot(obs, 'k.')
+    fitsed.to_flux = True
     
-    # print(fitsed.prior_transform(np.array([np.linspace(0, 1, 100), np.linspace(0, 1, 100)])))
+    e_obs = np.repeat(0.025, len(obs))
+
     
-    fitsed.fit_sed(obs, e_obs, nlive = 250)
+    fit = fitsed.fit(obs, e_obs, nlive = 250,
+                      binary = True, plot_trace = True, progress = True, plot_corner = True)
+    
+    print(fit)
+
     
