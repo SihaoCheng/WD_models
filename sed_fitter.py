@@ -205,6 +205,23 @@ class FitSED:
             NUV = 2.22e-8,
             )
         
+        self.mean_wl = dict(
+            Su = 3596,
+            Sg = 4639,
+            Sr = 6122,
+            Si = 7439,
+            Sz = 8896,
+            J = 12350,
+            H = 16620,
+            Ks = 21590,
+            FUV = 1550,
+            NUV = 2275,
+            W1 = 33680,
+            W2 = 46180,
+            W3 = 120820,
+            W4 = 221940,
+            )
+        
         print('initialized with atm_type = %s and bands = %s' % (atm_type, bands))
         
     def mag_to_flux(self, sed):
@@ -212,7 +229,7 @@ class FitSED:
         for idx,band in enumerate(self.bands):
             flux_sed.append(self.zp_dict[band] * 10 ** (-0.4 * sed[idx]))
                 
-        return np.log10(np.asarray(flux_sed))
+        return np.asarray(flux_sed)
         
     def model_sed(self, teff, logg):
         logteff = np.log10(teff)
@@ -243,7 +260,7 @@ class FitSED:
     
     def fit(self, sed, e_sed, nlive = 250, parallax = None, distance = None, binary = False,
                 plot_fit = True, plot_trace = False, plot_corner = False, progress = False,
-                textx = 0.15, textsize = 12):
+                textx = 0.025, textsize = 12):
         
         if parallax is not None:
             sed = sed + 5 * (np.log10(parallax / 1000) + 1)
@@ -253,6 +270,7 @@ class FitSED:
             
         if self.to_flux:
             sed = self.mag_to_flux(sed)
+            e_sed = sed * e_sed # magnitude error to flux error
             
         if not binary:
             ndim = 2
@@ -309,13 +327,14 @@ class FitSED:
         chis = -2 * np.array([loglike(sample) for sample in result.samples])
         bestfit = np.argmin(chis)
         _, cov = dyfunc.mean_and_cov(samples, weights)
-        
-        resampled = dyfunc.resample_equal(result.samples, weights = weights)
-        mean = np.median(resampled, axis = 0)
-        
+                
         mean = result.samples[bestfit]
         
         print(result.samples[bestfit])
+        
+        bandwls = [];
+        for band in self.bands:
+            bandwls.append(self.mean_wl[band])
         
         if plot_trace:
 
@@ -343,13 +362,13 @@ class FitSED:
             if plot_fit:
                 
                 plt.figure(figsize = (10,5))
-                plt.errorbar(self.bands, 10**sed, yerr = 10**sed * np.log(10) * e_sed, linestyle = 'none', capsize = 5, color = 'k')
-                plt.scatter(self.bands, 10**model, color = 'k')
+                plt.errorbar(bandwls, sed, yerr = e_sed, linestyle = 'none', capsize = 5, color = 'k')
+                plt.scatter(bandwls, model, color = 'k')
                 plt.text(textx, 0.35, '$T_{\mathrm{eff}}$ = %i ± %i' %(mean[0], np.sqrt(cov[0,0])), transform = plt.gca().transAxes, fontsize = textsize)
                 plt.text(textx, 0.25, '$\log{g}$ = %.2f ± %.2f' %(mean[1], np.sqrt(cov[1,1])), transform = plt.gca().transAxes, fontsize = textsize)
                 plt.text(textx, 0.15, 'atm = %s' %(self.atm_type), transform = plt.gca().transAxes, fontsize = textsize)
                 plt.text(textx, 0.05, '$\chi_r^2$ = %.2f' %(redchi), transform = plt.gca().transAxes, fontsize = textsize)
-                plt.xlabel('Band', fontsize = 16)
+                plt.xlabel('Wavelength ($\mathrm{\AA}$', fontsize = 16)
                 plt.ylabel('$f_\lambda\ [erg\ cm^{-2}\ s^{-1}\ \mathrm{\AA}^{-1}]$', fontsize = 16)
                 plt.yscale('log')
                 
@@ -366,15 +385,15 @@ class FitSED:
             if plot_fit:
                 
                 plt.figure(figsize = (10,5))
-                plt.errorbar(self.bands, 10**sed, yerr = 10**sed * np.log(10) * e_sed, linestyle = 'none', capsize = 5, color = 'k')
-                plt.scatter(self.bands, 10**model, color = 'k')
+                plt.errorbar(bandwls, sed, yerr = e_sed, linestyle = 'none', capsize = 5, color = 'k')
+                plt.scatter(bandwls, model, color = 'k')
                 plt.text(textx, 0.45, '$T_{\mathrm{eff,1}}$ = %i ± %i' %(mean[0], np.sqrt(cov[0,0])), transform = plt.gca().transAxes, fontsize = textsize)
                 plt.text(textx, 0.35, '$\log{g}_1$ = %.2f ± %.2f' %(mean[1], np.sqrt(cov[1,1])), transform = plt.gca().transAxes, fontsize = textsize)
                 plt.text(textx, 0.25, '$T_{\mathrm{eff,2}}$ = %i ± %i' %(mean[2], np.sqrt(cov[2,2])), transform = plt.gca().transAxes, fontsize = textsize)
                 plt.text(textx, 0.15, '$\log{g}_2$ = %.2f ± %.2f' %(mean[3], np.sqrt(cov[3,3])), transform = plt.gca().transAxes, fontsize = textsize)
                 #plt.text(0.15, 0.2, 'atm = %s' %(self.atm_type), transform = plt.gca().transAxes, fontsize = 12)
                 plt.text(textx, 0.05, '$\chi_r^2$ = %.2f' %(redchi), transform = plt.gca().transAxes, fontsize = textsize)
-                plt.xlabel('Band', fontsize = 16)
+                plt.xlabel('Wavelength ($\mathrm{\AA}$)', fontsize = 16)
                 plt.ylabel('$f_\lambda\ [erg\ cm^{-2}\ s^{-1}\ \mathrm{\AA}^{-1}]$', fontsize = 16)
                 plt.yscale('log')
                 
