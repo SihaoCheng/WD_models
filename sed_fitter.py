@@ -233,14 +233,17 @@ class FitSED:
                 
         return np.asarray(flux_sed)
         
-    def model_sed(self, teff, logg, plx):
+    def model_sed(self, teff, logg, plx, to_flux = None):
+        if to_flux is None:
+            to_flux = self.to_flux
+            
         logteff = np.log10(teff)
         
         model =  self.interpolator(logteff, logg)
         
         model = model - 5 * (np.log10(plx / 1000) + 1)
         
-        if self.to_flux:
+        if to_flux:
             model = self.mag_to_flux(model)
             
         return model
@@ -264,7 +267,7 @@ class FitSED:
                 
     
     
-    def fit(self, sed, e_sed, parallax = [100, 1], nlive = 250, distance = None, binary = False,
+    def fit(self, sed, e_sed, parallax = [100, 0.001], nlive = 250, distance = None, binary = False,
                 plot_fit = True, plot_trace = False, plot_corner = False, progress = False,
                 textx = 0.025, textsize = 12):
         
@@ -323,6 +326,8 @@ class FitSED:
                 x[4] = parallax[1] * t
                 x[4] += parallax[0]
                 return x
+            
+        ########## DYNESTY ###################
         
         dsampler = dynesty.NestedSampler(loglike, prior_transform, ndim=ndim,
                                         nlive = nlive)
@@ -333,7 +338,8 @@ class FitSED:
         samples, weights = result.samples, np.exp(result.logwt - result.logz[-1])
         chis = -2 * np.array([loglike(sample) for sample in result.samples])
         bestfit = np.argmin(chis)
-        _, cov = dyfunc.mean_and_cov(samples, weights)
+        resampled = dyfunc.resample_equal(samples, weights)
+        cov = np.var(resampled, axis = 0)
                 
         mean = result.samples[bestfit]
         
@@ -342,6 +348,10 @@ class FitSED:
         bandwls = [];
         for band in self.bands:
             bandwls.append(self.mean_wl[band])
+            
+            
+            
+        ########## PLOTTING #################
         
         if plot_trace:
 
@@ -371,15 +381,15 @@ class FitSED:
                 plt.figure(figsize = (10,5))
                 plt.errorbar(bandwls, sed, yerr = e_sed, linestyle = 'none', capsize = 5, color = 'k')
                 plt.scatter(bandwls, model, color = 'k')
-                plt.text(textx, 0.35, '$T_{\mathrm{eff}}$ = %i ± %i' %(mean[0], np.sqrt(cov[0,0])), transform = plt.gca().transAxes, fontsize = textsize)
-                plt.text(textx, 0.25, '$\log{g}$ = %.2f ± %.2f' %(mean[1], np.sqrt(cov[1,1])), transform = plt.gca().transAxes, fontsize = textsize)
+                plt.text(textx, 0.35, '$T_{\mathrm{eff}}$ = %i ± %i' %(mean[0], np.sqrt(cov[0])), transform = plt.gca().transAxes, fontsize = textsize)
+                plt.text(textx, 0.25, '$\log{g}$ = %.2f ± %.2f' %(mean[1], np.sqrt(cov[1])), transform = plt.gca().transAxes, fontsize = textsize)
                 plt.text(textx, 0.15, 'atm = %s' %(self.atm_type), transform = plt.gca().transAxes, fontsize = textsize)
                 plt.text(textx, 0.05, '$\chi_r^2$ = %.2f' %(redchi), transform = plt.gca().transAxes, fontsize = textsize)
                 plt.xlabel('Wavelength ($\mathrm{\AA}$', fontsize = 16)
                 plt.ylabel('$f_\lambda\ [erg\ cm^{-2}\ s^{-1}\ \mathrm{\AA}^{-1}]$', fontsize = 16)
                 plt.yscale('log')
                 
-            return [mean[0], np.sqrt(cov[0,0]), mean[1], np.sqrt(cov[1,1])], redchi
+            return [mean[0], np.sqrt(cov[0]), mean[1], np.sqrt(cov[1])], redchi
         
         elif binary:
             
@@ -394,18 +404,18 @@ class FitSED:
                 plt.figure(figsize = (10,5))
                 plt.errorbar(bandwls, sed, yerr = e_sed, linestyle = 'none', capsize = 5, color = 'k')
                 plt.scatter(bandwls, model, color = 'k')
-                plt.text(textx, 0.45, '$T_{\mathrm{eff,1}}$ = %i ± %i' %(mean[0], np.sqrt(cov[0,0])), transform = plt.gca().transAxes, fontsize = textsize)
-                plt.text(textx, 0.35, '$\log{g}_1$ = %.2f ± %.2f' %(mean[1], np.sqrt(cov[1,1])), transform = plt.gca().transAxes, fontsize = textsize)
-                plt.text(textx, 0.25, '$T_{\mathrm{eff,2}}$ = %i ± %i' %(mean[2], np.sqrt(cov[2,2])), transform = plt.gca().transAxes, fontsize = textsize)
-                plt.text(textx, 0.15, '$\log{g}_2$ = %.2f ± %.2f' %(mean[3], np.sqrt(cov[3,3])), transform = plt.gca().transAxes, fontsize = textsize)
+                plt.text(textx, 0.45, '$T_{\mathrm{eff,1}}$ = %i ± %i' %(mean[0], np.sqrt(cov[0])), transform = plt.gca().transAxes, fontsize = textsize)
+                plt.text(textx, 0.35, '$\log{g}_1$ = %.2f ± %.2f' %(mean[1], np.sqrt(cov[1])), transform = plt.gca().transAxes, fontsize = textsize)
+                plt.text(textx, 0.25, '$T_{\mathrm{eff,2}}$ = %i ± %i' %(mean[2], np.sqrt(cov[2])), transform = plt.gca().transAxes, fontsize = textsize)
+                plt.text(textx, 0.15, '$\log{g}_2$ = %.2f ± %.2f' %(mean[3], np.sqrt(cov[3])), transform = plt.gca().transAxes, fontsize = textsize)
                 #plt.text(0.15, 0.2, 'atm = %s' %(self.atm_type), transform = plt.gca().transAxes, fontsize = 12)
                 plt.text(textx, 0.05, '$\chi_r^2$ = %.2f' %(redchi), transform = plt.gca().transAxes, fontsize = textsize)
                 plt.xlabel('Wavelength ($\mathrm{\AA}$)', fontsize = 16)
                 plt.ylabel('$f_\lambda\ [erg\ cm^{-2}\ s^{-1}\ \mathrm{\AA}^{-1}]$', fontsize = 16)
                 plt.yscale('log')
                 
-            return [mean[0], np.sqrt(cov[0,0]), mean[1], np.sqrt(cov[1,1]),
-                    mean[2], np.sqrt(cov[2,2]), mean[3], np.sqrt(cov[3,3])], redchi
+            return [mean[0], np.sqrt(cov[0]), mean[1], np.sqrt(cov[1]),
+                    mean[2], np.sqrt(cov[2]), mean[3], np.sqrt(cov[3])], redchi
 
 if __name__ == '__main__':
     
@@ -415,16 +425,17 @@ if __name__ == '__main__':
     
     #obs = fitsed.model_binary_sed(8000, 7.75, 15000, 8, 12)
    
-    obs = fitsed.model_sed(15000, 7.75, 10)
+    obs = fitsed.model_sed(7000, 7.75, 10)
     
     print(obs)
     
     fitsed.to_flux = True
     
-    e_obs = np.repeat(0.025, len(obs))
+    e_obs = np.repeat(0.05, len(obs))
+    obs = obs + e_obs * np.random.normal(size = len(obs))
 
     
-    fit = fitsed.fit(obs, e_obs, (10, 2),nlive = 250,
+    fit = fitsed.fit(obs, e_obs, (10, 0.1),nlive = 100,
                       binary = False, plot_trace = True, progress = True, plot_corner = True)
     
     # print(fit)
