@@ -52,6 +52,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import warnings
 
 from astropy.table import Table, vstack
 from scipy.interpolate import CloughTocher2DInterpolator, LinearNDInterpolator
@@ -66,17 +67,172 @@ dirpath = os.path.dirname(__file__)
 #
 #-------------------------------------------------------------------------------
 
-# define the initial-final mass relation for calculating the total age for 
-# some models
-IFMR        = interp1d((0.19, 0.4, 0.50, 0.72, 0.87, 1.25, 1.4),
+
+def IFMR(m_WD, model='Cummings18', fill_value=0):
+    '''
+    Define the initial-final mass relation for calculating the total age for 
+    the (semi-)empirical models:
+    
+    1. Catalan et al. 2008
+    2. Catalan et al. 2008 (two-part)
+    3. Salaris et al. 2009
+    4. Salaris et al. 2009 (two-part)
+    5. Williams, Bolte & Koester 2009
+    6. Kalirai et al. 2009
+    7. Kalirai et al. 2009 (two-part)
+    8. Cummings et al. 2018
+    9. El-Badry et al. 2018
+
+    '''
+
+    m_WD = np.asarray(m_WD).reshape(-1)
+
+    # Catalan et al. 2008 [m_i = 1.5-6.4]
+    if model == 'Catalan08':
+        if (m_WD < 0.5741).any():
+            warnings.warn('WD mass is below the minimum grid mass, the ' 
+                'MS mass is found by extrapolation.')
+        if (m_WD > 1.1195).any():
+            warnings.warn('WD mass is above the maximum grid mass, the ' 
+                'MS mass is found by extrapolation.')
+
+        m_MS = (m_WD - 0.384) / 0.117
+
+        if fill_value != 'extrapolate':
+            m_MS[m_WD < 0.5741] = fill_value
+            m_MS[m_WD > 1.1195] = fill_value
+
+    # Catalan et al. 2008 (two-part) [m_i = 1.5-6.4] break point at 2.707 solar mass
+    elif model == 'Catalan08b':
+        if (m_WD < 0.573).any():
+            warnings.warn('WD mass is below the minimum grid mass, the ' 
+                'MS mass is found by extrapolation.')
+        if (m_WD > 1.1948).any():
+            warnings.warn('WD mass is above the maximum grid mass, the ' 
+                'MS mass is found by extrapolation.')
+
+        mask = (m_WD >= 0.68890243)
+        m_MS = (m_WD - 0.429) / 0.096
+        m_MS[mask] = (m_WD[mask] - 0.318) / 0.137
+
+        if fill_value != 'extrapolate':
+            m_MS[m_WD < 0.573] = fill_value
+            m_MS[m_WD > 1.1948] = fill_value
+
+    # Salaris et al. 2009 [m_i = 1.7-8.5]
+    elif model == 'Salaris09':
+        if (m_WD < 0.6088).any():
+            warnings.warn('WD mass is below the minimum grid mass, the ' 
+                'MS mass is found by extrapolation.')
+        if (m_WD > 1.18).any():
+            warnings.warn('WD mass is above the maximum grid mass, the ' 
+                'MS mass is found by extrapolation.')
+
+        m_MS = (m_WD - 0.466) / 0.084
+
+        if fill_value != 'extrapolate':
+            m_MS[m_WD < 0.6088] = fill_value
+            m_MS[m_WD > 1.18] = fill_value
+
+    # Salaris et al. 2009 (two-part) [m_i = 1.7-8.5] breakpoint at 4.0 solar mass
+    elif model == 'Salaris09b':
+        if (m_WD < 0.5588).any():
+            warnings.warn('WD mass is below the minimum grid mass, the ' 
+                'MS mass is found by extrapolation.')
+        if (m_WD > 1.0785).any():
+            warnings.warn('WD mass is above the maximum grid mass, the ' 
+                'MS mass is found by extrapolation.')
+
+        mask = m_WD >= 0.867
+        m_MS = (m_WD - 0.331) / 0.134
+        m_MS[mask] = (m_WD[mask] - 0.679) / 0.047
+
+        if fill_value != 'extrapolate':
+            m_MS[m_WD < 0.5588] = fill_value
+            m_MS[m_WD > 1.0785] = fill_value
+
+    # Williams, Bolte & Koester (2009) [m_i = 1.25-8.0]
+    elif model == 'Williams09':
+        if (m_WD < 0.50025).any():
+            warnings.warn('WD mass is below the minimum grid mass, the ' 
+                'MS mass is found by extrapolation.')
+        if (m_WD > 1.371).any():
+            warnings.warn('WD mass is above the maximum grid mass, the ' 
+                'MS mass is found by extrapolation.')
+
+        m_MS = (m_WD - 0.339) / 0.129
+
+        if fill_value != 'extrapolate':
+            m_MS[m_WD < 0.50025] = fill_value
+            m_MS[m_WD > 1.371] = fill_value
+
+    # Kalirai et al. (2009) [m_f = 1.1-6.5]
+    elif model == 'Kalirai09':
+        if (m_WD < 0.5741).any():
+            warnings.warn('WD mass is below the minimum grid mass, the ' 
+                'MS mass is found by extrapolation.')
+        if (m_WD > 1.1195).any():
+            warnings.warn('WD mass is above the maximum grid mass, the ' 
+                'MS mass is found by extrapolation.')
+
+        m_MS = (m_WD - 0.428) / 0.109
+
+        if fill_value != 'extrapolate':
+            m_MS[m_WD < 0.5741] = fill_value
+            m_MS[m_WD > 1.1195] = fill_value
+
+    # Kalirai et al. (2009) (including M4) [m_i = 1.1-6.5]
+    elif model == 'Kalirai09b':
+        if (m_WD < 0.5741).any():
+            warnings.warn('One or more WD mass is below the minimum grid mass, ' 
+                    'the MS mass is found by extrapolation.')
+        if (m_WD > 1.1195).any():
+            warnings.warn('One or more WD mass is above the maximum grid mass, ' 
+                    'the MS mass is found by extrapolation.')
+
+        m_MS = (m_WD - 0.463) / 0.101
+
+        if fill_value != 'extrapolate':
+            m_MS[m_WD < 0.5741] = fill_value
+            m_MS[m_WD > 1.1195] = fill_value
+
+    # Cummings et al. (2018)
+    elif model == 'Cummings18':
+        if fill_value == 'extrapolate':
+            if (m_WD < 0.19).any():
+                warnings.warn('WD mass is below the minimum grid mass, the MS ' 
+                    'mass is found by extrapolation.')
+            if (m_WD > 1.4).any():
+                warnings.warn('WD mass is above the maximum grid mass, the MS ' 
+                    'mass is found by extrapolation.')
+        m_MS = interp1d((0.19, 0.4, 0.50, 0.72, 0.87, 1.25, 1.4),
                        (0.23, 0.5, 0.95, 2.8, 3.65, 8.2, 10),
-                       fill_value = 0, bounds_error=False)
-def MS_age(m_WD):
+                       fill_value=fill_value, bounds_error=False)(m_WD)
+
+    # El-Badry et al. (2018) [m_i = 0.95 - 8.]
+    elif model == 'ElBadry18':
+        if fill_value == 'extrapolate':
+            if (m_WD < 0.5).any():
+                warnings.warn('WD mass is below the minimum grid mass, the MS ' 
+                    'mass is found by extrapolation.')
+            if (m_WD > 1.37).any():
+                warnings.warn('WD mass is above the maximum grid mass, the MS ' 
+                    'mass is found by extrapolation.')
+        m_MS = interp1d((0.5, 0.67, 0.81, 0.91, 1.37),
+                       (0.95, 2.75, 3.54, 5.21, 8.),
+                       fill_value=fill_value, bounds_error=False)(m_WD)
+
+    else:
+        raise ValueError('Please choose from a valid model.')
+
+    return m_MS
+
+def MS_age(m_WD, model='Cummings18', fill_value=0.):
     with np.errstate(divide='ignore', invalid='ignore'):
-#        result = ( 10**9.38 * IFMR(m_WD)**-2.16 ) * (IFMR(m_WD) >= 2.3) + \
-#            ( 10**10 * IFMR(m_WD)**-3.5 ) * (IFMR(m_WD) < 2.3)
+#        result = ( 10**9.38 * IFMR(m_WD, model, fill_value)**-2.16 ) * (IFMR(m_WD, model, fill_value) >= 2.3) + \
+#            ( 10**10 * IFMR(m_WD, model, fill_value)**-3.5 ) * (IFMR(m_WD, model, fill_value) < 2.3)
 # we update this pre-WD lifetime estimate on Oct 6, 2019.
-        mi = IFMR(m_WD)
+        mi = IFMR(m_WD, model, fill_value)
         if mi <= 2.11:
             life0 = 10**(13.37807 - 6.292517 * mi + 4.451837 * mi**2
                     - 1.773315 * mi**3 + 0.2944963 * mi**4)
@@ -302,7 +458,8 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
 
 
 def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
-                        atm_type, logg_func=None, for_comparison=False):
+                        atm_type, logg_func=None, for_comparison=False,
+                        ifmr_model='Cummings18', fill_value=0.):
     """ Read a set of cooling tracks
     
     This function reads the cooling models and stack together the data points
@@ -434,7 +591,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
                                                       line*l_line+21])) )
             logg_temp.append(     float(text[line*l_line+22:line*l_line+35]) )
             age_temp.append(      float(text[line*l_line+48:line*l_line+63]) +
-                                  MS_age(int(mass)/100) )
+                                  float(MS_age(int(mass)/100, ifmr_model, fill_value)) )
             age_cool_temp.append( float(text[line*l_line+48:line*l_line+63]) )
             Mbol_temp.append(     4.75 - 
                                   2.5 * np.log10(float(text[line*l_line+64:
@@ -465,7 +622,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool))*float(mass) ))
             logg        = np.concatenate(( logg, Cool['logg'] ))
             age         = np.concatenate(( age, Cool['Age'] +
-                                                MS_age(float(mass)) ))
+                                                MS_age(float(mass), ifmr_model, fill_value) ))
             age_cool    = np.concatenate(( age_cool, Cool['Age'] ))
             logteff     = np.concatenate(( logteff, np.log10(Cool['Teff']) ))
             Mbol        = np.concatenate(( Mbol, Cool['Mbol'] ))
@@ -495,7 +652,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
             mass_array  = np.concatenate(( mass_array, np.ones(len(Cool))*int(mass)/1000 ))
             logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
             age         = np.concatenate(( age, Cool['age/Myr'] * 1e6 +
-                                                MS_age(int(mass)/1000) ))
+                                                MS_age(int(mass)/1000, ifmr_model, fill_value) ))
             age_cool    = np.concatenate(( age_cool, Cool['age/Myr'] * 1e6 ))
             logteff     = np.concatenate(( logteff, Cool['log(TEFF)'] ))
             Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['log(L)'] ))
@@ -566,7 +723,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
         mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
         logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
         age         = np.concatenate(( age, 10**Cool['log(t)'] +
-                                            MS_age(int(mass)/100) ))
+                                            MS_age(int(mass)/100), ifmr_model, fill_value ))
         age_cool    = np.concatenate(( age_cool, 10**Cool['log(t)'] ))
         logteff     = np.concatenate(( logteff, Cool['log(Teff)'] ))
         Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['log(L/Lo)'] ))
@@ -583,7 +740,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
             logg        = np.concatenate(( logg, Cool['Log(grav)'] ))
             age         = np.concatenate(( age, (10**Cool['Log(edad/Myr)'] -
                                                  10**Cool['Log(edad/Myr)'][0]) * 1e6 + \
-                                                 MS_age(int(mass)/100) ))
+                                                 MS_age(int(mass)/100), ifmr_model, fill_value ))
             age_cool    = np.concatenate(( age_cool, (10**Cool['Log(edad/Myr)'] -
                                                       10**Cool['Log(edad/Myr)'][0]) * 1e6 ))
             logteff     = np.concatenate(( logteff, Cool['LOG(TEFF)'] ))
@@ -608,7 +765,7 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
 #            #Cool.sort('Log(edad/Myr)')
 #            mass_array  = np.concatenate(( mass_array, np.ones(len(Cool)) * int(mass)/100 ))
 #            logg        = np.concatenate(( logg, np.ones(len(Cool)) * 9.4999 ))
-#            age         = np.concatenate(( age, Cool['col7']* 1e6 + MS_age(int(mass)/100) ))
+#            age         = np.concatenate(( age, Cool['col7']* 1e6 + MS_age(int(mass)/100), ifmr_model, fill_value ))
 #            age_cool    = np.concatenate(( age_cool, Cool['col7'] * 1e6 ))
 #            logteff     = np.concatenate(( logteff, Cool['col2'] ))
 #            Mbol        = np.concatenate(( Mbol, 4.75 - 2.5 * Cool['col1'] ))
@@ -796,7 +953,7 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
                HR_grid=(-0.6, 1.5, 0.002, 8, 18, 0.01),
                logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01),
                interp_type_atm='linear', interp_type='linear',
-               for_comparison=False):
+               for_comparison=False, ifmr_model='Cummings18', fill_value=0.):
     """ Load a set of cooling tracks and interpolate the HR diagram mapping
     
     This function reads a set of cooling tracks assigned by the user and returns
@@ -1009,7 +1166,8 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
                     = read_cooling_tracks(low_mass_model,
                                           middle_mass_model,
                                           high_mass_model,
-                                          atm_type, logg_func, for_comparison)
+                                          atm_type, logg_func, for_comparison,
+                        ifmr_model, fill_value)
 
     # Get Colour/Magnitude for Evolution Tracks
     Mag         = logteff_logg_to_BC(logteff, logg) + Mbol
