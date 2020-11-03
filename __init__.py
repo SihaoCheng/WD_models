@@ -87,7 +87,7 @@ def IFMR(m_WD, model='Cummings18', fill_value=0, mass=None):
                 8. Cummings et al. 2018
                 9. El-Badry et al. 2018
                 10. Manual
-        fill_value: numeric or str (Default: 0)
+        fill_value: numeric, str or list of size 2 (Default: 0)
             Value to fill if m_WD is outside the interpolated grid. Set to
             'extrapolate' to return the extrapolated values.
         mass: list or array of 2 lists or arrays
@@ -102,6 +102,20 @@ def IFMR(m_WD, model='Cummings18', fill_value=0, mass=None):
 
     m_WD = np.asarray(m_WD).reshape(-1)
 
+    if isinstance(fill_value, list):
+        if len(fill_value) != 2:
+            raise ValueError('list has to of size 2.')
+        fill_value_low = fill_value[0]
+        fill_value_high = fill_value[1]
+    elif np.isfinite(fill_value):
+        fill_value_low = fill_value
+        fill_value_high = fill_value
+    elif fill_value == 'extrapolate':
+        pass
+    else:
+        raise ValueError('fill_value has to be numeric, \'extrapolate\' or '
+                         'list of size 2.')
+
     # Catalan et al. 2008 [m_i = 1.5-6.4]
     if model == 'Catalan08':
         if (m_WD < 0.5741).any():
@@ -114,8 +128,8 @@ def IFMR(m_WD, model='Cummings18', fill_value=0, mass=None):
         m_MS = (m_WD - 0.384) / 0.117
 
         if fill_value != 'extrapolate':
-            m_MS[m_WD < 0.5741] = fill_value
-            m_MS[m_WD > 1.1195] = fill_value
+            m_MS[m_WD < 0.5741] = fill_value_low
+            m_MS[m_WD > 1.1195] = fill_value_high
 
     # Catalan et al. 2008 (two-part) [m_i = 1.5-6.4] break point at 2.707 solar mass
     elif model == 'Catalan08b':
@@ -131,8 +145,8 @@ def IFMR(m_WD, model='Cummings18', fill_value=0, mass=None):
         m_MS[mask] = (m_WD[mask] - 0.318) / 0.137
 
         if fill_value != 'extrapolate':
-            m_MS[m_WD < 0.573] = fill_value
-            m_MS[m_WD > 1.1948] = fill_value
+            m_MS[m_WD < 0.573] = fill_value_low
+            m_MS[m_WD > 1.1948] = fill_value_high
 
     # Salaris et al. 2009 [m_i = 1.7-8.5]
     elif model == 'Salaris09':
@@ -146,8 +160,8 @@ def IFMR(m_WD, model='Cummings18', fill_value=0, mass=None):
         m_MS = (m_WD - 0.466) / 0.084
 
         if fill_value != 'extrapolate':
-            m_MS[m_WD < 0.6088] = fill_value
-            m_MS[m_WD > 1.18] = fill_value
+            m_MS[m_WD < 0.6088] = fill_value_low
+            m_MS[m_WD > 1.18] = fill_value_high
 
     # Salaris et al. 2009 (two-part) [m_i = 1.7-8.5] breakpoint at 4.0 solar mass
     elif model == 'Salaris09b':
@@ -163,8 +177,8 @@ def IFMR(m_WD, model='Cummings18', fill_value=0, mass=None):
         m_MS[mask] = (m_WD[mask] - 0.679) / 0.047
 
         if fill_value != 'extrapolate':
-            m_MS[m_WD < 0.5588] = fill_value
-            m_MS[m_WD > 1.0785] = fill_value
+            m_MS[m_WD < 0.5588] = fill_value_low
+            m_MS[m_WD > 1.0785] = fill_value_high
 
     # Williams, Bolte & Koester (2009) [m_i = 1.25-8.0]
     elif model == 'Williams09':
@@ -178,8 +192,8 @@ def IFMR(m_WD, model='Cummings18', fill_value=0, mass=None):
         m_MS = (m_WD - 0.339) / 0.129
 
         if fill_value != 'extrapolate':
-            m_MS[m_WD < 0.50025] = fill_value
-            m_MS[m_WD > 1.371] = fill_value
+            m_MS[m_WD < 0.50025] = fill_value_low
+            m_MS[m_WD > 1.371] = fill_value_high
 
     # Kalirai et al. (2009) [m_f = 1.1-6.5]
     elif model == 'Kalirai09':
@@ -193,8 +207,8 @@ def IFMR(m_WD, model='Cummings18', fill_value=0, mass=None):
         m_MS = (m_WD - 0.428) / 0.109
 
         if fill_value != 'extrapolate':
-            m_MS[m_WD < 0.5741] = fill_value
-            m_MS[m_WD > 1.1195] = fill_value
+            m_MS[m_WD < 0.5741] = fill_value_low
+            m_MS[m_WD > 1.1195] = fill_value_high
 
     # Kalirai et al. (2009) (including M4) [m_i = 1.1-6.5]
     elif model == 'Kalirai09b':
@@ -210,8 +224,8 @@ def IFMR(m_WD, model='Cummings18', fill_value=0, mass=None):
         m_MS = (m_WD - 0.463) / 0.101
 
         if fill_value != 'extrapolate':
-            m_MS[m_WD < 0.5741] = fill_value
-            m_MS[m_WD > 1.1195] = fill_value
+            m_MS[m_WD < 0.5741] = fill_value_low
+            m_MS[m_WD > 1.1195] = fill_value_high
 
     # Cummings et al. (2018)
     elif model == 'Cummings18':
@@ -224,7 +238,7 @@ def IFMR(m_WD, model='Cummings18', fill_value=0, mass=None):
                               'mass is found by extrapolation.')
         m_MS = interp1d((0.19, 0.4, 0.50, 0.72, 0.87, 1.25, 1.4),
                         (0.23, 0.5, 0.95, 2.8, 3.65, 8.2, 10),
-                        fill_value=fill_value,
+                        fill_value=[fill_value_low, fill_value_high],
                         bounds_error=False)(m_WD)
 
     # El-Badry et al. (2018) [m_i = 0.95 - 8.]
@@ -238,18 +252,21 @@ def IFMR(m_WD, model='Cummings18', fill_value=0, mass=None):
                               'mass is found by extrapolation.')
         m_MS = interp1d((0.5, 0.67, 0.81, 0.91, 1.37),
                         (0.95, 2.75, 3.54, 5.21, 8.),
-                        fill_value=fill_value,
+                        fill_value=[fill_value_low, fill_value_high],
                         bounds_error=False)(m_WD)
 
     # Manual input
     elif model == 'manual':
         m_i = mass[0]
         m_f = mass[1]
-        m_MS = interp1d(m_f, m_i, fill_value=fill_value,
+        m_MS = interp1d(m_f, m_i, fill_value=[fill_value_low, fill_value_high],
                         bounds_error=False)(m_WD)
 
     else:
         raise ValueError('Please choose from a valid IFMR model.')
+
+    # enforce m_MS is at least as large as m_WD
+    m_MS[m_MS<m_WD] = m_WD[[m_MS<m_WD]]
 
     return m_MS
 
