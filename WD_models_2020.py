@@ -46,19 +46,6 @@ guess for the photometric behaviour around log(g)=9.5. If the user is
 unconfortable with this extrapolation, he/she can import the old version:
 `from WD_models import WD_models_old`. 
 
-Feb 22, 2021:
-I updated the synthetic color table with Gaia EDR3 passbands. These updates 
-directly came from the recent (Jan 2021) updates of the Montreal atmosphere 
-models: http://www.astro.umontreal.ca/~bergeron/CoolingModels/. Note that the
-Gaia filter names are different (G2, G2_BP, G3, etc), see the README document
-or the documentation in this script. 
-In this updates, the Montreal group provides data for M=1.1 and M=1.3Msun, 
-the latter corresponds to roughly log(g)= 9.2-9.3. I therefore used these 
-data as a reasonable guess for the photometric behaviour around log(g)=9.5, 
-similar to last version.
-Last version is stored as 'WD_models_old.py'. To use it, please import:
-`from WD_models import WD_models_2020`. 
-
 """
 
 import os
@@ -120,8 +107,7 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
             See the "Synthetic color" section on http://www.astro.umontreal.ca/~bergeron/CoolingModels/
         color:              String. {'G-Mbol', 'bp-rp', 'V-Mbol', 'u-g', 'B-z', etc.}
             The target color of the mapping. Any two bands between 
-            Gaia EDR3: G3, bp3, rp3
-            Gaia DR2: G2, bp2, rp2
+            Gaia: G, bp, rp
             SDSS: Su, Sg, Sr, Si, Sz
             PanSTARRS: Pg, Pr, Pi, Pz, Py
             Johnson: U, B, V, R, I
@@ -149,12 +135,9 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
     logteff     = np.zeros(0) # atmospheric parameter
     logg        = np.zeros(0) # atmospheric parameter
     Mbol        = np.zeros(0) # Bolometric
-    bp3_Mag     = np.zeros(0) # Gaia EDR3
-    rp3_Mag     = np.zeros(0) # Gaia EDR3
-    G3_Mag      = np.zeros(0) # Gaia EDR3
-    bp2_Mag     = np.zeros(0) # Gaia DR2
-    rp2_Mag     = np.zeros(0) # Gaia DR2
-    G2_Mag      = np.zeros(0) # Gaia DR2
+    bp_Mag      = np.zeros(0) # Gaia
+    rp_Mag      = np.zeros(0) # Gaia 
+    G_Mag       = np.zeros(0) # Gaia
     Su_Mag      = np.zeros(0) # SDSS
     Sg_Mag      = np.zeros(0) # SDSS
     Sr_Mag      = np.zeros(0) # SDSS
@@ -193,19 +176,18 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
         suffix = 'DA'
     if atm_type == 'He':
         suffix = 'DB'
-    Atm_color = Table.read(dirpath+'/Montreal_atm_grid_2021/Table_'+suffix,
+    Atm_color = Table.read(dirpath+'/Montreal_atm_grid_2019/Table_'+suffix,
                            format='ascii')
     selected  = Atm_color['Teff'] > 10**logteff_logg_grid[0]
     Atm_color = Atm_color[selected]
 
-    table_95 = Table.read(dirpath+'/Montreal_atm_grid_2021/Table_'+
-        'Mass_1.3_'+suffix, format='ascii')
+    table_95 = Atm_color[-51:].copy()
     table_95['logg'] = 9.5
     table_95['M/Mo'] = 1.366
     for column in ['Mbol','U','B','V','R','I','J','H','Ks','MY','MJ','MH','MK','W1','W2','W3','W4',
          'S3.6','S4.5','S5.8','S8.0','Su','Sg','Sr','Si','Sz','Pg','Pr','Pi','Pz','Py',
-         'G2','G2_BP','G2_RP','G3','G3_BP','G3_RP','FUV','NUV']:
-        table_95[column] += 1.108 - 0.652 # the effect of radius when converting M=1.3 to M=1.366
+         'G','G_BP','G_RP','FUV','NUV']:
+        table_95[column] += 1.108
     Atm_color = vstack(( Atm_color, table_95 ))
     
     selected  = Atm_color['Teff'] > 10**logteff_logg_grid[0]
@@ -215,12 +197,9 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
     logteff = np.concatenate(( logteff, np.log10(Atm_color['Teff']) ))
     logg    = np.concatenate(( logg, Atm_color['logg'] ))
     Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
-    bp3_Mag = np.concatenate(( bp3_Mag, Atm_color['G3_BP'] ))
-    rp3_Mag = np.concatenate(( rp3_Mag, Atm_color['G3_RP'] ))
-    G3_Mag  = np.concatenate(( G3_Mag, Atm_color['G3'] ))
-    bp2_Mag = np.concatenate(( bp2_Mag, Atm_color['G2_BP'] ))
-    rp2_Mag = np.concatenate(( rp2_Mag, Atm_color['G2_RP'] ))
-    G2_Mag  = np.concatenate(( G2_Mag, Atm_color['G2'] ))
+    bp_Mag  = np.concatenate(( bp_Mag, Atm_color['G_BP'] ))
+    rp_Mag  = np.concatenate(( rp_Mag, Atm_color['G_RP'] ))
+    G_Mag   = np.concatenate(( G_Mag, Atm_color['G'] ))
     Su_Mag  = np.concatenate(( Su_Mag, Atm_color['Su'] ))
     Sg_Mag  = np.concatenate(( Sg_Mag, Atm_color['Sg'] ))
     Sr_Mag  = np.concatenate(( Sr_Mag, Atm_color['Sr'] ))
@@ -257,8 +236,8 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
     # read the table for each mass
     # I suppose the color information in this table is from the interpolation
     # of the above table, so I do not need to read it.
-    for mass in ['0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','1.1','1.2','1.3']:
-        Atm_color = Table.read(dirpath+'/Montreal_atm_grid_2021/Table_Mass_' +
+    for mass in ['0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','1.2']:
+        Atm_color = Table.read(dirpath+'/Montreal_atm_grid_2019/Table_Mass_' +
                                mass + '_'+suffix, format='ascii')
         selected  = Atm_color['Teff'] > 10**logteff_logg_grid[0]
         Atm_color = Atm_color[selected]
@@ -267,12 +246,9 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
         logteff = np.concatenate(( logteff, np.log10(Atm_color['Teff']) ))
         logg    = np.concatenate(( logg, Atm_color['logg'] ))
         Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
-        bp3_Mag = np.concatenate(( bp3_Mag, Atm_color['G3_BP'] ))
-        rp3_Mag = np.concatenate(( rp3_Mag, Atm_color['G3_RP'] ))
-        G3_Mag  = np.concatenate(( G3_Mag, Atm_color['G3'] ))
-        bp2_Mag = np.concatenate(( bp2_Mag, Atm_color['G2_BP'] ))
-        rp2_Mag = np.concatenate(( rp2_Mag, Atm_color['G2_RP'] ))
-        G2_Mag  = np.concatenate(( G2_Mag, Atm_color['G2'] ))
+        bp_Mag  = np.concatenate(( bp_Mag, Atm_color['G_BP'] ))
+        rp_Mag  = np.concatenate(( rp_Mag, Atm_color['G_RP'] ))
+        G_Mag   = np.concatenate(( G_Mag, Atm_color['G'] ))
         Su_Mag  = np.concatenate(( Su_Mag, Atm_color['Su'] ))
         Sg_Mag  = np.concatenate(( Sg_Mag, Atm_color['Sg'] ))
         Sr_Mag  = np.concatenate(( Sr_Mag, Atm_color['Sr'] ))
@@ -413,88 +389,6 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
     if atm_type == 'He':
         spec_suffix2 = 'DB'
     
-    for mass in ['020','025','030','035','040','045','050','055','060',
-             '065','070','075','080','085','090','095','100',
-             '105','110','115','120','125','130']:
-        if int(mass)/100 < mass_separation_1 and atm_type == 'H':
-            if low_mass_model == 'Bedard2021':
-                spec_suffix = '_thick'
-            elif low_mass_model == 'Bedard2021_thin':
-                spec_suffix = '_thin'
-            else: continue
-        elif (int(mass)/100 > mass_separation_1 and 
-              int(mass)/100 < mass_separation_2 and atm_type == 'H'):
-            if middle_mass_model == 'Bedard2020':
-                spec_suffix = '_thick'
-            elif middle_mass_model == 'Bedard2020_thin':
-                spec_suffix = '_thin'
-            else: continue
-        elif int(mass)/100 > mass_separation_2 and atm_type == 'H':
-            if high_mass_model == 'Bedard2020':
-                spec_suffix = '_thick'
-            elif high_mass_model == 'Bedard2020_thin':
-                spec_suffix = '_thin'
-            else: continue
-        else: continue
-        f       = open(dirpath+'/cooling_models/Bedard_AllSequences/seq_'
-                        + mass + spec_suffix + '.txt')
-        title_offset = 76*5-4
-        text    = f.read()[title_offset:]
-        example = ('      1    57674.0025    8.36722799  7.160654E+08 '
-                    ' 4.000000E+05  4.042436E+33\n'
-                    '        7.959696E+00  2.425570E+01  7.231926E+00 '
-                    ' 0.0000000000  0.000000E+00\n'
-                    '        6.019629E+34 -4.010597E+00 -1.991404E+00 '
-                    '-3.055254E-01 -3.055254E-01'
-                  )
-        logg_temp       = []
-        age_temp        = []
-        age_cool_temp   = []
-        logteff_temp    = []
-        Mbol_temp       = []
-        l_line          = len(example)
-        for line in range(len(text)//l_line):
-            logteff_temp.append(  np.log10(float(text[line*l_line+9:
-                                                      line*l_line+21])) )
-            logg_temp.append(     float(text[line*l_line+22:line*l_line+35]) )
-            age_temp.append(      float(text[line*l_line+48:line*l_line+63]) +
-                                  MS_age(int(mass)/100) )
-            age_cool_temp.append( float(text[line*l_line+48:line*l_line+63]) )
-            Mbol_temp.append(     4.75 - 
-                                  2.5 * np.log10(float(text[line*l_line+64:
-                                                            line*l_line+76]
-                                                      ) / 3.828e33) )
-        mass_array  = np.concatenate(( mass_array, np.ones(len(age_temp)) * 
-                                                   int(mass)/100 ))
-        logg        = np.concatenate(( logg, logg_temp ))
-        age         = np.concatenate(( age, age_temp ))
-        age_cool    = np.concatenate(( age_cool, age_cool_temp ))
-        logteff     = np.concatenate(( logteff, logteff_temp ))
-        Mbol        = np.concatenate(( Mbol, Mbol_temp ))
-        f.close()
-    
-    # Montreal He-atmosphere model (2021 verion)
-    for mass in ['0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','1.1','1.2','1.3']:
-        if ((float(mass) < mass_separation_1 and
-             low_mass_model == 'Bedard2020') or
-            (float(mass) > mass_separation_1 and
-             float(mass) < mass_separation_2 and
-             middle_mass_model == 'Bedard2020') or
-            (float(mass) > mass_separation_2 and
-             high_mass_model == 'Bedard2020')
-           ) and atm_type == 'He':
-            Cool = Table.read(dirpath+'/Montreal_atm_grid_2021/Table_Mass_' + mass +
-                                    '_'+spec_suffix2, format='ascii')
-            Cool = Cool[::1]
-            mass_array  = np.concatenate(( mass_array, np.ones(len(Cool))*float(mass) ))
-            logg        = np.concatenate(( logg, Cool['logg'] ))
-            age         = np.concatenate(( age, Cool['Age'] +
-                                                MS_age(float(mass)) ))
-            age_cool    = np.concatenate(( age_cool, Cool['Age'] ))
-            logteff     = np.concatenate(( logteff, np.log10(Cool['Teff']) ))
-            Mbol        = np.concatenate(( Mbol, Cool['Mbol'] ))
-
-
     # read data from cooling models
     # Fontaine et al. 2001
     for mass in ['020','030','040','050','060','070','080','090','095','100',
@@ -929,26 +823,18 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
                             (<~0.5Msun). Its value should be one of the
                             following: 
             ''                              no low-mass model will be read
-            'Bedard2020' or 'be'            the newest thick-H- or He-atmosphere CO WD model in 
+            'Fontaine2001' or 'f'           the thick-H- or He-atmosphere CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Bedard2020_thin' or 'bet'      the newest thin-H CO WD model in 
-                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Fontaine2001' or 'f'           the old thick-H- or He-atmosphere CO WD model in 
-                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Fontaine2001_thin' or 'ft'     the old thin-H CO WD model in 
+            'Fontaine2001_thin' or 'ft'     the thin-H CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
         middle_mass_model:  String. 
                             Specifying the cooling model used for middle-mass
                             WDs (about 0.5~1.0Msun). Its value should be one of
                             the following:
             ''                              no middle-mass model will be read
-            'Bedard2020' or 'be'            the newest thick-H- or He-atmosphere CO WD model in 
+            'Fontaine2001' or 'f'           the thick-H- or He-atmosphere CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Bedard2020_thin' or 'bet'      the newest thin-H CO WD model in 
-                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Fontaine2001' or 'f'           the old thick-H- or He-atmosphere CO WD model in 
-                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Fontaine2001_thin' or 'ft'     the old thin-H CO WD model in 
+            'Fontaine2001_thin' or 'ft'     the thin-H CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'Renedo2010_001' or 'r001'     Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
             'Renedo2010_0001' or 'r0001'   Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
@@ -959,13 +845,9 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
                             Specifying the cooling model used for high-mass WDs
                             (>~1.0Msun). Should be one of the following: 
             ''                              no high-mass model will be read
-            'Bedard2020' or 'be'            the newest thick-H- or He-atmosphere CO WD model in 
+            'Fontaine2001' or 'f'           the thick-H- or He-atmosphere CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Bedard2020_thin' or 'bet'      the newest thin-H CO WD model in 
-                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Fontaine2001' or 'f'           the old thick-H- or He-atmosphere CO WD model in 
-                                            http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Fontaine2001_thin' or 'ft'     the old thin-H CO WD model in 
+            'Fontaine2001_thin' or 'ft'     the thin-H CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'ONe' or 'o'                    Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html
             'MESA' or 'm'                   Lauffer et al. 2018
@@ -979,12 +861,12 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
         HR_bands:          (String, String). *Optional*
             The passbands for the color and absolute magnitude on the H--R
             diagram. It can be any combination from the following bands:
-                G3, bp3, rp3 (Gaia EDR3); G, bp, rp (Gaia DR2); u, g, r, i, z (SDSS); 
-                U, B, V, R, I (Johnson); J, H, K (2MASS).
+                G, bp, rp (Gaia); u, g, r, i, z (SDSS); U, B, V, R, I (Johnson);
+                J, H, K (2MASS).
             Color should be in the format of:
-                'bp3-rp3', 'G3-bp3', 'U-B', 'u-g', 'G3-i', etc. 
+                'bp-rp', 'G-bp', 'U-B', 'u-g', 'G-i', etc. 
             Absolute magnitude should be in the format of:
-                'G3', 'bp3', 'U', 'u', etc. 
+                'G', 'bp', 'U', 'u', etc. 
         HR_grid:           (xmin, xmax, dx, ymin, ymax, dy). *Optional*
             The grid information of the H-R diagram coordinates BP-RP and G.
         logteff_logg_grid: (xmin, xmax, dx, ymin, ymax, dy). *Optional*
@@ -1055,10 +937,6 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
                         
     """
     # define some alias of model names
-    if low_mass_model == 'be':
-        low_mass_model = 'Bedard2020'
-    if low_mass_model == 'bet':
-        low_mass_model = 'Bedard2020_thin'
     if low_mass_model == 'f':
         low_mass_model = 'Fontaine2001'
     if low_mass_model == 'ft':
@@ -1068,10 +946,6 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
         middle_mass_model = 'Renedo2010_001'
     if middle_mass_model == 'r0001':
         middle_mass_model = 'Renedo2010_0001'
-    if middle_mass_model == 'be':
-        middle_mass_model = 'Bedard2020'
-    if middle_mass_model == 'bet':
-        middle_mass_model = 'Bedard2020_thin'
     if middle_mass_model == 'f':
         middle_mass_model = 'Fontaine2001'
     if middle_mass_model == 'ft':
@@ -1083,10 +957,6 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
     if middle_mass_model == 'bn':
         middle_mass_model = 'BaSTI_nosep'
     
-    if high_mass_model == 'be':
-        high_mass_model = 'Bedard2020'
-    if high_mass_model == 'bet':
-        high_mass_model = 'Bedard2020_thin'
     if high_mass_model == 'f':
         high_mass_model = 'Fontaine2001'
     if high_mass_model == 'ft':
@@ -1100,12 +970,9 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
     if high_mass_model == 'o':
         high_mass_model = 'ONe'
     
-    model_names = [
-        '', 'Bedard2020', 'Bedard2020_thin',
-        'Fontaine2001', 'Fontaine2001_thin', 
-        'Renedo2010_001', 'Renedo2010_0001', 'Camisassa2017', 
-        'BaSTI', 'BaSTI_nosep',
-        'MESA', 'ONe',]
+    model_names = ['', 'Fontaine2001', 'Fontaine2001_thin', 'Renedo2010_001', 
+                   'Renedo2010_0001', 'Camisassa2017', 'BaSTI', 'BaSTI_nosep',
+                   'MESA', 'ONe',]
     if (low_mass_model not in model_names or 
         middle_mass_model not in model_names or
         high_mass_model not in model_names):
@@ -1126,14 +993,14 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
 
     # get for logg_func BaSTI models
     if 'BaSTI' in middle_mass_model or 'BaSTI' in high_mass_model:
-        mass_array_Bedard2020, logg_Bedard2020, _, _, logteff_Bedard2020, _\
-                    = read_cooling_tracks('Bedard2020',
-                                          'Bedard2020',
-                                          'Bedard2020',
+        mass_array_Fontaine2001, logg_Fontaine2001, _, _, logteff_Fontaine2001, _\
+                    = read_cooling_tracks('Fontaine2001',
+                                          'Fontaine2001',
+                                          'Fontaine2001',
                                           atm_type)
-        logg_func   = interp_xy_z_func(x=logteff_Bedard2020,
-                                       y=mass_array_Bedard2020,
-                                       z=logg_Bedard2020)
+        logg_func   = interp_xy_z_func(x=logteff_Fontaine2001,
+                                       y=mass_array_Fontaine2001,
+                                       z=logg_Fontaine2001)
     else: 
         logg_func   = None
     
@@ -1258,4 +1125,3 @@ def read_crystallization_fraction(
     grid_HR_to_X, HR_to_X         = interp_HR_to_para(color, Mag, X, 
                                                             HR_grid, interp_type)
     return {'grid_HR_to_X':grid_HR_to_X, 'HR_to_X':HR_to_X}
-
