@@ -930,9 +930,9 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
                             (<~0.5Msun). Its value should be one of the
                             following: 
             ''                              no low-mass model will be read
-            'Bedard2020' or 'be'            the newest thick-H- or He-atmosphere CO WD model in 
+            'Bedard2020' or 'be'            the updated thick-H- or He-atmosphere CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Bedard2020_thin' or 'bet'      the newest thin-H CO WD model in 
+            'Bedard2020_thin' or 'bet'      the updated thin-H CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'Fontaine2001' or 'f'           the old thick-H- or He-atmosphere CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
@@ -943,9 +943,9 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
                             WDs (about 0.5~1.0Msun). Its value should be one of
                             the following:
             ''                              no middle-mass model will be read
-            'Bedard2020' or 'be'            the newest thick-H- or He-atmosphere CO WD model in 
+            'Bedard2020' or 'be'            the updated thick-H- or He-atmosphere CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Bedard2020_thin' or 'bet'      the newest thin-H CO WD model in 
+            'Bedard2020_thin' or 'bet'      the updated thin-H CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'Fontaine2001' or 'f'           the old thick-H- or He-atmosphere CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
@@ -960,9 +960,9 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
                             Specifying the cooling model used for high-mass WDs
                             (>~1.0Msun). Should be one of the following: 
             ''                              no high-mass model will be read
-            'Bedard2020' or 'be'            the newest thick-H- or He-atmosphere CO WD model in 
+            'Bedard2020' or 'be'            the updated thick-H- or He-atmosphere CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-            'Bedard2020_thin' or 'bet'      the newest thin-H CO WD model in 
+            'Bedard2020_thin' or 'bet'      the updated thin-H CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
             'Fontaine2001' or 'f'           the old thick-H- or He-atmosphere CO WD model in 
                                             http://www.astro.umontreal.ca/~bergeron/CoolingModels/
