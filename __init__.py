@@ -50,8 +50,9 @@ Feb 22, 2021:
 I updated the synthetic color table with Gaia EDR3 passbands. These updates 
 directly came from the recent (Jan 2021) updates of the Montreal atmosphere 
 models: http://www.astro.umontreal.ca/~bergeron/CoolingModels/. Note that the
-Gaia filter names are different (G2, G2_BP, G3, etc), see the README document
-or the documentation in this script. 
+Gaia filter names are different (G2, bp2, G3, etc), see the README document
+or the documentation in this script. Also note that now the default HR
+coordinates are (bp3-rp3, M_G3).
 In this updates, the Montreal group provides data for M=1.1 and M=1.3Msun, 
 the latter corresponds to roughly log(g)= 9.2-9.3. I therefore used these 
 data as a reasonable guess for the photometric behaviour around log(g)=9.5, 
@@ -118,7 +119,7 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
     Args:
         atm_type:           String. {'H', 'He'}
             See the "Synthetic color" section on http://www.astro.umontreal.ca/~bergeron/CoolingModels/
-        color:              String. {'G-Mbol', 'bp-rp', 'V-Mbol', 'u-g', 'B-z', etc.}
+        color:              String. {'G3-Mbol', 'bp3-rp3', 'V-Mbol', 'u-g', 'B-z', etc.}
             The target color of the mapping. Any two bands between 
             Gaia EDR3: G3, bp3, rp3
             Gaia DR2: G2, bp2, rp2
@@ -413,13 +414,15 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
     if atm_type == 'He':
         spec_suffix2 = 'DB'
     
+    # read data from cooling models
+    # Bedard et al. 2020
     for mass in ['020','025','030','035','040','045','050','055','060',
              '065','070','075','080','085','090','095','100',
              '105','110','115','120','125','130']:
         if int(mass)/100 < mass_separation_1 and atm_type == 'H':
-            if low_mass_model == 'Bedard2021':
+            if low_mass_model == 'Bedard2020':
                 spec_suffix = '_thick'
-            elif low_mass_model == 'Bedard2021_thin':
+            elif low_mass_model == 'Bedard2020_thin':
                 spec_suffix = '_thin'
             else: continue
         elif (int(mass)/100 > mass_separation_1 and 
@@ -494,8 +497,6 @@ def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
             logteff     = np.concatenate(( logteff, np.log10(Cool['Teff']) ))
             Mbol        = np.concatenate(( Mbol, Cool['Mbol'] ))
 
-
-    # read data from cooling models
     # Fontaine et al. 2001
     for mass in ['020','030','040','050','060','070','080','090','095','100',
                  '105','110','115','120','125','130']:
@@ -898,7 +899,7 @@ def interp_xy_z_func(x, y, z, interp_type='linear'):
 
 
 def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
-               HR_bands=('bp-rp', 'G'),
+               HR_bands=('bp3-rp3', 'G3'),
                HR_grid=(-0.6, 1.5, 0.002, 8, 18, 0.01),
                logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01),
                interp_type_atm='linear', interp_type='linear',
@@ -979,8 +980,12 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
         HR_bands:          (String, String). *Optional*
             The passbands for the color and absolute magnitude on the H--R
             diagram. It can be any combination from the following bands:
-                G3, bp3, rp3 (Gaia EDR3); G, bp, rp (Gaia DR2); u, g, r, i, z (SDSS); 
-                U, B, V, R, I (Johnson); J, H, K (2MASS).
+                G3, bp3, rp3 (Gaia EDR3); G2, bp2, rp2 (Gaia DR2); 
+                Su, Sg, Sr, Si, Sz (SDSS); Pg, Pr, Pi, Pz, Py (PanSTARRS); 
+                U, B, V, R, I (Johnson); J, H, K (2MASS);
+                MY, MJ, MH, MK (Mauna Kea Observatory (MKO));
+                W1, W2, W3, W4 (WISE); S36, S45, S58, S80 (SPITZER);
+                FUV, NUV (GALEX)
             Color should be in the format of:
                 'bp3-rp3', 'G3-bp3', 'U-B', 'u-g', 'G3-i', etc. 
             Absolute magnitude should be in the format of:
@@ -1113,7 +1118,7 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
     if atm_type not in ['H', 'He']:
         print('please enter either \'H\' or \'He\' for atm_type.')
     
-    # make atmosphere grid and mapping: logteff, logg --> bp-rp,  G-Mbol
+    # make atmosphere grid and mapping: logteff, logg --> bp3-rp3,  G3-Mbol
     grid_logteff_logg_to_color, logteff_logg_to_color = interp_atm(
         atm_type, HR_bands[0], 
         logteff_logg_grid=logteff_logg_grid,
@@ -1169,7 +1174,7 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
                                                             HR_grid, interp_type)
     grid_HR_to_rate_inv, HR_to_rate_inv = interp_HR_to_para(color, Mag, rate_inv,
                                                             HR_grid, interp_type)
-    # (mass, t_cool) --> bp-rp, G
+    # (mass, t_cool) --> bp3-rp3, G3
     m_agecool_to_color                  = interp_xy_z_func(mass_array, age_cool,
                                                            color, interp_type)
     m_agecool_to_Mag                    = interp_xy_z_func(mass_array, age_cool,
@@ -1196,14 +1201,14 @@ def load_model(low_mass_model, middle_mass_model, high_mass_model, atm_type,
 
 
 def read_crystallization_fraction(
-    HR_bands=('bp-rp', 'G'),
+    HR_bands=('bp3-rp3', 'G3'),
     HR_grid=(-0.6, 1.5, 0.002, 8, 18, 0.01),
     logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01),
     interp_type_atm='linear', interp_type='linear',
     for_comparison=False):
     
     atm_type = 'H'
-    # make atmosphere grid and mapping: logteff, logg --> bp-rp,  G-Mbol
+    # make atmosphere grid and mapping: logteff, logg --> bp3-rp3,  G3-Mbol
     grid_logteff_logg_to_color, logteff_logg_to_color = interp_atm(
         atm_type, HR_bands[0], 
         logteff_logg_grid=logteff_logg_grid,
