@@ -1,5 +1,5 @@
 # WD_models
-(Updated on Jan 15, 2020. For details of updates please check update.md)
+(Updated on Feb 22, 2021. For details of updates please check update.md)
 
 The number of white dwarfs (WD) with precise luminosity and color measurements has been increased drastically by *Gaia* DR2. Accordingly, the need for a tool to easily transform WD photometry to physical parameters (and vice versa) emerges. Here, I provide a python module for such transformations, based on interpolation of existing WD atmosphere grid and cooling models. This module is written for python 3 and depends on the following packages: `astropy, matplotlib, numpy, scipy`. The most useful functions include:
 
@@ -8,7 +8,7 @@ The number of white dwarfs (WD) with precise luminosity and color measurements h
 
 It also provides tools to transform any desired WD parameters and compare the results of different WD models. In addition, the user may custimize many parameters, such as the choice of cooling models and setting details of plotting.
 
-If you use this tool, don't forget to cite this website and the corresponding papers of synthetic colors and cooling models (see the reference at the bottom of this page). If you have more cooling models and/or synthetic colors, I am more than happy to add them to this module!
+If you use this tool, don't forget to cite this website and the corresponding papers of synthetic colors and cooling models (see the reference at the bottom of this page). If you have more cooling models and/or synthetic colors, I am more than happy to add them to this package!
 
 Below, I introduce the basic usage of this module, give some examples. A list of available cooling models is attached. I also present a detailed introduction to the output of the main function `load_model`. I hope that with a convenient way provided to transform WD parameters, more researchers will be attracted to the WD field, and the connection between observers, theorists, and astronomers from outside the WD field will be tighter. For questions or suggestions or comments, please do not hesitate to contact me: s.cheng@jhu.edu
 
@@ -27,19 +27,19 @@ print(sys.path)
 
 ## Example 1: converting H--R diagram coordinate into WD parameters
 ```python
-model = WD_models.load_model(low_mass_model='Fontaine2001',
-                             middle_mass_model='Fontaine2001',
+model = WD_models.load_model(low_mass_model='Bedard2020',
+                             middle_mass_model='Bedard2020',
                              high_mass_model='ONe',
                              atm_type='H')
-bp_rp = np.array([0.25, 0.25])
-G = np.array([13,14])
-age_cool = model['HR_to_age_cool'](bp_rp, G)
+bp3_rp3 = np.array([0.25, 0.25])
+G3 = np.array([13,14])
+age_cool = model['HR_to_age_cool'](bp3_rp3, G3)
 
-print('bp_rp: ', bp_rp, '\nM_G: ', G)
+print('bp3_rp3: ', bp3_rp3, '\nM_G3: ', G3)
 print('cooling ages:', age_cool, 'Gyr')
 >> bp_rp:	[ 0.25  0.25] 
 >> M_G:	[13 14]
->> cooling ages: [ 1.26162464  2.83953083] Gyr
+>> cooling ages: [ 1.31350174  2.74414148] Gyr
 ```
 The outputs are in unit of Gyr. The function `load_model` in the module reads a set of cooling tracks and returns a dictionary containing many useful functions for parameter transformation and grid data for ploting contours. The keys of this dictionary are listed in the section "output of the function `load_model`" below.
 
@@ -47,7 +47,8 @@ With the argument `HR_bands`, one can change the passband for both the color ind
 
 filter system | filters | filter names in this package
 --------------|---------|------------------------------
-Gaia          | G, bp, rp         | G, bp, rp
+Gaia EDR3     | G, bp, rp         | G3, bp3, rp3
+Gaia DR2      | G, bp, rp         | G2, bp2, rp2
 SDSS          | u, g, r, i, z     | Su, Sg, Sr, Si, Sz
 PanSTARRS     | g, r, i, z, y     | Pg, Pr, Pi, Pz, Py
 Johnson       | U, B, V, R, I     | U, B, V, R, I
@@ -59,22 +60,22 @@ GALEX         | FUV, NUV          | FUV, NUV
 
 For example:
 ```python
-model = WD_models.load_model('f', 'f', 'o', 'H',
-                             HR_bands=('Su-Sg', 'G'),)
+model = WD_models.load_model('be', 'be', 'o', 'H',
+                             HR_bands=('Su-Sg', 'G3'),)
 ```
 Note that shorter names of the same cooling models (see section "Available models included in this module" below for details) are used here.
 
 Loading two sets of models allows comparisons between cooling models. For example:
 ```python
-model_A = WD_models.load_model('', 'f', 'f', 'H')
-model_B = WD_models.load_model('', 'f', 'f', 'He')
+model_A = WD_models.load_model('', 'be', 'be', 'H')
+model_B = WD_models.load_model('', 'be', 'be', 'He')
 
 d_age_cool = (model_A['HR_to_age_cool'](0, 13) - model_B['HR_to_age_cool'](0, 13))
 
-print('bp-rp = 0,  M_G = 13')
+print('bp3-rp3 = 0,  M_G3 = 13')
 print('difference of cooling ages between DA and DB models: ', d_age_cool, 'Gyr')
->> bp-rp = 0,  M_G = 13
->> difference of cooling ages between DA and DB models:  0.108108710416 Gyr
+>> bp3-rp3 = 0,  M_G3 = 13
+>> difference of cooling ages between DA and DB models:  0.1695180723420473 Gyr
 ```
 
 
@@ -85,7 +86,7 @@ print('difference of cooling ages between DA and DB models: ', d_age_cool, 'Gyr'
 The contours can be plotted using the grid data in the output of function `load_model`. To make sure the coordinates match, the argument `HR_grid` of function `load_model` should be used, and the same values should also be used for the `extent` of contour plotting.
 ```python
 HR_grid = (-0.6, 1.25, 0.002, 10, 15, 0.01)
-model = WD_models.load_model('f', 'f', 'f', 'H', HR_grid=HR_grid)
+model = WD_models.load_model('be', 'be', 'be', 'H', HR_grid=HR_grid)
 extent = (HR_grid[0], HR_grid[1], HR_grid[3], HR_grid[4])
 plt.contour(model['grid_HR_to_mass'].T, extent=extent)
 plt.contour(model['grid_HR_to_age_cool'].T, extent=extent)
@@ -123,8 +124,8 @@ For DA white dwarfs, there is a turning of color at low temperature. So, when in
 For ploting the cooling-tracks data points on the H--R diagram, the low-temperature cut is not necessary. So, the first element in `logteff_logg_grid` can be set to a lower value to avoid this cut:
 ```python
 logteff_logg_grid = (3.0, 5.1, 0.01, 6.5, 9.6, 0.01)
-model = WD_models.load_model('f', 'f', 'f', 'H', 
-                             HR_bands=('g-i','g'), 
+model = WD_models.load_model('be', 'be', 'be', 'H', 
+                             HR_bands=('Sg-Si','Sg'), 
                              logteff_logg_grid=logteff_logg_grid)
 plt.scatter(model['color'], model['Mag'], c=model['logteff'])
 ```
@@ -137,7 +138,7 @@ If a desired transformation function is not provided in the output of `load_mode
 
 For example, for the mapping (mass, logteff) --> cooling age:
 ```python
-model = WD_models.load_model('f', 'f', 'o', 'H')
+model = WD_models.load_model('be', 'be', 'o', 'H')
 
 # interpolate the desired mapping
 m_logteff_to_agecool = WD_models.interp_xy_z_func(x=model['mass_array'],
@@ -165,33 +166,39 @@ I include several classical and recent cooling models published in the literatur
 model names | short names | remarks & reference
 ------------|-------------|----------------------
 ''           |                 |no low-mass model will be read
-'Fontaine2001' | 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/. WD mass is sampled on a regular grid. No "phase separation" effect included. Old phase diagram for crystallization.
-'Fontaine2001_thin' | 'ft'     |the thin-hydrogen CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+'Bédard2020' | 'be'            |the updated thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/. WD mass is sampled on a regular grid.
+'Bédard2020_thin' | 'bet'      |the updated thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+'Fontaine2001' | 'f'           |old thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/. No "phase separation" effect included. Old phase diagram for crystallization.
+'Fontaine2001_thin' | 'ft'     |old thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
 
 ### Middle-mass models (about 0.5 to 1.0 Msun)
 
 model names | short names | remarks & reference
 ------------|-------------|----------------------
 ''         |                   |no middle-mass model will be read
-'Fontaine2001' | 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/.  It samples the WD mass on a regular grid. Old phase diagram for crystallization.
-'Fontaine2001_thin' | 'ft'     |the thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+'Bédard2020' | 'be'            |the updated thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/. WD mass is sampled on a regular grid.
+'Bédard2020_thin' | 'bet'      |the updated thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+'Fontaine2001' | 'f'           |old thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/. No "phase separation" effect included. Old phase diagram for crystallization.
+'Fontaine2001_thin' | 'ft'     |old thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
 'Renedo2010_001' | 'r001'      |Z=0.01, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
 'Renedo2010_0001' | 'r0001'    |Z=0.001, only for DA, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_cocore.html
 'Camisassa2017' | 'c'          |only for DB, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/tracks_DODB.html
 'BaSTI' | 'b'                  |with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it. This model predicts very slow cooling rate after crystallization, compared with other models.
-'BaSTI_nosep' | 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it. This model predicts very slow cooling rate after crystallization, compared with other models.
+'BaSTI_nosep' | 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it. This model predicts slow cooling rate after crystallization, compared with other models.
 
 ### High-mass models (higher than 1.0 Msun)
 
 model names | short names | remarks & reference
 ------------|-------------|----------------------
 ''         |                   |no high-mass model will be read
-'Fontaine2001' | 'f'           |the thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/. Old phase diagram for crystallization.
-'Fontaine2001_thin' | 'ft'     |the thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+'Bédard2020' | 'be'            |the updated thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/. WD mass is sampled on a regular grid.
+'Bédard2020_thin' | 'bet'      |the updated thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
+'Fontaine2001' | 'f'           |old thick-H- or He-atmosphere CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/. No "phase separation" effect included. Old phase diagram for crystallization.
+'Fontaine2001_thin' | 'ft'     |old thin-H CO WD model in http://www.astro.umontreal.ca/~bergeron/CoolingModels/
 'ONe' | 'o'                    |Camisassa et al. 2019, http://evolgroup.fcaglp.unlp.edu.ar/TRACKS/ultramassive.html. A very recent model for O/Ne-core WDs, including phase separation. High-mass WDs from single-star evolution are supposed to hold O/Ne cores.
 'MESA' | 'm'                   |Lauffer et al. 2018. Evolving intermediate-mass stars into high-mass WDs with MESA.
 'BaSTI' | 'b'                  |with phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it. This model predicts very slow cooling rate after crystallization, compared with other models.
-'BaSTI_nosep' | 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it. This model predicts very slow cooling rate after crystallization, compared with other models.
+'BaSTI_nosep' | 'bn'           |no phase separation, Salaris et al. 2010, http://basti.oa-teramo.inaf.it. This model predicts slow cooling rate after crystallization, compared with other models.
 
 ### Spectral type and atmosphere sythetic colors
 
@@ -250,6 +257,8 @@ For the calculation of total ages, I adopt the IFMR from Cummings et al. 2018 fo
 
 ## References
 Bergeron et al. ([2011ApJ...737...28B](https://ui.adsabs.harvard.edu/abs/2011ApJ...737...28B/abstract))
+
+Bédard et al. ([2020ApJ...901...93B](https://ui.adsabs.harvard.edu/abs/2020ApJ...901...93B/abstract))
 
 Blouin et al. ([2018ApJ...863..184B](https://ui.adsabs.harvard.edu/abs/2018ApJ...863..184B/abstract))
 
