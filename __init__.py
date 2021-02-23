@@ -64,9 +64,7 @@ Last version is stored as 'WD_models_old.py'. To use it, please import:
 
 import os
 
-import matplotlib.pyplot as plt
 import numpy as np
-
 from astropy.table import Table, vstack
 from scipy.interpolate import CloughTocher2DInterpolator, LinearNDInterpolator
 from scipy.interpolate import griddata, interp1d
