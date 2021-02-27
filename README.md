@@ -18,9 +18,10 @@ Please download the package `WD_models` to one of the system paths of your pytho
 ```python
 import WD_models
 ```
-To check the system paths,
+Or you can add its path to python by,
 ```python
 import sys
+sys.path.append('/the/path/where/you/downloaded/WD_models/to/')
 print(sys.path)
 ```
 
