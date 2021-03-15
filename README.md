@@ -1,7 +1,7 @@
 # WD_models
 (Updated on Feb 22, 2021. For details of updates please check update.md)
 
-The number of white dwarfs (WD) with precise luminosity and color measurements has been increased drastically by *Gaia* DR2. Accordingly, the need for a tool to easily transform WD photometry to physical parameters (and vice versa) emerges. Here, I provide a python module for such transformations, based on interpolation of existing WD atmosphere grid and cooling models. This module is written for python 3 and depends on the following packages: `astropy, numpy, scipy`. The most useful functions include:
+The number of white dwarfs (WD) with precise luminosity and color measurements has been increased drastically by *Gaia* DR2. Accordingly, the need for a tool to easily transform WD photometry to physical parameters (and vice versa) emerges. Here, I provide a python module for such transformations, based on interpolation of existing WD atmosphere grid and cooling models. This package is written for python 3 and depends on the following packages: `astropy, numpy, scipy`. The most useful functions include:
 
 1. converting the coordinates of *Gaia* (and other passbands) H--R diagram into WD parameters;
 2. plotting contours of WD parameters on the *Gaia* (and other passbands) H--R diagram.
