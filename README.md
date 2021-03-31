@@ -27,7 +27,8 @@ import WD_models
 model = WD_models.load_model(low_mass_model='Bedard2020',
                              middle_mass_model='Bedard2020',
                              high_mass_model='ONe',
-                             atm_type='H')
+                             atm_type='H',
+                             HR_bands=('bp3-rp3', 'G3'))
 bp3_rp3 = np.array([0.25, 0.25])
 G3 = np.array([13,14])
 age_cool = model['HR_to_age_cool'](bp3_rp3, G3)
