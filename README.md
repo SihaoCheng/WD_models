@@ -10,7 +10,7 @@ It also provides tools to transform any desired WD parameters and compare the re
 
 If you use this tool, don't forget to cite this website and the corresponding papers of synthetic colors and cooling models (see the reference at the bottom of this page). If you have more cooling models and/or synthetic colors, I am more than happy to add them to this package!
 
-Below, I introduce the basic usage of this module, give some examples. A list of available cooling models is attached. I also present a detailed introduction to the output of the main function `load_model`. I hope that with a convenient way provided to transform WD parameters, more researchers will be attracted to the WD field, and the connection between observers, theorists, and astronomers from outside the WD field will be tighter. For questions or suggestions or comments, please do not hesitate to contact me: s.cheng@jhu.edu
+Below, I introduce the basic usage of this package, give some examples. A list of available cooling models is attached. I also present a detailed introduction to the output of the main function `load_model`. I hope that with a convenient way provided to transform WD parameters, more researchers will be attracted to the WD field, and the connection between observers, theorists, and astronomers from outside the WD field will be tighter. For questions or suggestions or comments, please do not hesitate to contact me: s.cheng@jhu.edu
 
 
 ## Install
@@ -39,7 +39,7 @@ print('cooling ages:', age_cool, 'Gyr')
 >> M_G:	[13 14]
 >> cooling ages: [ 1.31350174  2.74414148] Gyr
 ```
-The outputs are in unit of Gyr. The function `load_model` in the module reads a set of cooling tracks and returns a dictionary containing many useful functions for parameter transformation and grid data for ploting contours. The keys of this dictionary are listed in the section "output of the function `load_model`" below.
+The outputs are in unit of Gyr. The function `load_model` in the package reads a set of cooling tracks and returns a dictionary containing many useful functions for parameter transformation and grid data for ploting contours. The keys of this dictionary are listed in the section "output of the function `load_model`" below.
 
 With the argument `HR_bands`, one can change the passband for both the color index and absolute magnitude of the H--R diagram. It can be any combination from the following bands: 
 
@@ -61,7 +61,7 @@ For example:
 model = WD_models.load_model('be', 'be', 'o', 'H',
                              HR_bands=('Su-Sg', 'G3'),)
 ```
-Note that shorter names of the same cooling models (see section "Available models included in this module" below for details) are used here.
+Note that shorter names of the same cooling models (see section "Available models included in this package" below for details) are used here.
 
 Loading two sets of models allows comparisons between cooling models. For example:
 ```python
@@ -132,7 +132,7 @@ Note that this H--R diagram is for SDSS passbands.
 
 ## Example 5: transformation between any desired WD parameters
 
-If a desired transformation function is not provided in the output of `load_model`, e.g., (mass, Teff) --> cooling age, the user can generate the customized mapping with the functions `interp_xy_z_func`, `interp_xy_z`, or `interp_HR_to_para` provided in this module. These functions read the cooling-track data points from the output of `load_model` and then generate new mappings. 
+If a desired transformation function is not provided in the output of `load_model`, e.g., (mass, Teff) --> cooling age, the user can generate the customized mapping with the functions `interp_xy_z_func`, `interp_xy_z`, or `interp_HR_to_para` provided in this package. These functions read the cooling-track data points from the output of `load_model` and then generate new mappings. 
 
 For example, for the mapping (mass, logteff) --> cooling age:
 ```python
@@ -155,7 +155,7 @@ print('cooling age: ', age_cool, 'Gyr')
 As other transformation functions, this customized mapping function `m_logteff_to_agecool` also accepts numpy array as input.
 
 
-## Available models included in this module
+## Available models included in this package
 
 I include several classical and recent cooling models published in the literature. If you have a model and want it to be included, please send me your cooling tracks and I am willing to add them here.
 
