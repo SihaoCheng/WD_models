@@ -14,7 +14,7 @@ Below, I introduce the basic usage of this module, give some examples. A list of
 
 
 ## Install
-Please download the package `WD_models` to some path. If that path is not included in python's system's path, you may need to add it. E.g., if you download the package (which is a folder) to '~/softwares/', then just type:
+Just download the package `WD_models` to some local path in your computer. If that path is not included in python's system's path, then you need to add it. For example, if you download the `WD_models` package (which is a folder) to '~/softwares/', then the following codes should import the package smoothly.
 
 ```python
 import sys
