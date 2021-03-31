@@ -14,16 +14,13 @@ Below, I introduce the basic usage of this module, give some examples. A list of
 
 
 ## Install
-Please download the package `WD_models` to one of the system paths of your python, and then simply import it in python 3:
-```python
-import WD_models
-```
-To check the system paths,
+Please download the package `WD_models` to some path. If that path is not included in python's system's path, you may need to add it. E.g., if you download the package (which is a folder) to '~/softwares/', then just type:
+
 ```python
 import sys
-print(sys.path)
+sys.path.append('~/softwares/')
+import WD_models
 ```
-
 
 ## Example 1: converting H--R diagram coordinate into WD parameters
 ```python
