@@ -106,7 +106,35 @@ def interpolate_2d(x, y, z, method):
     return interpolator((x,y), z, rescale=True)
     #return interp2d(x, y, z, kind=method)
 
+def read_atm_table(atm_type):
+    if atm_type == 'H':
+        suffix = 'DA'
+    if atm_type == 'He':
+        suffix = 'DB'
 
+    # read data from the Table_DA and Table_DB files
+    atm_color_table = Table.read(dirpath+'/Montreal_atm_grid_2021/Table_'+suffix, format='ascii')
+    # read the table for each mass
+    # I assume the color information in this table is from the interpolation of the above table
+    for mass in ['0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','1.1','1.2','1.3']:
+        atm_color_table_temp = Table.read(dirpath+'/Montreal_atm_grid_2021/Table_Mass_'+mass+'_'+suffix, format='ascii')
+        atm_color_table_temp['M/Mo'] = float(mass)
+        atm_color_table = vstack(( atm_color_table, atm_color_table_temp ))
+    # add a table for ultra-massive WD with logg=9.5
+    table_95 = Table.read(dirpath+'/Montreal_atm_grid_2021/Table_'+'Mass_1.3_'+suffix, format='ascii')
+    table_95['logg'] = 9.5
+    table_95['M/Mo'] = 1.366
+    for column in [
+        'Mbol','U','B','V','R','I','J','H','Ks','MY','MJ','MH','MK','W1','W2','W3','W4',
+        'S3.6','S4.5','S5.8','S8.0','Su','Sg','Sr','Si','Sz','Pg','Pr','Pi','Pz','Py',
+        'G2','G2_BP','G2_RP','G3','G3_BP','G3_RP','FUV','NUV'
+    ]:
+        table_95[column] += 1.108 - 0.652 # the effect of radius when converting M=1.3 to M=1.366
+    atm_color_table = vstack(( atm_color_table, table_95 ))
+    # add a column for logteff
+    atm_color_table['logteff'] = np.log10(atm_color_table['Teff'])
+    return atm_color_table
+    
 def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.01), 
                interp_type_atm='linear'):
     """interpolate the mapping (logteff, logg) --> photometry
@@ -145,168 +173,22 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
                                 (logteff, logg) --> photometry
         
     """
-    logteff     = np.zeros(0) # atmospheric parameter
-    logg        = np.zeros(0) # atmospheric parameter
-    Mbol        = np.zeros(0) # Bolometric
-    bp3_Mag     = np.zeros(0) # Gaia EDR3
-    rp3_Mag     = np.zeros(0) # Gaia EDR3
-    G3_Mag      = np.zeros(0) # Gaia EDR3
-    bp2_Mag     = np.zeros(0) # Gaia DR2
-    rp2_Mag     = np.zeros(0) # Gaia DR2
-    G2_Mag      = np.zeros(0) # Gaia DR2
-    Su_Mag      = np.zeros(0) # SDSS
-    Sg_Mag      = np.zeros(0) # SDSS
-    Sr_Mag      = np.zeros(0) # SDSS
-    Si_Mag      = np.zeros(0) # SDSS
-    Sz_Mag      = np.zeros(0) # SDSS
-    Pg_Mag      = np.zeros(0) # PanSTARRS
-    Pr_Mag      = np.zeros(0) # PanSTARRS
-    Pi_Mag      = np.zeros(0) # PanSTARRS
-    Pz_Mag      = np.zeros(0) # PanSTARRS
-    Py_Mag      = np.zeros(0) # PanSTARRS
-    U_Mag       = np.zeros(0) # Johnson
-    B_Mag       = np.zeros(0) # Johnson
-    V_Mag       = np.zeros(0) # Johnson
-    R_Mag       = np.zeros(0) # Johnson
-    I_Mag       = np.zeros(0) # Johnson
-    J_Mag       = np.zeros(0) # 2MASS
-    H_Mag       = np.zeros(0) # 2MASS
-    Ks_Mag      = np.zeros(0) # 2MASS
-    MY_Mag      = np.zeros(0) # Mauna Kea Observatory (MKO)
-    MJ_Mag      = np.zeros(0) # Mauna Kea Observatory (MKO)
-    MH_Mag      = np.zeros(0) # Mauna Kea Observatory (MKO)
-    MK_Mag      = np.zeros(0) # Mauna Kea Observatory (MKO)
-    W1_Mag      = np.zeros(0) # WISE
-    W2_Mag      = np.zeros(0) # WISE
-    W3_Mag      = np.zeros(0) # WISE
-    W4_Mag      = np.zeros(0) # WISE
-    S36_Mag     = np.zeros(0) # Spitzer IRAC
-    S45_Mag     = np.zeros(0) # Spitzer IRAC
-    S58_Mag     = np.zeros(0) # Spitzer IRAC
-    S80_Mag     = np.zeros(0) # Spitzer IRAC
-    FUV_Mag     = np.zeros(0) # GALEX
-    NUV_Mag     = np.zeros(0) # GALEX 
-    
-    # read the table for all logg
-    if atm_type == 'H':
-        suffix = 'DA'
-    if atm_type == 'He':
-        suffix = 'DB'
-    Atm_color = Table.read(dirpath+'/Montreal_atm_grid_2021/Table_'+suffix,
-                           format='ascii')
-    selected  = Atm_color['Teff'] > 10**logteff_logg_grid[0]
-    Atm_color = Atm_color[selected]
-
-    table_95 = Table.read(dirpath+'/Montreal_atm_grid_2021/Table_'+
-        'Mass_1.3_'+suffix, format='ascii')
-    table_95['logg'] = 9.5
-    table_95['M/Mo'] = 1.366
-    for column in ['Mbol','U','B','V','R','I','J','H','Ks','MY','MJ','MH','MK','W1','W2','W3','W4',
-         'S3.6','S4.5','S5.8','S8.0','Su','Sg','Sr','Si','Sz','Pg','Pr','Pi','Pz','Py',
-         'G2','G2_BP','G2_RP','G3','G3_BP','G3_RP','FUV','NUV']:
-        table_95[column] += 1.108 - 0.652 # the effect of radius when converting M=1.3 to M=1.366
-    Atm_color = vstack(( Atm_color, table_95 ))
-    
-    selected  = Atm_color['Teff'] > 10**logteff_logg_grid[0]
-    Atm_color = Atm_color[selected]
-    
-    # read columns from the Table_DA and Table_DB files
-    logteff = np.concatenate(( logteff, np.log10(Atm_color['Teff']) ))
-    logg    = np.concatenate(( logg, Atm_color['logg'] ))
-    Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
-    bp3_Mag = np.concatenate(( bp3_Mag, Atm_color['G3_BP'] ))
-    rp3_Mag = np.concatenate(( rp3_Mag, Atm_color['G3_RP'] ))
-    G3_Mag  = np.concatenate(( G3_Mag, Atm_color['G3'] ))
-    bp2_Mag = np.concatenate(( bp2_Mag, Atm_color['G2_BP'] ))
-    rp2_Mag = np.concatenate(( rp2_Mag, Atm_color['G2_RP'] ))
-    G2_Mag  = np.concatenate(( G2_Mag, Atm_color['G2'] ))
-    Su_Mag  = np.concatenate(( Su_Mag, Atm_color['Su'] ))
-    Sg_Mag  = np.concatenate(( Sg_Mag, Atm_color['Sg'] ))
-    Sr_Mag  = np.concatenate(( Sr_Mag, Atm_color['Sr'] ))
-    Si_Mag  = np.concatenate(( Si_Mag, Atm_color['Si'] ))
-    Sz_Mag  = np.concatenate(( Sz_Mag, Atm_color['Sz'] ))
-    Pg_Mag  = np.concatenate(( Pg_Mag, Atm_color['Pg'] ))
-    Pr_Mag  = np.concatenate(( Pr_Mag, Atm_color['Pr'] ))
-    Pi_Mag  = np.concatenate(( Pi_Mag, Atm_color['Pi'] ))
-    Pz_Mag  = np.concatenate(( Pz_Mag, Atm_color['Pz'] ))
-    Py_Mag  = np.concatenate(( Py_Mag, Atm_color['Py'] ))
-    U_Mag   = np.concatenate(( U_Mag, Atm_color['U'] ))
-    B_Mag   = np.concatenate(( B_Mag, Atm_color['B'] ))
-    V_Mag   = np.concatenate(( V_Mag, Atm_color['V'] ))
-    R_Mag   = np.concatenate(( R_Mag, Atm_color['R'] ))
-    I_Mag   = np.concatenate(( I_Mag, Atm_color['I'] ))
-    J_Mag   = np.concatenate(( J_Mag, Atm_color['J'] ))
-    H_Mag   = np.concatenate(( H_Mag, Atm_color['H'] ))
-    Ks_Mag  = np.concatenate(( Ks_Mag, Atm_color['Ks'] ))
-    MY_Mag  = np.concatenate(( MY_Mag, Atm_color['MY'] ))
-    MJ_Mag  = np.concatenate(( MJ_Mag, Atm_color['MJ'] ))
-    MH_Mag  = np.concatenate(( MH_Mag, Atm_color['MH'] ))
-    MK_Mag  = np.concatenate(( MK_Mag, Atm_color['MK'] ))
-    W1_Mag  = np.concatenate(( W1_Mag, Atm_color['W1'] ))
-    W2_Mag  = np.concatenate(( W2_Mag, Atm_color['W2'] ))
-    W3_Mag  = np.concatenate(( W3_Mag, Atm_color['W3'] ))
-    W4_Mag  = np.concatenate(( W4_Mag, Atm_color['W4'] ))
-    S36_Mag = np.concatenate(( S36_Mag, Atm_color['S3.6'] ))
-    S45_Mag = np.concatenate(( S45_Mag, Atm_color['S4.5'] ))
-    S58_Mag = np.concatenate(( S58_Mag, Atm_color['S5.8'] ))
-    S80_Mag = np.concatenate(( S80_Mag, Atm_color['S8.0'] ))
-    FUV_Mag = np.concatenate(( FUV_Mag, Atm_color['FUV'] ))
-    NUV_Mag = np.concatenate(( NUV_Mag, Atm_color['NUV'] ))
-    
-    # read the table for each mass
-    # I suppose the color information in this table is from the interpolation
-    # of the above table, so I do not need to read it.
-    for mass in ['0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','1.1','1.2','1.3']:
-        Atm_color = Table.read(dirpath+'/Montreal_atm_grid_2021/Table_Mass_' +
-                               mass + '_'+suffix, format='ascii')
-        selected  = Atm_color['Teff'] > 10**logteff_logg_grid[0]
-        Atm_color = Atm_color[selected]
-        
-        # read columns
-        logteff = np.concatenate(( logteff, np.log10(Atm_color['Teff']) ))
-        logg    = np.concatenate(( logg, Atm_color['logg'] ))
-        Mbol    = np.concatenate(( Mbol, Atm_color['Mbol'] ))
-        bp3_Mag = np.concatenate(( bp3_Mag, Atm_color['G3_BP'] ))
-        rp3_Mag = np.concatenate(( rp3_Mag, Atm_color['G3_RP'] ))
-        G3_Mag  = np.concatenate(( G3_Mag, Atm_color['G3'] ))
-        bp2_Mag = np.concatenate(( bp2_Mag, Atm_color['G2_BP'] ))
-        rp2_Mag = np.concatenate(( rp2_Mag, Atm_color['G2_RP'] ))
-        G2_Mag  = np.concatenate(( G2_Mag, Atm_color['G2'] ))
-        Su_Mag  = np.concatenate(( Su_Mag, Atm_color['Su'] ))
-        Sg_Mag  = np.concatenate(( Sg_Mag, Atm_color['Sg'] ))
-        Sr_Mag  = np.concatenate(( Sr_Mag, Atm_color['Sr'] ))
-        Si_Mag  = np.concatenate(( Si_Mag, Atm_color['Si'] ))
-        Sz_Mag  = np.concatenate(( Sz_Mag, Atm_color['Sz'] ))
-        Pg_Mag  = np.concatenate(( Pg_Mag, Atm_color['Pg'] ))
-        Pr_Mag  = np.concatenate(( Pr_Mag, Atm_color['Pr'] ))
-        Pi_Mag  = np.concatenate(( Pi_Mag, Atm_color['Pi'] ))
-        Pz_Mag  = np.concatenate(( Pz_Mag, Atm_color['Pz'] ))
-        Py_Mag  = np.concatenate(( Py_Mag, Atm_color['Py'] ))
-        U_Mag   = np.concatenate(( U_Mag, Atm_color['U'] ))
-        B_Mag   = np.concatenate(( B_Mag, Atm_color['B'] ))
-        V_Mag   = np.concatenate(( V_Mag, Atm_color['V'] ))
-        R_Mag   = np.concatenate(( R_Mag, Atm_color['R'] ))
-        I_Mag   = np.concatenate(( I_Mag, Atm_color['I'] ))
-        J_Mag   = np.concatenate(( J_Mag, Atm_color['J'] ))
-        H_Mag   = np.concatenate(( H_Mag, Atm_color['H'] ))
-        Ks_Mag  = np.concatenate(( Ks_Mag, Atm_color['Ks'] ))
-        MY_Mag  = np.concatenate(( MY_Mag, Atm_color['MY'] ))
-        MJ_Mag  = np.concatenate(( MJ_Mag, Atm_color['MJ'] ))
-        MH_Mag  = np.concatenate(( MH_Mag, Atm_color['MH'] ))
-        MK_Mag  = np.concatenate(( MK_Mag, Atm_color['MK'] ))
-        W1_Mag  = np.concatenate(( W1_Mag, Atm_color['W1'] ))
-        W2_Mag  = np.concatenate(( W2_Mag, Atm_color['W2'] ))
-        W3_Mag  = np.concatenate(( W3_Mag, Atm_color['W3'] ))
-        W4_Mag  = np.concatenate(( W4_Mag, Atm_color['W4'] ))
-        S36_Mag = np.concatenate(( S36_Mag, Atm_color['S3.6'] ))
-        S45_Mag = np.concatenate(( S45_Mag, Atm_color['S4.5'] ))
-        S58_Mag = np.concatenate(( S58_Mag, Atm_color['S5.8'] ))
-        S80_Mag = np.concatenate(( S80_Mag, Atm_color['S8.0'] ))
-        FUV_Mag = np.concatenate(( FUV_Mag, Atm_color['FUV'] ))
-        NUV_Mag = np.concatenate(( NUV_Mag, Atm_color['NUV'] ))
+    atm_color_table = read_atm_table(atm_type)
+    selected  = atm_color_table['Teff'] > 10**logteff_logg_grid[0]
+    atm_color_table = atm_color_table[selected]
     
     grid_x, grid_y = np.mgrid[logteff_logg_grid[0]:logteff_logg_grid[1]:logteff_logg_grid[2],
                               logteff_logg_grid[3]:logteff_logg_grid[4]:logteff_logg_grid[5]]
+    
+    band_name_column_list = ['U','B','V','R','I','J','H','Ks','MY','MJ','MH','MK','W1','W2','W3','W4',
+        'S3.6','S4.5','S5.8','S8.0','Su','Sg','Sr','Si','Sz','Pg','Pr','Pi','Pz','Py',
+        'G2','G2_BP','G2_RP','G3','G3_BP','G3_RP','FUV','NUV']
+    band_name_list = ['U','B','V','R','I','J','H','Ks','MY','MJ','MH','MK','W1','W2','W3','W4',
+        'S36','S45','S58','S80','Su','Sg','Sr','Si','Sz','Pg','Pr','Pi','Pz','Py',
+        'G2','bp2','rp2','G3','bp3','rp3','FUV','NUV']
+    band_name_dict = {}
+    for i,band_name in enumerate(band_name_list):
+        band_name_dict[band_name] = band_name_column_list[i]
     
     # define the interpolation of mapping
     def interp(x, y, z, interp_type_atm='linear'):
@@ -317,11 +199,11 @@ def interp_atm(atm_type, color, logteff_logg_grid=(3.5, 5.1, 0.01, 6.5, 9.6, 0.0
     
     division = color.find('-')
     if '-Mbol' in color:
-        z = eval(color[:division] + '_Mag - Mbol')
+        z = atm_color_table[band_name_dict[color[:division]]] -  atm_color_table['Mbol']
     else:
-        z = eval(color[:division] + '_Mag - ' + color[division+1:] + '_Mag')
+        z = atm_color_table[band_name_dict[color[:division]]] - atm_color_table[band_name_dict[color[division+1:]]]
     
-    return interp(logteff, logg, z, interp_type_atm)
+    return interp(atm_color_table['logteff'], atm_color_table['logg'], z, interp_type_atm)
 
 
 def read_cooling_tracks(low_mass_model, middle_mass_model, high_mass_model,
